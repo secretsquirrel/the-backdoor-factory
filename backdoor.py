@@ -120,7 +120,7 @@ menu = ["-.(`-')  (`-')  _           <-"
         "     \/        \/     \/  "
         "                 \/             \n"]
 
-# I couple NOPs from playing with the debugger
+# A couple NOPs from playing with the debugger
 nops = [0x90, 0x3690, 0x6490, 0x6590, 0x6690, 0x6790]
 
 #this data block is a mapping of x86 intel (from windows) opcodes and their
