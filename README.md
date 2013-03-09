@@ -41,7 +41,6 @@ Options:
   -v, --verbose         For debug information output.
   
   -e ENCODER, --encoder=ENCODER
-  
                         Encoders that can help with AV evasion.
   
   -l SHELL_LEN, --shell_length=SHELL_LEN
