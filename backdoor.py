@@ -510,9 +510,8 @@ class Shellcodes():
 
     def av_test(self):
         """
-        There is no continuation of EXE from the this shellcode.
-        I'm guessing the incoming stage will need to modified to continue
-        execution.
+        A reverse_shell_tcp from metasploit for use in demos for av
+        avoidance.
         """
 
         if self.HOST == "":
