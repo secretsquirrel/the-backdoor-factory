@@ -3,6 +3,8 @@ Backdoors win32 PE files, to continue normal file execution (if the shellcode su
 
 Some executables have built in protections, as such this will not work on all PE files.  It is advisable that you test target PE files before deploying them to clients or using them in exercises.
 
+Recently tested on all 32bit Sysinternal tools.
+
 Usage: ./backdoor.py -h
 
 Usage: backdoor.py [options]
