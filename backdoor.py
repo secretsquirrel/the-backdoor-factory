@@ -1595,7 +1595,7 @@ if __name__ == "__main__":
     parser.add_option("-c", "--cave", default=False, dest="CAVE",
                       action="store_true",
                       help="The cave flag will find code caves that "
-                      "can be used for stashing shellcode."
+                      "can be used for stashing shellcode. "
                       "This will print to all the code caves "
                       "of a specific size."
                       "The -l flag can be use with this setting.")
