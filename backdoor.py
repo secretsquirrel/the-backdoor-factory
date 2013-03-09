@@ -1596,13 +1596,13 @@ if __name__ == "__main__":
                       action="store_true",
                       help="The cave flag will find code caves that "
                       "can be used for stashing shellcode."
-                      "This will print to string all the code caves "
+                      "This will print to all the code caves "
                       "of a specific size."
                       "The -l flag can be use with this setting.")
     parser.add_option("-d", "--directory", dest="DIR", action="store",
                       type="string",
                       help="This is the location of the files that "
-                      "you want to backdoor."
+                      "you want to backdoor. "
                       "You can make a directory of file backdooring faster by "
                       "forcing the attaching of a codecave "
                       "to the exe by using the -a setting.")
