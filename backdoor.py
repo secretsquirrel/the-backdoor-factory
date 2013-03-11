@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 '''
-    backdoor.py v0.01
+    The Backdoor Factory
 
-    Author: Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
+    Author Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
     Special thanks to Travis Morrow.
 
-    Backdoor PE Files
     Copyright 2013 Joshua Pitts
 
-    This program is free software; you can redistribute it and/or modify
+    License:   GPLv3
+
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -18,10 +19,8 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-    MA 02110-1301, USA.
+    See <http://www.gnu.org/licenses/> for a copy of the GNU General
+    Public License
 
     Currently supports win32 EXEs/DLLs only (intel architecture).
     This program is to be used for only legal activities by IT security
@@ -1206,14 +1205,6 @@ def do_thebackdoor(filename, backdoorfile, shellcode,
     if fileItems is False:
         return None
     fileItems['NewCodeCave'] = NewCodeCave
-    '''
-    if MachineTypes[hex(fileItems['MachineType'])] != "Intel x86":
-        for item in fileItems:
-            print item+':', fileItems[item]
-        print ("This program does not support this format: %s"
-               % MachineTypes[hex(fileItems['MachineType'])])
-        return None
-    '''
     #Creating file to backdoor
     shutil.copy2(filename, fileItems['backdoorfile'])
     global f
