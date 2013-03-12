@@ -133,6 +133,8 @@ nops = [0x90, 0x3690, 0x6490, 0x6590, 0x6690, 0x6790]
 #entire length.  For reconstructing an exe it doesn't matter as much what
 #the value of the instructions are as it matters first the length in bytes.
 
+jump_codes = [ int('e8', 16), int('0xeb', 16), int('0xea', 16)]
+
 op_codes = {'0x0100': 2, '0x0101': 2, '0x0102': 2, '0x0103': 2,
             '0x0104': 3, '0x0105': 6, '0x0106': 2, '0x0107': 2,
             '0x0108': 2, '0x0109': 2, '0x010a': 2, '0x010b': 2,
@@ -222,7 +224,7 @@ op_codes = {'0x0100': 2, '0x0101': 2, '0x0102': 2, '0x0103': 2,
             '0x33f6': 2,
             '0x895c24': 4, '0x8da424': 7,
             '0xa1': 5, '0xa3': 5, '0xc3': 1,
-            '0xeb': 2,
+            '0xeb': 2, '0xea': 7,
             }
 
 
@@ -604,6 +606,9 @@ def pe32_entry_instr(TrackingAddress, fileItems):
                 #print "length:", op_codes[hex(CurrInstr)]
                 instr_length = op_codes[hex(CurrInstr)] - i
                 #print "instr_length", instr_length
+                if instr_length == 6:
+                    InstrSets[CurrInstr] = (struct.unpack('<BBBBBB',
+                                            f.read(6))[0])
                 if instr_length == 5:
                     InstrSets[CurrInstr] = (struct.unpack('<BBBBB',
                                             f.read(5))[0])
@@ -728,7 +733,7 @@ def resume_execution_32(ImpList):
 
         compliment_one, compliment_two = ones_compliment()
 
-        if OpCode in [int('E8', 16), int('eb', 16)]:
+        if OpCode in jump_codes:
             print "You might have issues running this on a x64 system."
             resumeExe += struct.pack('=B', int('E8', 16))  # call
             resumeExe += "\x00"*4
@@ -743,13 +748,25 @@ def resume_execution_32(ImpList):
             resumeExe += compliment_two  #
             resumeExe += "\x05"  # ADD
             #print ImpValue
-            if ImpValue > 429467295:
+            if OpCode is int('ea', 16):  # jmp far
+                resumeExe += struct.pack('<BBBBBB', ImpValue)
+            elif ImpValue > 429467295:
                 resumeExe += struct.pack('<I', abs(ImpValue - 0xffffffff + 2))
             else:
                 resumeExe += struct.pack('<I', ImpValue)  # Add+ EAX, CallValue
             resumeExe += "\x50\xc3\x90\x90\x90\x90"  # PUSH EAX,RETN, NOPS*4
             ReturnTrackingAddress = item[3]
             #print 'ReturnTrackingAddress', ReturnTrackingAddress
+
+        elif instr_length == 7:
+            resumeExe += opcode_return(OpCode, instr_length)
+            resumeExe += struct.pack("<BBBBBBB", instruction)
+            ReturnTrackingAddress = item[3]
+
+        elif instr_length == 6:
+            resumeExe += opcode_return(OpCode, instr_length)
+            resumeExe += struct.pack("<BBBBBB", instruction)
+            ReturnTrackingAddress = item[3]
 
         elif instr_length == 5:
             resumeExe += opcode_return(OpCode, instr_length)
@@ -790,6 +807,7 @@ def resume_execution_32(ImpList):
     f.write('\x25\x35\x32\x31\x2A') #zero out EAX
     f.write('\xC3') # RETN
     '''
+
     resumeExe += "\x25"
     resumeExe += compliment_one  # zero out EAX
     resumeExe += "\x25"
