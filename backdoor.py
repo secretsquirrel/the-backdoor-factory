@@ -253,7 +253,7 @@ def ByteToHex(byteStr):
 class Encoders():
     """
     This class contains the encoding functions for
-    shellcode and the decoding stubs live.
+    shellcode and the decoding stubs.
     """
 
     def __init__(self, encoder, shellcode):
@@ -728,8 +728,8 @@ def resume_execution_32(ImpList):
 
         compliment_one, compliment_two = ones_compliment()
 
-        if OpCode == int('E8', 16):
-            print "You might have issues running this on an x64 system."
+        if OpCode in [int('E8', 16), int('eb', 16)]:
+            print "You might have issues running this on a x64 system."
             resumeExe += struct.pack('=B', int('E8', 16))  # call
             resumeExe += "\x00"*4
             # POP ECX to find location
