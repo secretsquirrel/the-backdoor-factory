@@ -3,11 +3,9 @@ Backdoors win32 PE files, to continue normal file execution (if the shellcode su
 
 Some executables have built in protections, as such this will not work on all PE files.  It is advisable that you test target PE files before deploying them to clients or using them in exercises.
 
-It is preferred to use a code cave vs appending a code cave. Win32 binaries now run on x64 working with ASLR for proper continued execution after shellcode has run.
+Win32 binaries now run on x64 working with ASLR for proper continued execution after shellcode has run.
 
 Recently tested on all 32bit Sysinternal tools.
-
-Side note: I'm reworking the code, starting to look too much like spaghetti.
 ---
 
 Usage: ./backdoor.py -h
