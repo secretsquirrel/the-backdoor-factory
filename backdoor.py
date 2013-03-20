@@ -1485,11 +1485,10 @@ def support_check(filename, backdoorfile, LocOfEntryinCode_Offset):
         print ("This program does not support this format: %s"
                % MachineTypes[hex(fileItems['MachineType'])])
         return False
-    '''for section in fileItems['Sections']:
+    for section in fileItems['Sections']:
         if 'UPX'.lower() in section[0].lower():
             print "No support for UPX packed files... yet.."
-            return
-        return False'''
+            return False
 
     return fileItems
 
