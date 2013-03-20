@@ -748,7 +748,6 @@ def resume_execution_32(ImpList):
         if OpCode == int('e8', 16):  # Call instruction
             # Let's beat ASLR :D
             resumeExe += "\xb8"
-            # include new section buffer in this in future
             aprox_loc_wo_alsr = (fileItems['VirtualStartingPoint'] +
                                  fileItems['JMPtoCodeAddress'] +
                                  len(shellcode) + len(resumeExe) +
