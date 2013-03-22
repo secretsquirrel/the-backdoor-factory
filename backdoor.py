@@ -68,15 +68,26 @@ list_of_targets = {'hamachi-2.exe':
                                     'procmon64.exe'), None, True]
                    }
 
-MachineTypes = {'0x0': 'AnyMachineType', '0x1d3': 'Matsushita AM33',
-                '0x8664': 'x64', '0x1c0': 'ARM LE', '0x1c4': 'ARMv7',
-                '0xebc': 'EFIByteCode', '0x14c': 'Intel x86',
-                '0x200': 'Intel Itanium', '0x9041': 'M32R',
-                '0x266': 'MIPS16', '0x366': 'MIPS w/FPU',
-                '0x466': 'MIPS16 w/FPU', '0x1f0': 'PowerPC LE',
-                '0x1f1': 'PowerPC w/FP', '0x166': 'MIPS LE',
-                '0x1a2': 'Hitachi SH3', '0x1a3': 'Hitachi SH3 DSP',
-                '0x1a6': 'Hitachi SH4', '0x1a8': 'Hitachi SH5',
+MachineTypes = {'0x0': 'AnyMachineType',
+                '0x1d3': 'Matsushita AM33',
+                '0x8664': 'x64',
+                '0x1c0': 'ARM LE',
+                '0x1c4': 'ARMv7',
+                '0xaa64': 'ARMv8 x64',
+                '0xebc': 'EFIByteCode',
+                '0x14c': 'Intel x86',
+                '0x200': 'Intel Itanium',
+                '0x9041': 'M32R',
+                '0x266': 'MIPS16',
+                '0x366': 'MIPS w/FPU',
+                '0x466': 'MIPS16 w/FPU',
+                '0x1f0': 'PowerPC LE',
+                '0x1f1': 'PowerPC w/FP',
+                '0x166': 'MIPS LE',
+                '0x1a2': 'Hitachi SH3',
+                '0x1a3': 'Hitachi SH3 DSP',
+                '0x1a6': 'Hitachi SH4',
+                '0x1a8': 'Hitachi SH5',
                 '0x1c2': 'ARM or Thumb -interworking',
                 '0x169': 'MIPS little-endian WCE v2'
                 }
@@ -1802,7 +1813,7 @@ if __name__ == "__main__":
             print "You must provide a file to look for caves (-f)"
             sys.exit()
         f = open(options.FILE, 'rb')
-        fileItems = gather_file_info(options.FILE, 'None')
+        fileItems = gather_file_info(options.FILE, 'None', options.DISK_OFFSET)
         print ("Looking for caves with a size of %s "
                "bytes (measured as an integer)"
                % options.SHELL_LEN)
