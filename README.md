@@ -1,6 +1,14 @@
 ##The Backdoor Factory
 For security professionals and researchers only.
 
+From DerbyCon: 
+    
+    Video: http://www.youtube.com/watch?v=jXLb2RNX5xs
+
+    Injection Module Demo: http://www.youtube.com/watch?v=04aJAex2o3U
+
+    Slides: http://www.slideshare.net/midnite_runr/patching-windows-executables-with-the-backdoor-factory
+
 Injects shellcode into win32/64 PE files, to continue normal file execution (if the shellcode supports it), by patching the exe/dll directly.
 
 Some executables have built in protections, as such this will not work on all PE files.  It is advisable that you test target PE files before deploying them to clients or using them in exercises.
