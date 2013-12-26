@@ -450,10 +450,10 @@ class win64_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode1) < breakupvar:
                     self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
-                                                   len(self.shellcode1) - 4)), 16))
+                                                   len(self.shellcode1) - 4).rstrip("L")), 16))
                 else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
-                                                   breakupvar - len(self.stackpreserve) - 4)), 16))
+                                                   breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
             else:
                     self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar -
                                                    len(self.stackpreserve) - len(self.shellcode1) - 3)
@@ -581,10 +581,10 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode1) < breakupvar:
                     self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
-                                                   len(self.shellcode1) - 4)), 16))
+                                                   len(self.shellcode1) - 4).rstrip("L")), 16))
                 else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
-                                                   breakupvar - len(self.stackpreserve) - 4)), 16))
+                                                   breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
             else:
                     self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar - len(self.stackpreserve) -
                                                    len(self.shellcode1) - 3)
@@ -607,13 +607,13 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode1) < breakupvar:
                     self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
-                                                   len(self.shellcode1) - 4)), 16))
+                                                   len(self.shellcode1) - 4).rstrip("L")), 16))
                 else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
-                                                   breakupvar - len(self.stackpreserve) - 4)), 16))
+                                                   breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
             else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(0xffffffff + breakupvar - len(self.stackpreserve) -
-                                                   len(self.shellcode1) - 3)), 16))
+                                                   len(self.shellcode1) - 3).rstrip("L")), 16))
         else:
             self.shellcode1 += "\xE9\x27\x01\x00\x00"
 
@@ -626,13 +626,13 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode2) < breakupvar:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - breakupvar -
-                                                   len(self.shellcode2) + 241)), 16))
+                                                   len(self.shellcode2) + 241).rstrip("L")), 16))
                 else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - len(self.shellcode2) -
-                                                   breakupvar + 241)), 16))
+                                                   breakupvar + 241).rstrip("L")), 16))
             else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(abs(breakupvar) + len(self.stackpreserve) +
-                                                             len(self.shellcode2) + 234)), 16))
+                                                             len(self.shellcode2) + 234).rstrip("L")), 16))
         else:
             self.shellcode2 = "\xE8\xB7\xFF\xFF\xFF"
         #Can inject any shellcode below.
@@ -709,10 +709,10 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode1) < breakupvar:
                     self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
-                                                             len(self.shellcode1) - 4)), 16))
+                                                             len(self.shellcode1) - 4).rstrip("L")), 16))
                 else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
-                                                             breakupvar - len(self.stackpreserve) - 4)), 16))
+                                                             breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
             else:
                     self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar - len(self.stackpreserve) -
                                                    len(self.shellcode1) - 3)
@@ -735,13 +735,13 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode1) < breakupvar:
                     self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
-                                                             len(self.shellcode1) - 4)), 16))
+                                                             len(self.shellcode1) - 4).rstrip("L")), 16))
                 else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
-                                                             breakupvar - len(self.stackpreserve) - 4)), 16))
+                                                             breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
             else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(0xffffffff + breakupvar - len(self.stackpreserve) -
-                                                   len(self.shellcode1) - 3)), 16))
+                                                   len(self.shellcode1) - 3).rstrip("L")), 16))
         #else:
         #    self.shellcode1 += "\xEB\x06\x01\x00\x00"
 
@@ -754,13 +754,13 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode2) < breakupvar:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - breakupvar -
-                                                             len(self.shellcode2) + 241)), 16))
+                                                             len(self.shellcode2) + 241).rstrip("L")), 16))
                 else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - len(self.shellcode2) -
-                                                             breakupvar + 241)), 16))
+                                                             breakupvar + 241).rstrip("L")), 16))
             else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(abs(breakupvar) + len(self.stackpreserve) +
-                                                   len(self.shellcode2) + 234)), 16))
+                                                   len(self.shellcode2) + 234).rstrip("L")), 16))
         else:
             self.shellcode2 = "\xE8\xB7\xFF\xFF\xFF"
 
@@ -809,10 +809,10 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode1) < breakupvar:
                     self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
-                                                             len(self.shellcode1) - 4)), 16))
+                                                             len(self.shellcode1) - 4).rstrip("L")), 16))
                 else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
-                                                             breakupvar - len(self.stackpreserve) - 4)), 16))
+                                                             breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
             else:
                     self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar - len(self.stackpreserve) -
                                                    len(self.shellcode1) - 3)
@@ -835,13 +835,13 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode1) < breakupvar:
                     self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
-                                                             len(self.shellcode1) - 4)), 16))
+                                                             len(self.shellcode1) - 4).rstrip("L")), 16))
                 else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
-                                                   breakupvar - len(self.stackpreserve) - 4)), 16))
+                                                   breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
             else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(0xffffffff + breakupvar - len(self.stackpreserve) -
-                                                             len(self.shellcode1) - 3)), 16))
+                                                             len(self.shellcode1) - 3).rstrip("L")), 16))
         else:
             self.shellcode1 += "\xE9\x76\x01\x00\x00"  # <---length shellcode2 + 5
 
@@ -853,13 +853,13 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode2) < breakupvar:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - breakupvar -
-                                                             len(self.shellcode2) + 241)), 16))
+                                                             len(self.shellcode2) + 241).rstrip("L")), 16))
                 else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - len(self.shellcode2) -
-                                                             breakupvar + 241)), 16))
+                                                             breakupvar + 241).rstrip("L")), 16))
             else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(abs(breakupvar) + len(self.stackpreserve) +
-                                                             len(self.shellcode2) + 234)), 16))
+                                                             len(self.shellcode2) + 234).rstrip("L")), 16))
         else:
             self.shellcode2 = "\xE8\xB7\xFF\xFF\xFF"
 
@@ -909,10 +909,10 @@ class win32_shellcode():
             if breakupvar > 0:
                 if len(self.shellcode1) < breakupvar:
                     self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
-                                                                 len(self.shellcode1) - 4)), 16))
+                                                                 len(self.shellcode1) - 4).rstrip("L")), 16))
                 else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
-                                                             breakupvar - len(self.stackpreserve) - 4)), 16))
+                                                             breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
             else:
                     self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar - len(self.stackpreserve) -
                                                    len(self.shellcode1) - 3)
