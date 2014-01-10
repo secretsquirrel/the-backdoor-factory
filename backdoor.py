@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-    Backdoor Factory 1.1
+    Backdoor Factory 1.2
 
     Author Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
     Special thanks to Travis Morrow for poking holes in my ideas.
