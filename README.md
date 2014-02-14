@@ -1,6 +1,15 @@
 ##The Backdoor Factory
 For security professionals and researchers only.
 
+Many thanks to Ryan O'neill --ryan 'at' codeslum <d ot> org--
+Without him, I would still be trying to do stupid things 
+with the elf format.
+Also thanks to Silvio Cesare with his 1998 paper 
+(http://vxheaven.org/lib/vsc01.html) which these ELF patching
+techniques are based on.
+
+I learned a ton about the ELF format.  The first fustrating thing I noticed were the lack of code caves in debian builds.  However, you don't really need them. See the link above, circa 1998.  The look and feel to the user will be no different for ELF binaries, just point the tool at them as you have for PE bins.
+
 From DerbyCon: 
     
     Video: http://www.youtube.com/watch?v=jXLb2RNX5xs
@@ -9,9 +18,9 @@ From DerbyCon:
 
     Slides: http://www.slideshare.net/midnite_runr/patching-windows-executables-with-the-backdoor-factory
 
-Injects shellcode into win32/64 PE files, to continue normal file execution (if the shellcode supports it), by patching the exe/dll directly.
+Injects shellcode into win32/64 PE and linux32/64 ELF Files, to continue normal file execution (if the shellcode supports it), by patching the exe/dll directly.
 
-Some executables have built in protections, as such this will not work on all PE files.  It is advisable that you test target PE files before deploying them to clients or using them in exercises.
+Some executables have built in protections, as such this will not work on all binaries.  It is advisable that you test target binaries before deploying them to clients or using them in exercises.
 
 Recently tested on all 32/64bit Sysinternal tools and Chrome browser.
 ---
