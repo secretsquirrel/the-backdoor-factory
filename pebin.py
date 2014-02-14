@@ -124,7 +124,7 @@ class pebin():
                 print "%s is not supported." % self.FILE
             else:
                 print "%s is supported." % self.FILE
-                if flItms['runas_admin'] is True:
+                if self.flItms['runas_admin'] is True:
                         print "%s must be run as admin." % self.FILE
             sys.exit()
         self.output_options()
@@ -663,7 +663,7 @@ class pebin():
         self.flItms['runas_admin'] = self.runas_admin()
 
         if self.VERBOSE is True:
-            print_self.flItms(self.flItms)
+            self.print_flItms(self.flItms)
 
         if self.flItms['supported'] is False:
             return False
@@ -846,7 +846,6 @@ class pebin():
                     continue
                 else:
                     print "   {0}".format(item)
-            parser.print_help()
             sys.exit()
         if self.SHELL not in dir(self.flItms['bintype']):
             print "The following %ss are available: (use -s)" % str(self.flItms['bintype']).split(".")[1]
