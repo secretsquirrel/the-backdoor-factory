@@ -8,7 +8,7 @@ Also thanks to Silvio Cesare with his 1998 paper
 (http://vxheaven.org/lib/vsc01.html) which these ELF patching
 techniques are based on.
 
-I learned a ton about the ELF format.  The first fustrating thing I noticed were the lack of code caves in debian builds.  However, you don't really need them. See the link above, circa 1998.  The look and feel to the user will be no different for ELF binaries, just point the tool at them as you have for PE bins.
+I learned a ton about the ELF format.  The first frustrating thing I noticed were the lack of code caves in debian builds.  However, you don't really need them. See the link above, circa 1998.  The look and feel to the user will be no different for ELF binaries, just point the tool at them as you have for PE bins.
 
 From DerbyCon: 
     
