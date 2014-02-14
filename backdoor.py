@@ -54,6 +54,10 @@ def signal_handler(signal, frame):
 
 class bdfMain():
 
+    version = """\
+         v2.0.1 
+         """
+
     author = """\
          Author:    Joshua Pitts
          Email:     the.midnite.runr[a t]gmail<d o t>com
@@ -233,6 +237,7 @@ class bdfMain():
     if options.NO_BANNER is False:
         print choice(menu)
         print author
+        print version
         time.sleep(1)
 
     if options.DIR:
