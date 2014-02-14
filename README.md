@@ -217,7 +217,7 @@ File bd.psexec.exe is in current directory
 ...output too long for README...
 
 ---
-###Hunt and backdoor: Injector
+###Hunt and backdoor: Injector | Windows Only
 The injector module will look for target executables to backdoor on disk.  It will check to see if you have identified the target as a service, check to see if the process is running, kill the process and/or service, inject the executable with the shellcode, save the original file to either file.exe.old or another suffix of choice, and attempt to restart the process or service.  
 Edit the python dictionary "list_of_targets" in the 'injector' module for targets of your choosing.
 
