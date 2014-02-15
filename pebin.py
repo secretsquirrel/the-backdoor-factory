@@ -844,6 +844,13 @@ class pebin():
             for item in dir(self.flItms['bintype']):
                 if "__" in item:
                     continue
+                elif ("returnshellcode" == item 
+                    or "pack_ip_addresses" == item 
+                    or "eat_code_caves" == item
+                    or 'ones_compliment' == item
+                    or 'resume_execution' in item
+                    or 'returnshellcode' in item):
+                    continue
                 else:
                     print "   {0}".format(item)
             sys.exit()
