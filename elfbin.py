@@ -86,7 +86,7 @@ class elfbin():
     """
     This is the class handler for the elf binary format
     """
-    def __init__(self, FILE, OUTPUT, SHELL, HOST="127.0.0.1", PORT="8888", 
+    def __init__(self, FILE, OUTPUT, SHELL, HOST="127.0.0.1", PORT=8888, 
                  SUPPORT_CHECK=False, FIND_CAVES=False, SHELL_LEN=70,
                  SUPPLIED_SHELLCODE=None):
         #print FILE
@@ -637,6 +637,7 @@ class elfbin():
            
             self.JMPtoCodeAddress = shellcode_vaddr - self.e_entry -5    
 
+        self.bin_file.close()
         return True
 
 # END elfbin clas
