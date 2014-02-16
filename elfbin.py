@@ -638,6 +638,7 @@ class elfbin():
             self.JMPtoCodeAddress = shellcode_vaddr - self.e_entry -5    
 
         self.bin_file.close()
+        print "[!] Patching Complete"
         return True
 
 # END elfbin clas
