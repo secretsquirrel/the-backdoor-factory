@@ -642,13 +642,3 @@ class elfbin():
         return True
 
 # END elfbin clas
-
-def main(): 
-    if len(sys.argv) != 5:
-        print "Usage:", sys.argv[0], "FILE shellcode HOST PORT"
-        sys.exit()
-    supported_file = elfbin(sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]))
-    Result = supported_file.run_this()
-    
-if __name__ == "__main__":
-    main()
