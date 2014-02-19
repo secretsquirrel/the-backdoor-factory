@@ -1,7 +1,7 @@
 ##The Backdoor Factory
 For security professionals and researchers only.
 
-Many thanks to Ryan O'neill --ryan 'at' codeslum <d ot> org--
+Many thanks to Ryan O'Neill --ryan 'at' codeslum <d ot> org--
 Without him, I would still be trying to do stupid things 
 with the elf format.
 Also thanks to Silvio Cesare with his 1998 paper 
