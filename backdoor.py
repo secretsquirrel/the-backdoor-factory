@@ -244,9 +244,12 @@ class bdfMain():
         for root, subFolders, files in os.walk(options.DIR):
             for _file in files:
                 options.FILE = os.path.join(root, _file)
-                is_supported = basicDiscovery(options.FILE)
+		if os.path.isdir(options.FILE) is True:
+		    print "Directory found, continuing"
+		    continue
+		is_supported = basicDiscovery(options.FILE)
                 if is_supported is "PE":
-                    supported_file = pebin(options.FILE,
+		    supported_file = pebin(options.FILE,
                                 options.OUTPUT,
                                 options.SHELL,
                                 options.NSECTION,
@@ -265,25 +268,27 @@ class bdfMain():
                                 options.SUFFIX,
                                 options.DELETE_ORIGINAL)
                 elif is_supported is "ELF":
-                    supported_file = elfbin(options.FILE, 
+                    supported_file = elfbin(options.FILE,
+                                options.OUTPUT,
                                 options.SHELL,
                                 options.HOST,
                                 options.PORT,
                                 options.SUPPORT_CHECK,
                                 options.FIND_CAVES,
                                 options.SHELL_LEN,
-                                options.SUPPLIED_SHELLCODE)
-                #for item in dirlisting:
-                #    options.FILE = options.DIR + '/' + item
+                                options.SUPPLIED_SHELLCODE
+				)
+                				
                 if options.SUPPORT_CHECK is True:
                     if os.path.isfile(options.FILE):
-                        print "file", options.FILE
+                        is_supported = False
+			print "file", options.FILE
                         try:
                             is_supported = supported_file.support_check()
                         except Exception, e:
                             is_supported = False
                             print 'Exception:', str(e), '%s' % options.FILE
-                        if is_supported is False:
+			if is_supported is False or is_supported is None:
                             print "%s is not supported." % options.FILE
                             #continue
                         else:
@@ -307,8 +312,12 @@ class bdfMain():
                 #print item
                 print "*" * 50
                 options.FILE = options.DIR + '/' + item
-                print ("backdooring file %s" % item)
-                #result = None
+		if os.path.isdir(options.FILE) is True:
+		    print "Directory found, continuing"
+		    continue
+                
+		print ("backdooring file %s" % item)
+                result = None
                 is_supported = basicDiscovery(options.FILE)
                 try:
                     if is_supported is "PE":
@@ -334,20 +343,22 @@ class bdfMain():
                         supported_file.output_options()
                         result = supported_file.patch_pe()
                     elif is_supported is "ELF":
-                        supported_file = elfbin(options.FILE, 
-                                    options.SHELL,
-                                    options.HOST,
-                                    options.PORT,
-                                    options.SUPPORT_CHECK,
-                                    options.FIND_CAVES,
-                                    options.SHELL_LEN,
-                                    options.SUPPLIED_SHELLCODE)
+                        supported_file = elfbin(options.FILE,
+                                options.OUTPUT,
+                                options.SHELL,
+                                options.HOST,
+                                options.PORT,
+                                options.SUPPORT_CHECK,
+                                options.FIND_CAVES,
+                                options.SHELL_LEN,
+                                options.SUPPLIED_SHELLCODE
+				)
                         supported_file.OUTPUT = None
                         supported_file.output_options()
                         result = supported_file.patch_elf()
-    
-                    if result is None:
-                        print 'Continuing'
+                    
+		    if result is None:
+                        print 'Not Supported. Continuing'
                         continue
                     else:
                         print ("[*] File {0} is in backdoored "
