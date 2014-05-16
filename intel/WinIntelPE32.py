@@ -183,6 +183,38 @@ class winI32_shellcode():
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2
         return (self.stackpreserve + self.shellcode1, self.shellcode2)
 
+    def cave_miner(self, flItms, CavesPicked={}):
+        """
+        Sample code for finding sutable code caves
+        """
+        breakupvar = eat_code_caves(flItms, 0, 1)
+        self.shellcode1 = ""
+
+        if flItms['cave_jumping'] is True:
+            self.shellcode1 += "\xe9"
+            if breakupvar > 0:
+                if len(self.shellcode1) < breakupvar:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
+                                                                 len(self.shellcode1) - 4).rstrip("L")), 16))
+                else:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
+                                                             breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
+            else:
+                    self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar - len(self.stackpreserve) -
+                                                   len(self.shellcode1) - 3)
+        #else:
+        #    self.shellcode1 += "\x89\x00\x00\x00"
+
+        self.shellcode1 += ("\x90"*40
+                            )
+
+        self.shellcode2 = ("\x90" *48
+                           )
+
+        self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2 + self.stackrestore
+        return (self.stackpreserve + self.shellcode1, self.shellcode2 + self.stackrestore)
+    
+
     def user_supplied_shellcode(self, flItms, CavesPicked={}):
         """
         This module allows for the user to provide a win32 raw/binary

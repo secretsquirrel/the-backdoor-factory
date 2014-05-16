@@ -134,6 +134,38 @@ class winI64_shellcode():
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2 + self.stackrestore
         return (self.stackpreserve + self.shellcode1, self.shellcode2 + self.stackrestore)
 
+    def cave_miner(self, flItms, CavesPicked={}):
+        """
+        Sample code for finding sutable code caves
+        """
+
+        breakupvar = eat_code_caves(flItms, 0, 1)
+
+        self.shellcode1 = ""
+
+        if flItms['cave_jumping'] is True:
+            if breakupvar > 0:
+                self.shellcode1 += "\xe9"
+                if len(self.shellcode1) < breakupvar:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
+                                                   len(self.shellcode1) - 4).rstrip("L")), 16))
+                else:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
+                                                   breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
+            else:
+                    self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar -
+                                                   len(self.stackpreserve) - len(self.shellcode1) - 3)
+        #else:
+        #    self.shellcode1 += "\xc0\x00\x00\x00"
+
+        self.shellcode1 += ("\x90"*13)
+
+        self.shellcode2 = ("\x90"*19)
+
+        self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2 + self.stackrestore
+        return (self.stackpreserve + self.shellcode1, self.shellcode2 + self.stackrestore)
+    
+
     def reverse_tcp_stager(self, flItms, CavesPicked={}):
         """
         Ported the x32 payload from msfvenom for patching win32 binaries (shellcode1) 
