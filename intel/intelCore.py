@@ -1,7 +1,6 @@
 '''
- 
     Author Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
-    
+
     Copyright (C) 2013,2014, Joshua Pitts
 
     License:   GPLv3
@@ -31,6 +30,7 @@
 import struct
 import random
 from binascii import unhexlify
+
 
 #Might make this a class
 class intelCore():
@@ -134,11 +134,12 @@ class intelCore():
                 '0x895c24': 4, '0x8da424': 7, '0x8d4424': 4,
                 '0xa1': 5, '0xa3': 5, '0xc3': 1,
                 '0xeb': 2, '0xea': 7,
-                '0xb9': 5, '0xba': 5, '0xbb': 5, '0xb8': 5, 
+                '0xb9': 5, '0xba': 5, '0xbb': 5, '0xb8': 5,
+                '0x8b4424': 4, '0x8d5c24': 4,
                 }
 
-    opcode64 = {'0x4150':2,'0x4151': 2, '0x4152': 2, '0x4153': 2, '0x4154': 2,
-                '0x4155': 2,'0x4156': 2, '0x4157': 2,
+    opcode64 = {'0x4150': 2, '0x4151': 2, '0x4152': 2, '0x4153': 2, '0x4154': 2,
+                '0x4155': 2, '0x4156': 2, '0x4157': 2,
                 '0x4881ec': 7,
                 '0x4883c0': 4, '0x4883c1': 4, '0x4883c2': 4, '0x4883c3': 4,
                 '0x4883c4': 4, '0x4883c5': 4, '0x4883c6': 4, '0x4883c7': 4,
@@ -180,7 +181,6 @@ class intelCore():
         self.flItms = flItms
         self.VERBOSE = VERBOSE
 
-
     def opcode_return(self, OpCode, instr_length):
         _, OpCode = hex(OpCode).split('0x')
         OpCode = unhexlify(OpCode)
@@ -199,7 +199,7 @@ class intelCore():
             print "'AND' the compliments (0): ", compliment_you & compliment_me
         self.compliment_you = struct.pack('<I', compliment_you)
         self.compliment_me = struct.pack('<I', compliment_me)
-        
+
     def assembly_entry(self):
         if hex(self.CurrInstr) in self.opcode64:
             opcode_length = self.opcode64[hex(self.CurrInstr)]
@@ -322,7 +322,6 @@ class intelCore():
                         check64 = 0
                         break
 
-
             if self.count >= 6 or self.count % 5 == 0 and self.count != 0:
                 break
 
@@ -347,7 +346,7 @@ class intelCore():
         self.f.write(struct.pack('=B', int('E9', 16)))
         if self.flItms['JMPtoCodeAddress'] < 0:
             self.f.write(struct.pack('<I', 0xffffffff + self.flItms['JMPtoCodeAddress']))
-        else: 
+        else:
             self.f.write(struct.pack('<I', self.flItms['JMPtoCodeAddress']))
         #align the stack if the first OpCode+instruction is less
         #than 5 bytes fill with      to align everything. Not a for loop.
@@ -379,9 +378,8 @@ class intelCore():
         if opcode_length == 1:
             if self.flItms['count_bytes'] % 5 != 0 and self.flItms['count_bytes'] < 5:
                 self.f.write(struct.pack('=BBB', int('90', 16),
-                                    int('90', 16),
-                                    int('90', 16)))
-
+                                         int('90', 16),
+                                         int('90', 16)))
 
     def resume_execution_64(self):
         """
@@ -392,7 +390,6 @@ class intelCore():
         resumeExe = ''
         total_opcode_len = 0
         for item in self.flItms['ImpList']:
-            OpCode_address = item[0]
             OpCode = item[1].keys()[0]
             instruction = item[1].values()[0]
             ImpValue = item[2]
@@ -445,7 +442,7 @@ class intelCore():
                 resumeExe += "\xb8"
                 aprox_loc_wo_alsr = (self.flItms['VrtStrtngPnt'] +
                                      self.flItms['JMPtoCodeAddress'] +
-                                     len(shellcode) + len(resumeExe) +
+                                     len(self.flItms['shellcode']) + len(resumeExe) +
                                      200 + self.flItms['buffer'])
                 resumeExe += struct.pack("<I", aprox_loc_wo_alsr)
                 resumeExe += struct.pack('=B', int('E8', 16))  # call
@@ -544,7 +541,6 @@ class intelCore():
         resumeExe += "\xC3"
         return ReturnTrackingAddress, resumeExe
 
-
     def resume_execution_32(self):
         """
         This section of code imports the self.flItms['ImpList'] from pe32_entry_instr
@@ -554,7 +550,6 @@ class intelCore():
         print "[*] Creating win32 resume execution stub"
         resumeExe = ''
         for item in self.flItms['ImpList']:
-            OpCode_address = item[0]
             OpCode = item[1].keys()[0]
             instruction = item[1].values()[0]
             ImpValue = item[2]
@@ -724,5 +719,3 @@ class intelCore():
         resumeExe += self.compliment_me
         resumeExe += "\xC3"
         return ReturnTrackingAddress, resumeExe
-
-    

