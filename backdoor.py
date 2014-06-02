@@ -477,7 +477,7 @@ class bdfMain():
         print "Not supported."
         sys.exit()
     result = supported_file.run_this()
-    if result is True:
+    if result is True and options.SUPPORT_CHECK is False:
         print "File {0} is in the 'backdoored' directory".format(supported_file.FILE)
 
 
