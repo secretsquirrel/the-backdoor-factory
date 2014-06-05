@@ -2,7 +2,7 @@
 ##The Backdoor Factory (BDF)
 For security professionals and researchers only.
 
-The goal of BDF is patch executable binaries with user desidered shellcode and continue normal execution of the prepatched state.
+The goal of BDF is patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
 5/30/2013 Update
 
