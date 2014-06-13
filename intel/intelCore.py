@@ -418,13 +418,13 @@ class intelCore():
                 elif instruction > 4294967295:
                     resumeExe += "\x48\xb9"  # mov rcx, 8 bytes
                     resumeExe += struct.pack("<Q", instruction)
-                /* #YOLO
+                '''#YOLO
                 else:
                     print "So close.."
                     print ("Contact the dev with the exe and instruction=",
                            instruction)
                     sys.exit()
-                */
+                '''
                 resumeExe += "\x48\x01\xc8"  # add rax,rcx
                 #-----
                 resumeExe += "\x50"
