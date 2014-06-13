@@ -385,7 +385,6 @@ class intelCore():
         """
         For x64 exes...
         """
-        verbose = False
         print "[*] Creating win64 resume execution stub"
         resumeExe = ''
         total_opcode_len = 0
@@ -400,7 +399,7 @@ class intelCore():
                 total_opcode_len += self.opcode32[hex(OpCode)]
             else:
                 "Warning OpCode not found"
-            if verbose is True:
+            if self.VERBOSE is True:
                 if instruction:
                     print 'instruction', hex(instruction)
                 else:
@@ -419,11 +418,13 @@ class intelCore():
                 elif instruction > 4294967295:
                     resumeExe += "\x48\xb9"  # mov rcx, 8 bytes
                     resumeExe += struct.pack("<Q", instruction)
+                /* #YOLO
                 else:
                     print "So close.."
                     print ("Contact the dev with the exe and instruction=",
                            instruction)
                     sys.exit()
+                */
                 resumeExe += "\x48\x01\xc8"  # add rax,rcx
                 #-----
                 resumeExe += "\x50"
@@ -546,7 +547,6 @@ class intelCore():
         This section of code imports the self.flItms['ImpList'] from pe32_entry_instr
         to patch the executable after shellcode execution
         """
-        verbose = False
         print "[*] Creating win32 resume execution stub"
         resumeExe = ''
         for item in self.flItms['ImpList']:
@@ -554,7 +554,7 @@ class intelCore():
             instruction = item[1].values()[0]
             ImpValue = item[2]
             instr_length = item[4]
-            if verbose is True:
+            if self.VERBOSE is True:
                 if instruction:
                     print 'instruction', hex(instruction)
                 else:
