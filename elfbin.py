@@ -112,7 +112,13 @@ class elfbin():
                                  [0x03,  # x86
                                   0x3E   # x64
                                   ]],
-                                }
+                                0x09:    # FreeBSD
+                                [[0x01,  # 32bit
+                                  0x02   # 64bit
+                                  ],
+                                 [0x03,  # x86
+                                  0x3E   # x64
+                                  ]]}
 
     def run_this(self):
         '''
@@ -526,6 +532,7 @@ class elfbin():
                 LOCofNewSegment = values['p_filesz'] + newBuffer
                 headerTracker = header
                 newOffset = values['p_offset'] + values['p_filesz']
+                break
 
         #SPLIT THE FILE
         self.bin_file.seek(0)
