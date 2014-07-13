@@ -4,7 +4,46 @@ For security professionals and researchers only.
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
-5/30/2013 Update
+Contact the developer on:
+  
+    IRC:
+    irc.freenode.net #BDFactory 
+
+    Twitter:
+    @midnite_runr
+
+
+Dependences: 
+
+Capstone, using the 'next' repo until it is the 'master' repo: 
+https://github.com/aquynh/capstone/tree/next
+
+Pefile, most recent:
+https://code.google.com/p/pefile/
+
+INSTALL:
+
+./install.sh
+
+This will install Capstone with the 'next' repo and use pip to install pefile.
+
+UPDATE:
+
+./update.sh
+
+
+7/13/2014 Changelog
+
+Incorporated Capstone: http://www.capstone-engine.org/
+
+During the process of adding Capstone, I removed about 500 lines of code. That's pretty awesome.
+
+Renamed loadliba_reverse_tcp to iat_reverse_tcp.
+
+Small optimizations for speed.
+
+
+5/30/2014 Changelog
 
 Added a new win86 shellcode: loadliba_reverse_tcp
     

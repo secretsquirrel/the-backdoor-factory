@@ -516,7 +516,7 @@ class winI32_shellcode():
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2 + self.stackrestore
         return (self.stackpreserve + self.shellcode1, self.shellcode2 + self.stackrestore)
 
-    def loadliba_reverse_tcp(self, flItms, CavesPicked={}):
+    def iat_reverse_tcp(self, flItms, CavesPicked={}):
         """
         Position dependent shellcode that uses API thunks of LoadLibraryA and
         GetProcAddress to find and load APIs for callback to C2.
