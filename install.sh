@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ $EUID -ne 0 ]]; then
-  echo "You must root" 2>&1
+  echo "You must be root" 2>&1
   exit 1
 fi
 
@@ -19,6 +19,13 @@ git checkout next
 cd bindings/python
 
 make install
+
+#check if kali
+uname -a | grep -i kali &> /dev/null 
+if [ $? -eq 0 ]; then
+	echo "Adding capstone path for Kali"
+	export LD_LIBRARY_PATH=/usr/lib64/:$LD_LIBRARY_PATH
+fi
 
 #install pefile
 
