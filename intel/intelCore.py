@@ -35,6 +35,9 @@ from capstone import *
 class intelCore():
 
     nops = [0x90, 0x3690, 0x6490, 0x6590, 0x6690, 0x6790]
+    jmp_symbols = ['jns', 'jle', 'jg', 'jp', 'jge', 'js', 'jl', 'jbe', 'jo', 
+                   'jne', 'jrcxz', 'je', 'jae', 'jno', 'ja', 'jb', 'jnp', 'jmp'
+                  ]
 
     def __init__(self, flItms, file_handle, VERBOSE):
         self.f = file_handle
@@ -165,7 +168,7 @@ class intelCore():
                 resumeExe += "\xc3"
                 return ReturnTrackingAddress, resumeExe
 
-            elif 'jmp' in OpCode:
+            elif any(symbol in OpCode for symbol in self.jmp_symbols):
                 #Let's beat ASLR
                 CallValue = int(CallValue, 16)
                 resumeExe += "\xb8"
@@ -297,7 +300,7 @@ class intelCore():
                 resumeExe += "\xc3"
                 return ReturnTrackingAddress, resumeExe
 
-            elif 'jmp' in OpCode:
+            elif any(symbol in OpCode for symbol in self.jmp_symbols):
                 #Let's beat ASLR
                 CallValue = int(CallValue, 16)
                 resumeExe += "\xb8"
