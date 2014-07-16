@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ $EUID -ne 0 ]]; then
   echo "You must be root" 2>&1
