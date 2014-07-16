@@ -18,7 +18,14 @@ git checkout next
 
 cd bindings/python
 
-make install
+uname -a | grep BSD &> /dev/null
+if [ $? -eq 0 ]; then
+	echo 'Installing Capstone python bindings for *bsd'
+	rm -rf ./build
+	python setup.py build -b ./build install
+else
+	make install
+fi
 
 #check if kali
 uname -a | grep -i kali &> /dev/null 
@@ -30,7 +37,6 @@ if [ $? -eq 0 ]; then
 fi
 
 #install pefile
-
 #check for pip
 if hash pip 2>/dev/null; then
         pip install pefile
