@@ -13,6 +13,8 @@ Contact the developer on:
     @midnite_runr
 
 
+See the wiki: https://github.com/secretsquirrel/the-backdoor-factory/wiki
+
 Dependences: 
 
 Capstone, using the 'next' repo until it is the 'master' repo: 
