@@ -38,7 +38,7 @@ import shutil
 from intel.LinuxIntelELF32 import linux_elfI32_shellcode
 from intel.LinuxIntelELF64 import linux_elfI64_shellcode
 from intel.FreeBSDIntelELF32 import freebsd_elfI32_shellcode
-from intel.FreeBSDIntelELF64 import freebsd_elfI64_shellcode
+#from intel.FreeBSDIntelELF64 import freebsd_elfI64_shellcode
 
 
 class elf():
@@ -252,14 +252,14 @@ class elfbin():
             if self.EI_CLASS == 0x1:
                 if self.EI_OSABI == 0x00:
                     self.bintype = linux_elfI32_shellcode
-                elif self.EI_OSABI == 0x09:
+                elif self.EI_OSABI == 0x09 or self.EI_OSABI == 0x0C:
                     self.bintype = freebsd_elfI32_shellcode
         elif self.e_machine == 0x3E: # x86-64 chipset    
             if self.EI_CLASS == 0x2:
                 if self.EI_OSABI == 0x00:
                     self.bintype = linux_elfI64_shellcode
-                elif self.EI_OSABI == 0x09:
-                    self.bintype = freebsd_elfI64_shellcode
+                #elif self.EI_OSABI == 0x09:
+                #    self.bintype = freebsd_elfI64_shellcode
 
         if not self.SHELL:
             print "You must choose a backdoor to add: "
