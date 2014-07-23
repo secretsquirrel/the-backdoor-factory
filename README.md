@@ -38,7 +38,7 @@ UPDATE:
 ---
 
 Supporting: Windows PE x86/x64 and ELF x86/x64 (System V, FreeBSD)
-Experimental: OpenBSD x32
+Experimental: OpenBSD x32 
 
 Some executables have built in protections, as such this will not work on all binaries.  It is advisable that you test target binaries before deploying them to clients or using them in exercises.  I'm on the verge of bypassing NSIS, so bypassing these checks will be included in the future.
 
