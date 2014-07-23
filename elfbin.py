@@ -122,17 +122,17 @@ class elfbin():
                                   ]],
 				                0x09:    # FreeBSD
                                 [[0x01,  # 32bit
-                                  0x02   # 64bit
+                                #  0x02   # 64bit
                                   ],
                                  [0x03,  # x86
-                                  0x3E   # x64
+                                #  0x3E   # x64
                                   ]],
                                 0x0C:    # OpenBSD
                                 [[0x01,  # 32bit
-                                  0x02   # 64bit
+                                #  0x02   # 64bit
                                   ],
                                  [0x03,  # x86
-                                  0x3E   # x64
+                                #  0x3E   # x64
                                  ]]       
                                }
 
@@ -240,12 +240,6 @@ class elfbin():
         This function sets the shellcode.
         """
         print "[*] Setting selected shellcode"
-        '''
-        Going to need to base the identification of the binaries
-        based on e_machine and e_ident['EI_OSABI'].  Right now it is 
-        too simple as it is based off of e_machine and EI_CLASS and 
-
-        '''
 
         self.bintype = False
         if self.e_machine == 0x03:  # x86 chipset
