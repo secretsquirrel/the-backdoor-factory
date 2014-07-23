@@ -1,27 +1,34 @@
 '''
-    Author Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
-    
-    Copyright (C) 2013,2014, Joshua Pitts
 
-    License:   GPLv3
+Copyright (c) 2013-2014, Joshua Pitts
+All rights reserved.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Redistribution and use in source and binary forms, with or without modification, 
+are permitted provided that the following conditions are met:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
 
-    See <http://www.gnu.org/licenses/> for a copy of the GNU General
-    Public License
+    2. Redistributions in binary form must reproduce the above copyright notice, 
+    this list of conditions and the following disclaimer in the documentation 
+    and/or other materials provided with the distribution.
 
-    Currently supports win32/64 PE and linux32/64 ELF only(intel architecture).
-    This program is to be used for only legal activities by IT security
-    professionals and researchers. Author not responsible for malicious
-    uses.
+    3. Neither the name of the copyright holder nor the names of its contributors 
+    may be used to endorse or promote products derived from this software without 
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+POSSIBILITY OF SUCH DAMAGE.
+
 '''
 
 def eat_code_caves(flItms, caveone, cavetwo):
@@ -67,6 +74,6 @@ def eat_code_caves(flItms, caveone, cavetwo):
 
             return int(flItms['CavesPicked'][cavetwo][1], 16) - int(flItms['CavesPicked'][caveone][1], 16) + windows_memoffset_holder
 
-    except Exception as e:
+    except Exception:
         #print "EAT CODE CAVE", str(e)
         return 0

