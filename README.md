@@ -37,7 +37,7 @@ UPDATE:
 
 ---
 
-Supporting: Windows PE x86/x64 and ELF x86/x64 (System V, FreeBSD)
+Supporting: Windows PE x86/x64 and ELF x86/x64 (System V, FreeBSD), ARM Little Endian x32
 Experimental: OpenBSD x32 
 
 Some executables have built in protections, as such this will not work on all binaries.  It is advisable that you test target binaries before deploying them to clients or using them in exercises.  I'm on the verge of bypassing NSIS, so bypassing these checks will be included in the future.
@@ -251,9 +251,13 @@ Sample Usage:
 
 ###Changelog
 
+7/31/2014 
+
+Added support for ARM x32 LE ELF patching
+
 7/22/2014 Changelog
 
-Added FreeBSD x32 ELF Patching Support
+Added FreeBSD x32 ELF patching support
 
 Change to BSD 3 Clause License
 
