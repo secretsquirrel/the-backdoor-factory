@@ -32,7 +32,6 @@ POSSIBILITY OF SUCH DAMAGE.
 '''
 
 import struct
-import sys
 
 
 class linux_elfI32_shellcode():

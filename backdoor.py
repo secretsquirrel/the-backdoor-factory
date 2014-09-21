@@ -51,7 +51,7 @@ from random import choice
 from optparse import OptionParser
 from pebin import pebin
 from elfbin import elfbin
-
+from machobin import machobin
 
 def signal_handler(signal, frame):
         print '\nProgram Exit'
@@ -61,7 +61,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         2.2.7
+         2.3.0
          """
 
     author = """\
@@ -244,10 +244,17 @@ class bdfMain():
     parser.add_option("-L", "--patch_dll", dest="PATCH_DLL", default=True, action="store_false",
                       help="Use this setting if you DON'T want to patch DLLs. Patches by default."
                       )
+    parser.add_option("-F", "--FAT_PRIORITY", dest="FAT_PRIORITY", default="x64", action="store",
+                      help="For MACH-O format. If fat file focus on which arch to patch."
+                      )
 
     (options, args) = parser.parse_args()
 
     def basicDiscovery(FILE):
+        macho_supported = ['\xcf\xfa\xed\xfe', '\xca\xfe\xba\xbe',
+                           '\xce\xfa\xed\xfe',
+                           ]
+
         testBinary = open(FILE, 'rb')
         header = testBinary.read(4)
         testBinary.close()
@@ -255,6 +262,9 @@ class bdfMain():
             return 'PE'
         elif 'ELF' in header:
             return 'ELF'
+
+        elif header in macho_supported:
+            return "MACHO"
         else:
             'Only support ELF and PE file formats'
             return None
@@ -310,6 +320,16 @@ class bdfMain():
                                             options.SUPPLIED_SHELLCODE,
                                             options.IMAGE_TYPE
                                             )
+                elif is_supported is "MACHO":
+                    supported_file = machobin(options.FILE,
+                                              options.OUTPUT,
+                                              options.SHELL,
+                                              options.HOST,
+                                              options.PORT,
+                                              options.SUPPORT_CHECK,
+                                              options.SUPPLIED_SHELLCODE,
+                                              options.FAT_PRIORITY
+                                              )
 
                 if options.SUPPORT_CHECK is True:
                     if os.path.isfile(options.FILE):
@@ -392,9 +412,24 @@ class bdfMain():
                                                 options.SUPPLIED_SHELLCODE,
                                                 options.IMAGE_TYPE
                                                 )
+
                         supported_file.OUTPUT = None
                         supported_file.output_options()
                         result = supported_file.patch_elf()
+
+                    elif is_supported is "MACHO":
+                        supported_file = machobin(options.FILE,
+                                                  options.OUTPUT,
+                                                  options.SHELL,
+                                                  options.HOST,
+                                                  options.PORT,
+                                                  options.SUPPORT_CHECK,
+                                                  options.SUPPLIED_SHELLCODE,
+                                                  options.FAT_PRIORITY
+                                                  )
+                        supported_file.OUTPUT = None
+                        supported_file.output_options()
+                        result = supported_file.patch_macho()
 
                     if result is None:
                         print 'Not Supported. Continuing'
@@ -479,6 +514,18 @@ class bdfMain():
                                 options.SUPPLIED_SHELLCODE,
                                 options.IMAGE_TYPE
                                 )
+
+    elif is_supported is "MACHO":
+        supported_file = machobin(options.FILE,
+                                  options.OUTPUT,
+                                  options.SHELL,
+                                  options.HOST,
+                                  options.PORT,
+                                  options.SUPPORT_CHECK,
+                                  options.SUPPLIED_SHELLCODE,
+                                  options.FAT_PRIORITY
+                                  )
+
     else:
         print "Not supported."
         sys.exit()
