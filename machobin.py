@@ -158,6 +158,7 @@ class machobin():
         self.shells = self.bintype(self.HOST, self.PORT, self.jumpLocation, self.SUPPLIED_SHELLCODE)
         self.allshells = getattr(self.shells, self.SHELL)()
         self.shellcode = self.shells.returnshellcode()
+        return self.shellcode
 
     def get_structure(self):
         '''This function grabs necessary data for the mach-o format'''
@@ -452,7 +453,7 @@ class machobin():
                     print "[*] Pre-text section 'code cave' size:", hex(cave_size)
 
                     resultShell = self.set_shells(MagicNumber)
-                    if resultShell is False:
+                    if not resultShell:
                         print "[!] Could not set shell"
                         return False
 
@@ -474,7 +475,7 @@ class machobin():
                             self.jumpLocation = struct.unpack("<Q", LC_MAIN['EntryOffset'])[0] - struct.unpack("<I", text_section['Offset'])[0]
 
                     resultShell = self.set_shells(MagicNumber)
-                    if resultShell is False:
+                    if not resultShell:
                         print "[!] Could not set shell"
                         return False
                     #print 'shellcode:', self.shellcode.encode('hex')
@@ -501,7 +502,7 @@ class machobin():
                     print "[*] Pre-text section 'code cave' size:", hex(cave_size)
 
                     resultShell = self.set_shells(MagicNumber)
-                    if resultShell is False:
+                    if not resultShell:
                         print "[!] Could not set shell"
                         return False
 
@@ -522,7 +523,7 @@ class machobin():
                             self.jumpLocation = struct.unpack("<Q", LC_MAIN['EntryOffset'])[0] - struct.unpack("<I", text_section['Offset'])[0]
 
                     resultShell = self.set_shells(MagicNumber)
-                    if resultShell is False:
+                    if not resultShell:
                         print "[!] Could not set shell"
                         return False
 
