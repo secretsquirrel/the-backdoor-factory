@@ -37,7 +37,7 @@ UPDATE:
 
 ---
 
-Supporting: Windows PE x86/x64 and ELF x86/x64 (System V, FreeBSD), ARM Little Endian x32
+Supporting: Windows PE x86/x64,ELF x86/x64 (System V, FreeBSD), ARM Little Endian x32, and Mach-O x86/x64 and those formats in FAT files
 Experimental: OpenBSD x32 
 
 Some executables have built in protections, as such this will not work on all binaries.  It is advisable that you test target binaries before deploying them to clients or using them in exercises.  I'm on the verge of bypassing NSIS, so bypassing these checks will be included in the future.
@@ -155,6 +155,9 @@ Recently tested on many binaries.
 
     Extends 1000 bytes (in bytes) to the TEXT SEGMENT and injects shellcode into that section of code.
 
+###Mach-O Files
+    Pre-Text Section patching and signature removal
+
 ###Overall
     
     The user can :
@@ -250,6 +253,13 @@ Sample Usage:
 ---
 
 ###Changelog
+
+9/26/2014
+
+Mach-O x86/x64 added
+
+x86 IAT payload optimization
+
 
 7/31/2014 
 
