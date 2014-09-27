@@ -38,12 +38,6 @@ import shutil
 from intel.MachoIntel64 import macho_intel64_shellcode
 from intel.MachoIntel32 import macho_intel32_shellcode
 
-'''
-2. FInd the size of the section between the mach-o header and the
-text section.
-
-'''
-
 
 class machobin():
 
