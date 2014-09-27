@@ -245,7 +245,8 @@ class bdfMain():
                       help="Use this setting if you DON'T want to patch DLLs. Patches by default."
                       )
     parser.add_option("-F", "--FAT_PRIORITY", dest="FAT_PRIORITY", default="x64", action="store",
-                      help="For MACH-O format. If fat file focus on which arch to patch."
+                      help="For MACH-O format. If fat file, focus on which arch to patch. Default "
+                      "is x64. To force x86 use -F x86, to force both archs use -F ALL."
                       )
 
     (options, args) = parser.parse_args()
