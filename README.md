@@ -68,9 +68,10 @@ Recently tested on many binaries.
       -h, --help            show this help message and exit
       -f FILE, --file=FILE  File to backdoor
       -s SHELL, --shell=SHELL
-                            Payloads that are available for use.
+                            Payloads that are available for use. Use 'show' to see
+                            payloads.
       -H HOST, --hostip=HOST
-                            IP of the C2 for reverse connections
+                            IP of the C2 for reverse connections.
       -P PORT, --port=PORT  The port to either connect back to for reverse shells
                             or to listen on for bind shells
       -J, --cave_jumping    Select this options if you want to use code cave
@@ -124,7 +125,7 @@ Recently tested on many binaries.
       -q, --no_banner       Kills the banner.
       -v, --verbose         For debug information output.
       -T IMAGE_TYPE, --image-type=IMAGE_TYPE
-                            ALL, x32, or x64 type binaries only. Default=ALL
+                            ALL, x86, or x64 type binaries only. Default=ALL
       -Z, --zero_cert       Allows for the overwriting of the pointer to the PE
                             certificate table effectively removing the certificate
                             from the binary for all intents and purposes.
@@ -132,8 +133,12 @@ Recently tested on many binaries.
                             level="highestAvailable"'. If this string is included
                             in the binary, it must run as system/admin. Doing this
                             slows patching speed significantly.
-      -L, --patch_dll       Use this setting if you DON'T want to patch DLLs. 
+      -L, --patch_dll       Use this setting if you DON'T want to patch DLLs.
                             Patches by default.
+      -F FAT_PRIORITY, --FAT_PRIORITY=FAT_PRIORITY
+                            For MACH-O format. If fat file, focus on which arch to
+                            patch. Default is x64. To force x86 use -F x86, to
+                            force both archs use -F ALL.
 ---
 
 ##Features:
