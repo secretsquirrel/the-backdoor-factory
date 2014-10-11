@@ -37,9 +37,12 @@ UPDATE:
 
 ---
 
-Supporting: Windows PE x86/x64,ELF x86/x64 (System V, FreeBSD, ARM Little Endian x32), and Mach-O x86/x64 and those formats in FAT files
-Packed Files: PE UPX x86/x64
-Experimental: OpenBSD x32 
+Supporting: 
+
+    Windows PE x86/x64,ELF x86/x64 (System V, FreeBSD, ARM Little Endian x32), and Mach-O x86/x64 and those formats in FAT files
+    Packed Files: PE UPX x86/x64
+    Experimental: OpenBSD x32 
+
 
 Some executables have built in protections, as such this will not work on all binaries.  It is advisable that you test target binaries before deploying them to clients or using them in exercises.  I'm on the verge of bypassing NSIS, so bypassing these checks will be included in the future.
 
