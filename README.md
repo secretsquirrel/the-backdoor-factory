@@ -260,6 +260,10 @@ Sample Usage:
 
 ###Changelog
 
+10/11/2014
+PE UPX Patching Added
+
+
 9/26/2014
 
 Mach-O x86/x64 added
