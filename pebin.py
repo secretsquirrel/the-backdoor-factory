@@ -288,11 +288,12 @@ class pebin():
                 # SectionFlags
                 sectionValues.append(struct.unpack('<I', self.binary.read(4))[0])
                 self.flItms['Sections'].append(sectionValues)
-                if 'UPX'.lower() in sectionValues[0].lower():
-                    print "UPX files not supported."
-                    return False
+                if 'UPX1'.lower() in sectionValues[0].lower():
+                    print "[*] UPX packed, continuing..."
+                    
                 if ('.text\x00\x00\x00' == sectionValues[0] or
                    'AUTO\x00\x00\x00\x00' == sectionValues[0] or
+                   'UPX1\x00\x00\x00\x00' == sectionValues[0] or
                    'CODE\x00\x00\x00\x00' == sectionValues[0]):
                     self.flItms['textSectionName'] = sectionValues[0]
                     self.flItms['textVirtualAddress'] = sectionValues[2]
