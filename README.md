@@ -39,8 +39,11 @@ UPDATE:
 
 Supporting: 
 
-    Windows PE x86/x64,ELF x86/x64 (System V, FreeBSD, ARM Little Endian x32), and Mach-O x86/x64 and those formats in FAT files
+    Windows PE x86/x64,ELF x86/x64 (System V, FreeBSD, ARM Little Endian x32), 
+    and Mach-O x86/x64 and those formats in FAT files
+    
     Packed Files: PE UPX x86/x64
+    
     Experimental: OpenBSD x32 
 
 
