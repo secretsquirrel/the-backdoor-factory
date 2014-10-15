@@ -4,6 +4,8 @@ For security professionals and researchers only.
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
+DerbyCon 2014 Presentation: http://www.youtube.com/watch?v=LjUN9MACaTs
+
 Contact the developer on:
   
     IRC:
