@@ -99,7 +99,7 @@ class elfbin():
         self.FILE = FILE
         self.OUTPUT = OUTPUT
         self.SHELL = SHELL
-        self.bin_file = ''
+        self.bin_file = None
         self.HOST = HOST
         self.PORT = PORT
         self.FIND_CAVES = FIND_CAVES
@@ -322,25 +322,26 @@ class elfbin():
         """
         Checks for support
         """
-        print "[*] Checking file support"
-        self.bin_file.seek(0)
-        if self.bin_file.read(4) == elf.e_ident["EI_MAG"]:
-            self.bin_file.seek(4, 0)
-            self.class_type = struct.unpack("<B", self.bin_file.read(1))[0]
-            self.bin_file.seek(7, 0)
-            self.EI_OSABI = struct.unpack("<B", self.bin_file.read(1))[0]
-            self.supported = False
-            for system_type in self.supported_types.iteritems():
-                if self.EI_OSABI == system_type[0]:
-                    print "[*] System Type Supported:", elf.e_ident["EI_OSABI"][system_type[0]]
-                    if self.class_type == 0x1 and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x86'):
-                        self.supported = True
-                    elif self.class_type == 0x2 and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64'):
-                        self.supported = True
-                    break
+        with open(self.FILE, 'r+b') as bin_file:
+            print "[*] Checking file support"
+            bin_file.seek(0)
+            if bin_file.read(4) == elf.e_ident["EI_MAG"]:
+                bin_file.seek(4, 0)
+                self.class_type = struct.unpack("<B", bin_file.read(1))[0]
+                bin_file.seek(7, 0)
+                self.EI_OSABI = struct.unpack("<B", bin_file.read(1))[0]
+                self.supported = False
+                for system_type in self.supported_types.iteritems():
+                    if self.EI_OSABI == system_type[0]:
+                        print "[*] System Type Supported:", elf.e_ident["EI_OSABI"][system_type[0]]
+                        if self.class_type == 0x1 and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x86'):
+                            self.supported = True
+                        elif self.class_type == 0x2 and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64'):
+                            self.supported = True
+                        break
 
-        else:
-            self.supported = False
+            else:
+                self.supported = False
 
     def get_section_name(self, section_offset):
         """
