@@ -263,11 +263,10 @@ class bdfMain():
             return 'PE'
         elif 'ELF' in header:
             return 'ELF'
-
         elif header in macho_supported:
             return "MACHO"
         else:
-            'Only support ELF and PE file formats'
+            'Only support ELF, PE, and MACH-O file formats'
             return None
 
     if options.NO_BANNER is False:

@@ -99,6 +99,7 @@ class elfbin():
         self.FILE = FILE
         self.OUTPUT = OUTPUT
         self.SHELL = SHELL
+        self.bin_file = ''
         self.HOST = HOST
         self.PORT = PORT
         self.FIND_CAVES = FIND_CAVES
