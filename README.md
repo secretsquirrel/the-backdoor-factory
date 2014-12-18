@@ -274,6 +274,7 @@ OS X Beaconing Payloads for x86 and x64: beaconing_reverse_shell_tcp
 Bug fix to support OS X for BDFProxy
 
 
+
 10/11/2014
 PE UPX Patching Added
 
