@@ -42,7 +42,8 @@ from intel.MachoIntel32 import macho_intel32_shellcode
 class machobin():
 
     def __init__(self, FILE, OUTPUT=None, SHELL=None, HOST="127.0.0.1", PORT=8080,
-                 SUPPORT_CHECK=False, SUPPLIED_SHELLCODE=None, FAT_PRIORITY="x64"
+                 SUPPORT_CHECK=False, SUPPLIED_SHELLCODE=None, FAT_PRIORITY="x64",
+                 BEACON=15
                  ):
         self.FILE = FILE
         self.OUTPUT = OUTPUT
@@ -58,6 +59,7 @@ class machobin():
         self.SUPPORT_CHECK = SUPPORT_CHECK
         self.FAT_FILE = False
         self.FAT_PRIORITY = FAT_PRIORITY
+        self.BEACON = BEACON
         self.supported_CPU_TYPES = [0x7,  # i386
                                     0x01000007  # x64
                                     ]
@@ -87,15 +89,16 @@ class machobin():
 
     def support_check(self):
         print "[*] Checking file support"
-        check = self.get_structure()
-        if check is False:
-            self.supported = False
-
-        for key, value in self.load_cmds.iteritems():
-            self.ImpValues[key] = self.find_Needed_Items(value)
-            if self.ImpValues[key]['text_segment'] == {}:
-                print '[!] Not a proper Mach-O file'
+        with open(self.FILE, 'r+b') as self.bin:
+            check = self.get_structure()
+            if check is False:
                 self.supported = False
+
+            for key, value in self.load_cmds.iteritems():
+                self.ImpValues[key] = self.find_Needed_Items(value)
+                if self.ImpValues[key]['text_segment'] == {}:
+                    print '[!] Not a proper Mach-O file'
+                    self.supported = False
 
     def output_options(self):
         """
@@ -149,7 +152,7 @@ class machobin():
             return False
         #else:
         #    shell_cmd = self.SHELL + "()"
-        self.shells = self.bintype(self.HOST, self.PORT, self.jumpLocation, self.SUPPLIED_SHELLCODE)
+        self.shells = self.bintype(self.HOST, self.PORT, self.jumpLocation, self.SUPPLIED_SHELLCODE, self.BEACON)
         self.allshells = getattr(self.shells, self.SHELL)()
         self.shellcode = self.shells.returnshellcode()
         return self.shellcode

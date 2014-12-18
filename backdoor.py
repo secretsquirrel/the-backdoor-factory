@@ -53,6 +53,7 @@ from pebin import pebin
 from elfbin import elfbin
 from machobin import machobin
 
+
 def signal_handler(signal, frame):
         print '\nProgram Exit'
         sys.exit(0)
@@ -61,7 +62,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         2.3.1
+         2.3.2
          """
 
     author = """\
@@ -244,9 +245,12 @@ class bdfMain():
     parser.add_option("-L", "--patch_dll", dest="PATCH_DLL", default=True, action="store_false",
                       help="Use this setting if you DON'T want to patch DLLs. Patches by default."
                       )
-    parser.add_option("-F", "--FAT_PRIORITY", dest="FAT_PRIORITY", default="x64", action="store",
+    parser.add_option("-F", "--fat_priority", dest="FAT_PRIORITY", default="x64", action="store",
                       help="For MACH-O format. If fat file, focus on which arch to patch. Default "
                       "is x64. To force x86 use -F x86, to force both archs use -F ALL."
+                      )
+    parser.add_option("-B", "--beacon", dest="BEACON", default=15, action="store", type="int",
+                      help="For payloads that have the ability to beacon out, set the time in secs"
                       )
 
     (options, args) = parser.parse_args()
@@ -328,7 +332,8 @@ class bdfMain():
                                               options.PORT,
                                               options.SUPPORT_CHECK,
                                               options.SUPPLIED_SHELLCODE,
-                                              options.FAT_PRIORITY
+                                              options.FAT_PRIORITY,
+                                              options.BEACON
                                               )
 
                 if options.SUPPORT_CHECK is True:
@@ -425,7 +430,8 @@ class bdfMain():
                                                   options.PORT,
                                                   options.SUPPORT_CHECK,
                                                   options.SUPPLIED_SHELLCODE,
-                                                  options.FAT_PRIORITY
+                                                  options.FAT_PRIORITY,
+                                                  options.BEACON
                                                   )
                         supported_file.OUTPUT = None
                         supported_file.output_options()
@@ -523,7 +529,8 @@ class bdfMain():
                                   options.PORT,
                                   options.SUPPORT_CHECK,
                                   options.SUPPLIED_SHELLCODE,
-                                  options.FAT_PRIORITY
+                                  options.FAT_PRIORITY,
+                                  options.BEACON
                                   )
 
     else:

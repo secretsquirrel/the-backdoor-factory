@@ -268,12 +268,17 @@ Sample Usage:
 
 ###Changelog
 
+12/17/2014
+OS X Beaconing Payloads for x86 and x64: beaconing_reverse_shell_tcp 
+-B 15  --> set beacon time for 15 secs
+Bug fix to support OS X for BDFProxy
+
+
 10/11/2014
 PE UPX Patching Added
 
 
 9/26/2014
-
 Mach-O x86/x64 added
 
 x86 IAT payload optimization
