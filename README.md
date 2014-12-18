@@ -268,34 +268,45 @@ Sample Usage:
 
 ###Changelog
 
-12/17/2014
+####12/17/2014
+
 OS X Beaconing Payloads for x86 and x64: beaconing_reverse_shell_tcp 
+
 -B 15  --> set beacon time for 15 secs
+
 Bug fix to support OS X for BDFProxy
 
 
-10/11/2014
+
+####10/11/2014
+
 PE UPX Patching Added
 
 
-9/26/2014
+
+####9/26/2014
+
 Mach-O x86/x64 added
 
 x86 IAT payload optimization
 
 
-7/31/2014 
+
+####7/31/2014 
 
 Added support for ARM x32 LE ELF patching
 
-7/22/2014 Changelog
+
+
+####7/22/2014 
 
 Added FreeBSD x32 ELF patching support
 
 Change to BSD 3 Clause License
 
 
-7/13/2014 Changelog
+
+####7/13/2014 
 
 Incorporated Capstone: http://www.capstone-engine.org/
 
@@ -306,7 +317,8 @@ Renamed loadliba_reverse_tcp to iat_reverse_tcp.
 Small optimizations for speed.
 
 
-5/30/2014 Changelog
+
+####5/30/2014 
 
 Added a new win86 shellcode: loadliba_reverse_tcp
     
