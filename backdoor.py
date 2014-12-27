@@ -62,7 +62,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         2.3.2
+         2.3.3
          """
 
     author = """\
