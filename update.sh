@@ -9,9 +9,10 @@ fi
 
 cd capstone
 
+
 if [[ `git pull` != "Already up-to-date." ]]; then
 
-	git checkout next
+	git checkout master
 
 	./make.sh
 
