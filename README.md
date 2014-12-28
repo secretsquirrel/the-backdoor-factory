@@ -272,7 +272,7 @@ Sample Usage:
 
 Added payloadtests.py
 
-Will output patched files in backdoored that will allow for the user to 
+This script will output patched files in backdoored that will allow for the user to 
 test the payloads as they wish. Each payload type increments the port used
 by one.
 
