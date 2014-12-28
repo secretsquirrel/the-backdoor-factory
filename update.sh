@@ -12,7 +12,7 @@ cd capstone
 
 if [[ `git pull` != "Already up-to-date." ]]; then
 
-	git checkout master
+	git checkout b53a59af53ffbd5dbe8dbcefba41a00cf4fc7469
 
 	./make.sh
 
