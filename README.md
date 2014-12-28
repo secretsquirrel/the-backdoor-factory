@@ -268,6 +268,20 @@ Sample Usage:
 
 ###Changelog
 
+####12/27/2014
+
+Added payloadtests.py
+
+Will output patched files in backdoored that will allow for the user to 
+test the payloads as they wish. Each payload type increments the port used
+by one.
+
+```
+Usage: payloadtest.py binary HOST PORT
+
+```
+
+
 ####12/17/2014
 
 OS X Beaconing Payloads for x86 and x64: beaconing_reverse_shell_tcp 

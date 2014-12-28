@@ -66,7 +66,7 @@ if __name__ == "__main__":
     if len(sys.argv) != 4:
         print "Will create patched binaries for each stock shellcode/payload for the "
         print "type of binary provided. Each payload type has it's own port number."
-        print "Usage:" + str(sys.argv[0]) + " binary 127.0.0.1 8080"
+        print "Usage:" + str(sys.argv[0]) + " binary HOST PORT"
         sys.exit()
 
     file = sys.argv[1]
