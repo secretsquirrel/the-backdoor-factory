@@ -111,6 +111,9 @@ class machobin():
         "This function sets the shellcode."
 
         print "[*] Looking for and setting selected shellcode"
+
+        avail_shells = []
+
         self.bintype = False
         if MagicNumber == '0xfeedface':
             #x86
@@ -149,6 +152,8 @@ class machobin():
                     continue
                 else:
                     print "   {0}".format(item)
+                    avail_shells.append(item)
+            self.avail_shells = avail_shells
             return False
         #else:
         #    shell_cmd = self.SHELL + "()"

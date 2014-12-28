@@ -243,6 +243,8 @@ class elfbin():
         This function sets the shellcode.
         """
 
+        avail_shells = []
+
         self.bintype = False
         if self.e_machine == 0x03:  # x86 chipset
             if self.EI_CLASS == 0x1:
@@ -291,7 +293,8 @@ class elfbin():
                     continue
                 else:
                     print "   {0}".format(item)
-
+                    avail_shells.append(item)
+            self.avail_shells = avail_shells
             return False
         #else:
         #    shell_cmd = self.SHELL + "()"

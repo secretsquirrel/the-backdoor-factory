@@ -627,6 +627,9 @@ class pebin():
             print "[*] Cave {0} length as int: {1}".format(k + 1, item)
             print "[*] Available caves: "
 
+            if pickACave == {}:
+                print "[!!!!] No caves available! Use 'j' for cave jumping or"
+                print "[!!!!] 'i' for ignore."
             for ref, details in pickACave.iteritems():
                 if details[3] >= item:
                     print str(ref) + ".", ("Section Name: {0}; Section Begin: {4} "
@@ -907,6 +910,8 @@ class pebin():
         """
         print "[*] Looking for and setting selected shellcode"
 
+        avail_shells = []
+
         if self.flItms['Magic'] == int('10B', 16):
             self.flItms['bintype'] = winI32_shellcode
         if self.flItms['Magic'] == int('20B', 16):
@@ -936,7 +941,8 @@ class pebin():
                     continue
                 else:
                     print "   {0}".format(item)
-
+                    avail_shells.append(item)
+            self.flItms['avail_shells'] = avail_shells
             return False
         #else:
         #    shell_cmd = self.SHELL + "()"
