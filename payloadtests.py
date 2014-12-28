@@ -64,8 +64,8 @@ if __name__ == "__main__":
     Usage: ./testNarness.py file 127.0.0.1 8080
     '''
     if len(sys.argv) != 4:
-        print "Will create patched binaries for each payload for the type of binary provided."
-        print "Each payload has it's own port number."
+        print "Will create patched binaries for each stock shellcode/payload for the "
+        print "type of binary provided. Each payload type has it's own port number."
         print "Usage:" + str(sys.argv[0]) + " binary 127.0.0.1 8080"
         sys.exit()
 
