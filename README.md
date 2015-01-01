@@ -280,6 +280,16 @@ by one.
 Usage: payloadtest.py binary HOST PORT
 
 ```
+####1/1/2015
+
+Happy New Year!
+
+Two new OS X payloads! The delay: delay_reverse_shell_tcp
+
+-B 30 --> delay the payload for 30 seconds, main code runs right away.
+
+Setting of firm capstone commit for building into BDF, capstone 'Next' repo
+breaks BDF.
 
 
 ####12/17/2014
