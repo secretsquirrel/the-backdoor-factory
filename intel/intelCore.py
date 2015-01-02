@@ -81,12 +81,20 @@ class intelCore():
         self.count = 0
         for k in md.disasm(self.f.read(12), self.flItms['VrtStrtngPnt']):
             self.count += k.size
+            _bytes = bytearray(b'')
+
+            if len(k.bytes) < k.size:
+                _bytes = bytearray(b"\x00" * (k.size - len(k.bytes)))
+
+            value_bytes = k.bytes + _bytes
+
             self.flItms['ImpList'].append([int(hex(k.address).strip('L'), 16),
                                           k.mnemonic.encode("utf-8"),
                                           k.op_str.encode("utf-8"),
                                           int(hex(k.address).strip('L'), 16) + k.size,
-                                          k.bytes,
+                                          value_bytes,
                                           k.size])
+
             if self.count >= 6 or self.count % 5 == 0 and self.count != 0:
                 break
 
@@ -103,12 +111,20 @@ class intelCore():
         md = Cs(CS_ARCH_X86, CS_MODE_64)
         for k in md.disasm(self.f.read(12), self.flItms['VrtStrtngPnt']):
             self.count += k.size
+            _bytes = bytearray(b'')
+
+            if len(k.bytes) < k.size:
+                _bytes = bytearray(b"\x00" * (k.size - len(k.bytes)))
+
+            value_bytes = k.bytes + _bytes
+
             self.flItms['ImpList'].append([int(hex(k.address).strip('L'), 16),
                                           k.mnemonic.encode("utf-8"),
                                           k.op_str.encode("utf-8"),
                                           int(hex(k.address).strip('L'), 16) + k.size,
-                                          k.bytes,
+                                          value_bytes,
                                           k.size])
+
             if self.count >= 6 or self.count % 5 == 0 and self.count != 0:
                 break
 
@@ -361,7 +377,7 @@ class intelCore():
         resumeExe += "\x25"
         resumeExe += self.compliment_me  # zero out EAX
         resumeExe += "\x05"  # ADD
-        resumeExe += struct.pack('=i', ReturnTrackingAddress)
+        resumeExe += struct.pack('<I', ReturnTrackingAddress)
         resumeExe += "\x50"  # push eax
         resumeExe += "\x25"  # zero out EAX
         resumeExe += self.compliment_you

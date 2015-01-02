@@ -291,6 +291,8 @@ Two new OS X payloads! The delay: delay_reverse_shell_tcp
 Setting of firm capstone commit for building into BDF, capstone 'Next' repo
 breaks BDF.
 
+Fixes to support cython capstone implementation null byte truncation issue
+
 
 ####12/17/2014
 

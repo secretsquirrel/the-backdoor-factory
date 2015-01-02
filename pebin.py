@@ -430,7 +430,7 @@ class pebin():
         self.binary.write(struct.pack('<I', self.flItms['NewSizeOfImage']))
         self.binary.seek(self.flItms['BoundImportLocation'])
         if self.flItms['BoundImportLOCinCode'] != 0:
-            self.binary.write(struct.pack('=i', self.flItms['BoundImportLOCinCode'] + 40))
+            self.binary.write(struct.pack('<I', self.flItms['BoundImportLOCinCode'] + 40))
         self.binary.seek(self.flItms['BeginSections'] +
                          40 * self.flItms['NumberOfSections'], 0)
         self.binary.write(self.flItms['NewSectionName'] +
