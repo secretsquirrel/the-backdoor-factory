@@ -10,7 +10,7 @@ git clone https://github.com/aquynh/capstone/
 
 cd capstone
 
-git checkout b53a59af53ffbd5dbe8dbcefba41a00cf4fc7469
+git checkout e9be7ec26c2b13ba248d8b093a9f0d333f866d2c
 
 ./make.sh
 

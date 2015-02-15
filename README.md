@@ -21,21 +21,32 @@ See the wiki: https://github.com/secretsquirrel/the-backdoor-factory/wiki
 
 Dependences: 
 
-Capstone, using the 'next' repo until it is the 'master' repo: 
-https://github.com/aquynh/capstone/tree/next
+Capstone, using the master repo at this commit:
+https://github.com/aquynh/capstone/releases/tag/3.0.1
+
+git checkout e9be7ec26c2b13ba248d8b093a9f0d333f866d2c
+    
 
 Pefile, most recent:
 https://code.google.com/p/pefile/
 
-INSTALL:
 
-./install.sh
+Kali Install:
 
-This will install Capstone with the 'next' repo and use pip to install pefile.
+      apt-get update
+      apt-get install backdoor-factory
+
+
+Other *NIX/MAC INSTALL:
+
+    ./install.sh
+
+This will install Capstone with 3.01 pip to install pefile.
 
 UPDATE:
 
-./update.sh
+    ./update.sh
+
 
 ---
 
@@ -71,6 +82,7 @@ From DerbyCon:
 Recently tested on many binaries.
 ---
 
+./backdoor.py -h 
     Usage: backdoor.py [options]
 
     Options:
@@ -164,6 +176,7 @@ Recently tested on many binaries.
       -Append (a), for creating a code cave
       -Ignore (i), nevermind, ignore this binary
     Can ignore DLLs.
+    Import Table Patching
 
 ###ELF Files
 
@@ -268,18 +281,18 @@ Sample Usage:
 
 ###Changelog
 
-####12/27/2014
+####2/14/2014
+I <3 you guys
 
-Added payloadtests.py
+* Added Import Address Table patching for PEs to support iat_reverse_tcp payloads that 
+use the import table for winAPI calls. If the binary you are patching does not
+have LoadLibraryA and GetProcAddress, for example, BDF will patch it in to a 
+new Import Table in a new section. Supports x64/x86 PEs.
 
-This script will output patched files in backdoored that will allow for the user to 
-test the payloads as they wish. Each payload type increments the port used
-by one.
+* Added iat_reverse_tcp for x64 PEs.
 
-```
-Usage: payloadtest.py binary HOST PORT
+* Bug fixes and improvements
 
-```
 ####1/1/2015
 
 Happy New Year!
@@ -293,6 +306,18 @@ breaks BDF.
 
 Fixes to support cython capstone implementation null byte truncation issue
 
+
+####12/27/2014
+
+Added payloadtests.py
+
+This script will output patched files in backdoored that will allow for the user to 
+test the payloads as they wish. Each payload type increments the port used
+by one.
+
+
+    Usage: payloadtest.py binary HOST PORT
+  
 
 ####12/17/2014
 

