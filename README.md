@@ -19,13 +19,12 @@ Under a BSD 3 Clause License
 
 See the wiki: https://github.com/secretsquirrel/the-backdoor-factory/wiki
 
-Dependences: 
+Dependences
+---
 
-Capstone, using the master repo at this commit:
-https://github.com/aquynh/capstone/releases/tag/3.0.1
+[Capstone engine](www.capstone-engine.org) can be installed from PyPi with:
 
-git checkout e9be7ec26c2b13ba248d8b093a9f0d333f866d2c
-    
+    sudo pip install capstone
 
 Pefile, most recent:
 https://code.google.com/p/pefile/
