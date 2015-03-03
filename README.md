@@ -22,7 +22,7 @@ See the wiki: https://github.com/secretsquirrel/the-backdoor-factory/wiki
 Dependences
 ---
 
-[Capstone engine](www.capstone-engine.org) can be installed from PyPi with:
+[Capstone engine](http://www.capstone-engine.org) can be installed from PyPi with:
 
     sudo pip install capstone
 
