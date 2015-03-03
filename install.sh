@@ -6,17 +6,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 #install capstone
-git clone https://github.com/aquynh/capstone/
-
-cd capstone
-
-git checkout e9be7ec26c2b13ba248d8b093a9f0d333f866d2c
-
-./make.sh
-
-./make.sh install
-
-cd bindings/python
+pip install capstone
 
 uname -a | grep BSD &> /dev/null
 if [ $? -eq 0 ]; then
