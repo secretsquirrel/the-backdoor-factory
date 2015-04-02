@@ -265,6 +265,12 @@ class intelCore():
         """
         print "[*] Creating win32 resume execution stub"
         resumeExe = ''
+        # buffer for zeroing shellcode (no performance impact)
+        resumeExe += "\x51"             # push ecx
+        resumeExe += "\xb9"             # mov ecx, value below
+        resumeExe += struct.pack("<I", (len(self.flItms['shellcode']) - 6))
+        resumeExe += "\xe2\xfe"         # loop back on itself
+        resumeExe += "\x59"             # pop ecx
         for item in self.flItms['ImpList']:
             startingPoint = item[0]
             OpCode = item[1]
