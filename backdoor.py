@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-BackdoorFactory (BDF) v2 - Tertium Quid
+BackdoorFactory (BDF) v3 - FOUNTAINPATCH
 
 Many thanks to Ryan O'Neill --ryan 'at' codeslum <d ot> org--
 Without him, I would still be trying to do stupid things
@@ -62,13 +62,14 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         2.4.1
+         Version:   3.0.0
          """
 
     author = """\
          Author:    Joshua Pitts
-         Email:     the.midnite.runr[a t]gmail<d o t>com
+         Email:     the.midnite.runr[-at ]gmail<d o-t>com
          Twitter:   @midnite_runr
+         IRC:       freenode.net #BDFactory
          """
 
     #ASCII ART
@@ -128,7 +129,20 @@ class bdfMain():
             " \___  /  (____  /\___  >_"
             "_|  \____/|__|   / ____|        \n"
             "     \/        \/     \/  "
-            "                 \/             \n"]
+            "                 \/             \n",
+
+            "    ____  ____  ______  "
+            "         __      \n"
+            "   / __ )/ __ \/ ____/___ "
+            "______/ /_____  _______  __\n"
+            "  / __  / / / / /_  / __ `/"
+            " ___/ __/ __ \/ ___/ / / /\n"
+            " / /_/ / /_/ / __/ / /_/ /"
+            " /__/ /_/ /_/ / /  / /_/ /\n"
+            "/_____/_____/_/    \__,_/"
+            "\___/\__/\____/_/   \__, /\n"
+            "                         "
+            "                   /____/\n"]
 
     signal.signal(signal.SIGINT, signal_handler)
 
@@ -278,6 +292,10 @@ class bdfMain():
         print author
         print version
         time.sleep(1)
+    else:
+        print "\t Backdoor Factory"
+        print author
+        print version
 
     if options.DIR:
         for root, subFolders, files in os.walk(options.DIR):

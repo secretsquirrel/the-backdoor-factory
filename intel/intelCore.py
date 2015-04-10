@@ -1,6 +1,6 @@
 '''
 
-Copyright (c) 2013-2014, Joshua Pitts
+Copyright (c) 2013-2015, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -155,7 +155,14 @@ class intelCore():
         For x64 exes...
         """
         print "[*] Creating win64 resume execution stub"
+        #pause loop for code cave clearing stub
         resumeExe = ''
+        resumeExe += "\x51"             # push ecx
+        resumeExe += "\x48\xc7\xc1"             # mov ecx, value below
+        resumeExe += struct.pack("<I", (len(self.flItms['shellcode']) - 6))
+        resumeExe += "\xe2\xfe"         # loop back on itself
+        resumeExe += "\x59"             # pop ecx
+
         total_opcode_len = 0
         for item in self.flItms['ImpList']:
             startingPoint = item[0]

