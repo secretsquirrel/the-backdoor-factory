@@ -770,6 +770,9 @@ class pebin():
                 except:
                     print "EOF"
 
+        '''
+
+        '''
         print ("############################################################\n"
                "The following caves can be used to inject code and possibly\n"
                "continue execution.\n"
@@ -1087,6 +1090,13 @@ class pebin():
 
         avail_shells = []
 
+        #it's time to use a python properties TODO
+        ignores = ["returnshellcode", "pack_ip_addresses",
+                   "eat_code_caves", "ones_compliment",
+                   "ones_compliment", "resume_execution"
+                   "returnshellcode", "clean_caves_stub"
+                   ]
+
         if self.flItms['Magic'] == int('10B', 16):
             self.flItms['bintype'] = winI32_shellcode
         if self.flItms['Magic'] == int('20B', 16):
@@ -1096,12 +1106,7 @@ class pebin():
             for item in dir(self.flItms['bintype']):
                 if "__" in item:
                     continue
-                elif ("returnshellcode" == item
-                      or "pack_ip_addresses" == item
-                      or "eat_code_caves" == item
-                      or 'ones_compliment' == item
-                      or 'resume_execution' in item
-                      or 'returnshellcode' in item):
+                elif item in ignores:
                     continue
                 else:
                     print "   {0}".format(item)
@@ -1113,7 +1118,7 @@ class pebin():
                 #print item
                 if "__" in item:
                     continue
-                elif "returnshellcode" == item or "pack_ip_addresses" == item or "eat_code_caves" == item:
+                elif item in ignores:
                     continue
                 else:
                     print "   {0}".format(item)
