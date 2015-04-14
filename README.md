@@ -221,6 +221,8 @@ So many updates:
   
   * New IAT payloads for x86/x64 PE files
 
+  * Just watch: https://www.youtube.com/watch?v=kkLI_ur6BxY
+
 ####2/14/2014
 I <3 you guys
 
