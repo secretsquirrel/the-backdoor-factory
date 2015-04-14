@@ -20,10 +20,8 @@ fi
 #check if kali
 uname -a | grep -i kali &> /dev/null 
 if [ $? -eq 0 ]; then
-	echo "Adding capstone path for Kali64 in /etc/ls.so.conf.d/capstone.conf"
-	echo "#capstone shared libs" >> /etc/ld.so.conf.d/capstone.conf
-	echo "/usr/lib64" >> /etc/ld.so.conf.d/capstone.conf
-	ldconfig
+	apt-get update
+	apt-get install python-capstone
 fi
 
 #install pefile
