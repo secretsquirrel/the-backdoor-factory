@@ -219,7 +219,7 @@ Sample Usage:
 So many updates:
   * Automatic patching for PE files (use -m automatic with a *_threaded payload)
   
-  * new IAT payloads for x86/x64 PE files
+  * New IAT payloads for x86/x64 PE files
 
 ####2/14/2014
 I <3 you guys
