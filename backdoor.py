@@ -266,6 +266,8 @@ class bdfMain():
     parser.add_option("-B", "--beacon", dest="BEACON", default=15, action="store", type="int",
                       help="For payloads that have the ability to beacon out, set the time in secs"
                       )
+    parser.add_option("-m", "--patch-method", dest="PATCH_METHOD", default="manual", action="store",
+                      type="string", help="Patching methods for PE files, 'manual' and 'automatic'")
 
     (options, args) = parser.parse_args()
 
@@ -296,6 +298,9 @@ class bdfMain():
         print "\t Backdoor Factory"
         print author
         print version
+
+    if options.PATCH_METHOD.lower() == 'automatic':
+        options.CAVE_JUMPING = True
 
     if options.DIR:
         for root, subFolders, files in os.walk(options.DIR):
@@ -328,7 +333,8 @@ class bdfMain():
                                            options.IMAGE_TYPE,
                                            options.ZERO_CERT,
                                            options.CHECK_ADMIN,
-                                           options.PATCH_DLL
+                                           options.PATCH_DLL,
+                                           options.PATCH_METHOD
                                            )
                 elif is_supported is "ELF":
                     supported_file = elfbin(options.FILE,
@@ -418,7 +424,8 @@ class bdfMain():
                                                options.IMAGE_TYPE,
                                                options.ZERO_CERT,
                                                options.CHECK_ADMIN,
-                                               options.PATCH_DLL
+                                               options.PATCH_DLL,
+                                               options.PATCH_METHOD
                                                )
                         supported_file.OUTPUT = None
                         supported_file.output_options()
@@ -490,7 +497,8 @@ class bdfMain():
                                options.IMAGE_TYPE,
                                options.ZERO_CERT,
                                options.CHECK_ADMIN,
-                               options.PATCH_DLL
+                               options.PATCH_DLL,
+                               options.PATCH_METHOD
                                )
         supported_file.injector()
         sys.exit()
@@ -524,7 +532,8 @@ class bdfMain():
                                options.IMAGE_TYPE,
                                options.ZERO_CERT,
                                options.CHECK_ADMIN,
-                               options.PATCH_DLL
+                               options.PATCH_DLL,
+                               options.PATCH_METHOD
                                )
     elif is_supported is "ELF":
         supported_file = elfbin(options.FILE,

