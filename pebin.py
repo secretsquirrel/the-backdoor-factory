@@ -110,6 +110,8 @@ class pebin():
         self.PATCH_DLL = PATCH_DLL
         self.PATCH_METHOD = PATCH_METHOD.lower()
         self.flItms = {}
+        if self.PATCH_METHOD.lower() == 'automatic':
+            self.CAVE_JUMPING = True
 
     def run_this(self):
         if self.INJECTOR is True:

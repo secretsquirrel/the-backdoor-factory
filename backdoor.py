@@ -299,9 +299,6 @@ class bdfMain():
         print author
         print version
 
-    if options.PATCH_METHOD.lower() == 'automatic':
-        options.CAVE_JUMPING = True
-
     if options.DIR:
         for root, subFolders, files in os.walk(options.DIR):
             for _file in files:
