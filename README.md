@@ -6,6 +6,10 @@ The goal of BDF is to patch executable binaries with user desired shellcode and 
 
 DerbyCon 2014 Presentation: http://www.youtube.com/watch?v=LjUN9MACaTs
 
+
+Shmoocon 2015 Presentation: Userland Persistence of OS X Paper: https://www.dropbox.com/s/te7e35c8xcnyfzb/JoshPitts-UserlandPersistenceOnMacOSX.pdf
+
+
 Contact the developer on:
   
     IRC:
