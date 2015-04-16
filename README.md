@@ -218,7 +218,7 @@ Sample Usage:
 
 ###Changelog
 
-####4/14/2014
+####4/14/2015
 
 So many updates:
   * Automatic patching for PE files (use -m automatic with a *_threaded payload)
@@ -227,7 +227,7 @@ So many updates:
 
   * Just watch: https://www.youtube.com/watch?v=kkLI_ur6BxY
 
-####2/14/2014
+####2/14/2015
 I <3 you guys
 
 * Added Import Address Table patching for PEs to support iat_reverse_tcp payloads that 
@@ -253,7 +253,7 @@ breaks BDF.
 Fixes to support cython capstone implementation null byte truncation issue
 
 
-####12/27/2014
+####12/27/201
 
 Added payloadtests.py
 
