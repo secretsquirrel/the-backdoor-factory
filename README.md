@@ -4,10 +4,28 @@ For security professionals and researchers only.
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
-DerbyCon 2014 Presentation: http://www.youtube.com/watch?v=LjUN9MACaTs
 
 
-Shmoocon 2015 Presentation: Userland Persistence on Mac OS X paper: https://www.dropbox.com/s/te7e35c8xcnyfzb/JoshPitts-UserlandPersistenceOnMacOSX.pdf
+
+DerbyCon 2013: 
+    
+    Video: http://www.youtube.com/watch?v=jXLb2RNX5xs
+
+    Injection Module Demo: http://www.youtube.com/watch?v=04aJAex2o3U
+
+    Slides: http://www.slideshare.net/midnite_runr/patching-windows-executables-with-the-backdoor-factory
+
+
+DerbyCon 2014: 
+
+    Video: http://www.youtube.com/watch?v=LjUN9MACaTs
+
+
+Shmoocon 2015:
+    
+    Video: https://archive.org/details/joshpitts_shmoocon2015
+
+    Paper: https://www.dropbox.com/s/te7e35c8xcnyfzb/JoshPitts-UserlandPersistenceOnMacOSX.pdf
 
 
 Contact the developer on:
@@ -72,21 +90,6 @@ Some executables have built in protections, as such this will not work on all bi
     (http://vxheaven.org/lib/vsc01.html) which these ELF patching
     techniques are based on.
 
-
-From DerbyCon: 
-    
-    Video: http://www.youtube.com/watch?v=jXLb2RNX5xs
-
-    Injection Module Demo: http://www.youtube.com/watch?v=04aJAex2o3U
-
-    Slides: http://www.slideshare.net/midnite_runr/patching-windows-executables-with-the-backdoor-factory
-
-
-Shmoocon 2015:
-    
-    Video: https://archive.org/details/joshpitts_shmoocon2015
-
-    Paper: https://www.dropbox.com/s/te7e35c8xcnyfzb/JoshPitts-UserlandPersistenceOnMacOSX.pdf
 
 
 Recently tested on many binaries.
