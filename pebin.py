@@ -984,6 +984,10 @@ class pebin():
         else:
             self.flItms['supported'] = False
 
+        if self.flItms['BoundImportSize'] != 0:
+            print "[!] No support for Bound Imports at this time"
+            return False
+
         if self.CHECK_ADMIN is True:
             self.flItms['runas_admin'] = self.runas_admin()
 

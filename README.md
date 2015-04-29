@@ -221,6 +221,10 @@ Sample Usage:
 
 ###Changelog
 
+####4/28/2015
+
+    * Adding check for Bound Imports (PE files with bound imports will not be patched)
+
 ####4/14/2015
 
 So many updates:
