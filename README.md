@@ -221,6 +221,10 @@ Sample Usage:
 
 ###Changelog
 
+####5/01/2015
+
+    * Bug fix to the reverse_tcp_stager_threaded payload when using single caves payload
+
 ####4/28/2015
 
     * Adding check for Bound Imports (PE files with bound imports will not be patched)

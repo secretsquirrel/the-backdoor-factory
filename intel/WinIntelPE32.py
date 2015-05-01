@@ -280,7 +280,8 @@ class winI32_shellcode():
                     self.shellcode1 += struct.pack("<I", int(str(hex(0xffffffff + breakupvar - len(self.stackpreserve) -
                                                    len(self.shellcode1) - 3).rstrip("L")), 16))
         else:
-            self.shellcode1 += "\xE9\x27\x01\x00\x00"
+            self.shellcode1 += "\xe9"
+            self.shellcode1 += struct.pack("<I", len(self.shellcode2))
 
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2
         return (self.stackpreserve + self.shellcode1, self.shellcode2)
