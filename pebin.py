@@ -307,6 +307,17 @@ class pebin():
                     self.flItms['rsrcVirtualAddress'] = sectionValues[2]
                     self.flItms['rsrcSizeRawData'] = sectionValues[3]
                     self.flItms['rsrcPointerToRawData'] = sectionValues[4]
+
+                # I could add in checks here to support out of order PE file;
+                #  However if here were multiple sections that were RE, RWE, it would be
+                #  difficult to get it right in a purposefully mangled binary.
+                #  Perhaps if entrypoint is in RE section that is text section? But still.
+                #  That could be spoofed and it returns to another RE section.
+                if "textSectionName" not in self.flItms:
+                    print "[!] Text section does not have a normal name, not guessing, exiting"
+                    print "[!]\tFirst section, text section potential name:", str(self.flItms['Sections'][0][0])
+                    return False
+
             self.flItms['VirtualAddress'] = self.flItms['SizeOfImage']
 
             self.flItms['LocOfEntryinCode'] = (self.flItms['AddressOfEntryPoint'] -
@@ -562,7 +573,8 @@ class pebin():
 
         #get file data again
         with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
-            self.gather_file_info_win()
+            if not self.gather_file_info_win():
+                return False
 
         return True
 
@@ -960,7 +972,8 @@ class pebin():
         if self.binary.read(2) != "\x4d\x5a":
             print "%s not a PE File" % self.FILE
             return False
-        self.gather_file_info_win()
+        if not self.gather_file_info_win():
+            return False
         if self.flItms is False:
             return False
         if MachineTypes[hex(self.flItms['MachineType'])] not in supported_types:
