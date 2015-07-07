@@ -223,6 +223,11 @@ Sample Usage:
 
 ###Changelog
 
+####7/06/2015
+
+    * Clean exit if text section name is mangled or out of order.
+
+
 ####5/01/2015
 
     * Bug fix to the reverse_tcp_stager_threaded payload when using single caves payload
