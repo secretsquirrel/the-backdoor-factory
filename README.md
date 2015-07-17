@@ -223,6 +223,10 @@ Sample Usage:
 
 ###Changelog
 
+####7/17/2015
+    * Fix to correct early exit on gatherng PE info.
+
+
 ####7/06/2015
 
     * Clean exit if text section name is mangled or out of order.

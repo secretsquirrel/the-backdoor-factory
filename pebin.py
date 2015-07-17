@@ -573,7 +573,7 @@ class pebin():
 
         #get file data again
         with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
-            if not self.gather_file_info_win():
+            if self.gather_file_info_win() is False:
                 return False
 
         return True
@@ -972,8 +972,8 @@ class pebin():
         if self.binary.read(2) != "\x4d\x5a":
             print "%s not a PE File" % self.FILE
             return False
-        if not self.gather_file_info_win():
-            return False
+        if self.gather_file_info_win() is False:
+                return False
         if self.flItms is False:
             return False
         if MachineTypes[hex(self.flItms['MachineType'])] not in supported_types:
