@@ -1,0 +1,29 @@
+##
+## aPLib compression library  -  the smaller the better :)
+##
+## MinGW GCC makefile
+##
+## Copyright (c) 1998-2014 Joergen Ibsen
+## All Rights Reserved
+##
+
+target  = appack.exe
+objects = appack.o
+
+cflags  = -Wall -O2 -s
+ldflags = $(cflags)
+incdir  = ../lib/coff
+libs    = $(incdir)/aplib.lib
+
+.PHONY: all clean
+
+all: $(target)
+
+$(target): $(objects)
+	gcc $(ldflags) -o $@ $^ $(libs)
+
+%.o : %.c
+	gcc -c -I$(incdir) $(cflags) -o $@ $<
+
+clean:
+	$(RM) $(objects) $(target)

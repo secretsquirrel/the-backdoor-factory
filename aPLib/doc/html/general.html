@@ -1,0 +1,205 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>General Information &mdash; aPLib 1.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/grey.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="aPLib 1.1.1 documentation" href="index.html" />
+    <link rel="next" title="Compression" href="compression.html" />
+    <link rel="prev" title="License" href="license.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="compression.html" title="Compression"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="license.html" title="License"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">aPLib 1.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="general-information">
+<h1>General Information<a class="headerlink" href="#general-information" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>aPLib is a compression library based on the algorithm used in aPACK (my 16-bit
+executable packer). aPLib is an easy-to-use alternative to many of the
+heavy-weight compression libraries available.</p>
+<p>The compression ratios achieved by aPLib combined with the speed and tiny
+footprint of the decompressors (as low as 169 bytes!) makes it the ideal
+choice for many products.</p>
+<p>Since the first public release in 1998, aPLib has been one of the top pure
+LZ-based compression libraries available. It is used in a wide range of
+products including executable compression and protection software, archivers,
+games, embedded systems, and handheld devices.</p>
+</div>
+<div class="section" id="compatibility">
+<h2>Compatibility<a class="headerlink" href="#compatibility" title="Permalink to this headline">¶</a></h2>
+<p>The aPLib package includes pre-compiled libraries in a number of formats
+(COFF, ELF, OMF).</p>
+<p>No standard library functions are used, so the libraries can work with most
+x86/x64 compilers, as long as the name decoration and calling conventions
+match.</p>
+<p>The ELF folders contain a version of aPLib which uses PIC to allow it to be
+linked into shared libraries on linux.</p>
+</div>
+<div class="section" id="thread-safety">
+<h2>Thread-safety<a class="headerlink" href="#thread-safety" title="Permalink to this headline">¶</a></h2>
+<p>All compression and decompression functions are thread-safe.</p>
+</div>
+<div class="section" id="using-aplib">
+<h2>Using aPLib<a class="headerlink" href="#using-aplib" title="Permalink to this headline">¶</a></h2>
+<p>For C/C++ you simply include <tt class="docutils literal"><span class="pre">aplib.h</span></tt> and link with the appropriate library
+for your compiler. If you only need to decompress data, or if you modify the
+decompression code, you can compile and link with one of the decompression
+implementations in the <tt class="docutils literal"><span class="pre">src</span></tt> folder.</p>
+<p>For other languages you can either check if there is a useable example, or use
+the DLL version. Most linkers allow calling C functions in an external
+library, so usually there is a way to use one of the libraries.</p>
+<p>aPLib performs memory-to-memory compression and decompression, so getting data
+into an input buffer and allocating an output buffer is your responsibility.</p>
+<p>All functions return <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> (which is <tt class="docutils literal"><span class="pre">-1</span></tt>) if an error occurs.</p>
+<p>Attempting to compress incompressible data can lead to expansion. You can get
+the maximum possible coded size by passing the size of the input to the
+function <a class="reference internal" href="compression.html#c.aP_max_packed_size" title="aP_max_packed_size"><tt class="xref c c-func docutils literal"><span class="pre">aP_max_packed_size()</span></tt></a>.</p>
+<p>When calling <a class="reference internal" href="compression.html#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> you have to supply a work buffer. You can get
+the required size of this buffer by passing the size of the input to the
+function <a class="reference internal" href="compression.html#c.aP_workmem_size" title="aP_workmem_size"><tt class="xref c c-func docutils literal"><span class="pre">aP_workmem_size()</span></tt></a> (in the current version this function
+always returns 640k).</p>
+<p>If you do not have a callback for <a class="reference internal" href="compression.html#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a>, you can pass <tt class="docutils literal"><span class="pre">NULL</span></tt>
+(i.e. <tt class="docutils literal"><span class="pre">0</span></tt>) instead. The callback functionality allows your program to keep
+track of the compression progress, and if required to stop the compression.</p>
+<p><a class="reference internal" href="decompression.html#c.aP_depack" title="aP_depack"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack()</span></tt></a>, <a class="reference internal" href="decompression.html#c.aP_depack_asm" title="aP_depack_asm"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm()</span></tt></a>, and
+<a class="reference internal" href="decompression.html#c.aP_depack_asm_fast" title="aP_depack_asm_fast"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm_fast()</span></tt></a> assume that they are given valid compressed
+data &#8211; if not they will most likely crash. This is to ensure that the basic
+decompression code is as small, fast and easy to understand as possible. You
+can use <a class="reference internal" href="decompression.html#c.aP_depack_safe" title="aP_depack_safe"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_safe()</span></tt></a> or <a class="reference internal" href="decompression.html#c.aP_depack_asm_safe" title="aP_depack_asm_safe"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm_safe()</span></tt></a> if you
+need to catch decompression errors. Also the safe wrapper functions provide a
+nice interface that helps prevent potential crashes.</p>
+</div>
+<div class="section" id="safe-wrapper-functions">
+<h2>Safe Wrapper Functions<a class="headerlink" href="#safe-wrapper-functions" title="Permalink to this headline">¶</a></h2>
+<p>Starting with aPLib v0.34, there are additional functions included which
+provide a better way of handling the compressed data in the example, and also
+serve as an example of how to add functionality through function wrappers.</p>
+<p>The <a class="reference internal" href="compression.html#c.aPsafe_pack" title="aPsafe_pack"><tt class="xref c c-func docutils literal"><span class="pre">aPsafe_pack()</span></tt></a> and <a class="reference internal" href="decompression.html#c.aPsafe_depack" title="aPsafe_depack"><tt class="xref c c-func docutils literal"><span class="pre">aPsafe_depack()</span></tt></a> functions are
+wrappers for their regular <tt class="docutils literal"><span class="pre">aP_</span></tt> counterparts, which add a header to the
+compressed data. This header includes a tag, information about the compressed
+and decompressed size of the data, and CRC32 values for the compressed and
+decompressed data.</p>
+<p>The <tt class="docutils literal"><span class="pre">example</span></tt> folder contains a simple command line packer that uses aPLib
+to compress and decompress data. The <tt class="docutils literal"><span class="pre">aPsafe_</span></tt> functions are used in this
+example, because they provide extra functionality like retrieving the original
+size of compressed data.</p>
+</div>
+<div class="section" id="contact-information">
+<h2>Contact Information<a class="headerlink" href="#contact-information" title="Permalink to this headline">¶</a></h2>
+<p>If you have any questions, suggestions or bug-reports about aPLib, please feel
+free to contact me by e-mail at:</p>
+<blockquote>
+<div><a class="reference external" href="mailto:contact&#37;&#52;&#48;ibsensoftware&#46;com">contact<span>&#64;</span>ibsensoftware<span>&#46;</span>com</a></div></blockquote>
+<p>You can get the latest version of aPLib and my other software at:</p>
+<blockquote>
+<div><a class="reference external" href="http://www.ibsensoftware.com/">http://www.ibsensoftware.com/</a></div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">General Information</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#compatibility">Compatibility</a></li>
+<li><a class="reference internal" href="#thread-safety">Thread-safety</a></li>
+<li><a class="reference internal" href="#using-aplib">Using aPLib</a></li>
+<li><a class="reference internal" href="#safe-wrapper-functions">Safe Wrapper Functions</a></li>
+<li><a class="reference internal" href="#contact-information">Contact Information</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="license.html"
+                        title="previous chapter">License</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="compression.html"
+                        title="next chapter">Compression</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/general.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="compression.html" title="Compression"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="license.html" title="License"
+             >previous</a> |</li>
+        <li><a href="index.html">aPLib 1.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 1998-2014, Joergen Ibsen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

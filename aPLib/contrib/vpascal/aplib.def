@@ -1,0 +1,18 @@
+LIBRARY 'aplib.dll'
+
+STUB NONE
+
+DESCRIPTION '@#Jibz,V.K.:1.01#@  aPLib Compression/Decompression Library'
+
+EXPORTS
+  _aP_pack                @1
+  _aP_workmem_size        @2
+  _aP_max_packed_size     @3
+  _aP_depack_asm          @4
+  _aP_depack_asm_fast     @5
+  _aP_depack_asm_safe     @6
+  _aP_crc32               @7
+  _aPsafe_pack            @8
+  _aPsafe_check           @9
+  _aPsafe_get_orig_size   @10
+  _aPsafe_depack          @11

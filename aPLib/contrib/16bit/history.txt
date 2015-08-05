@@ -1,0 +1,458 @@
+Porting aPLib decompresion routines by Jibz to 16 bits by METALBRAIN
+
+        I haven't Internet conexion at home, so I can only connect from my
+  University from Monday to Friday (only a short while in the morning, except
+  Mondays, when I can also connect from 14:00 to 16:00), and some weekends
+  from a friend's house (in summer is much worse).
+
+
+28-10-98   to  12-11-98
+        I wanted to use aPLib v0.17b in my small game KOM, but all code is 32
+  bit, and KOM is a 16 bit project, so after several failing tests, I started
+  writing 16 bit version of NASM assembly routines, cleaning all C connection
+  protocol code and replacing string instructions and those that accessed
+  memory through [esi] and [edi] with 16 bit emulation routines. I started
+  putting them in smalls programs with fixed names for infile and outfile.
+  After fixing a bug, they started to work. Then I got aPLib v0.18b, and
+  updated my routines, and kept improving my test programs. Then finally
+  came out aPlib v0.19b, so I updated my routines once again, and started to
+  work more seriously, in order to offer my 16 bit port to Jibz.
+
+14-11-98    Saturday
+        Finally wrote a depacker capable of reading filenames from arguments.
+  Infile can't be greater than 64Kb, and no test is made about memory, so if
+  outfile is too big, it could collapse memory. My deppacker broke a file,
+  and I couldn't find any bug on it. I made some tests and found out a bug in
+  aPPACK itself. Oops. It also happens to previous versions. Jibz must be
+  informed about it...
+
+15-11-98    Sunday
+        Cleaned the code a bit, eliminating some redundances.
+
+16-11-98    Monday >
+        I send Jibz first version of DEPACK and DEPPACK (948 bytes), and
+  also tell him about aPPACK bug.
+
+20-11-98  > Friday
+        I got response from Jibz. He has found a bug in my routines, and he
+  has optimized both DEPACK and DEPPACK a lot. I look at his code and feel
+  really dumb. Some optimizations are so obvious...
+
+22-11-98    Sunday
+        I make first version of DEPPTINY. It's the same that DEPPACK, but
+  without error nor usage messages. My first goal was to make it under 700
+  bytes (that was the size of the tinyest decompressor I knew before mine
+  arrived), and as firstly I got it in 519, I played a bit to make it under
+  512 bytes (just one diskette sector). It ends up being 507(?) bytes long.
+
+23-11-98    Monday >
+        I send Jibz first version of DEPPTINY (507). At home I start coding
+  next DEPPACK version, featuring use of all available memory to be able to
+  uncompress any file which fits in low memory.
+
+24-11-98  > Tuesday
+        Jibz sent me a very optimized version of DEPPTINY (437). I can't
+  believe my eyes. He wiped away 70 bytes!. I'm really amazed. And code is
+  also cleaner, as he removed my dirty self-modifying code trick. I study his
+  optimizations. Curious. He got rid of most variables. I look at the code
+  and I'm able to clean 6 bytes from it. Now I feel great, my spirit rises
+  and continue coding v0.2 of DEPPACK, but I can't get it working.
+
+25-11-98    Wednesday >
+        I send Jibz my optimization of DEPPTINY (431) and I asked him about
+  my problem (thought I wasn't too clear about it). In the evening I study
+  the code debugging it and fix my problem alone, with another dirty
+  self-modifying trick.
+
+26-11-98  > Thursday >
+        I recieve Jibz's last work on DEPPTINY. I send him the very first
+  version of DEPPACK v0.2 . At home, I look his DEPPTINY. Incredible!. He
+  did it again! He killed 32 more bytes, leaving it in 398. Now some
+  optimizations are really weird (such as order modification), but they work
+  perfectly.
+
+27-11-98    Friday   to   29-11-98  Sunday
+        I port some optimizations from last DEPPTINY to DEPPACK. I think
+  he'll send me something next Monday, so I put NASM, aPACK, and some test
+  files in my diskette, together with last DEPPACK.
+
+30-11-98  > Monday >
+        As I expected, Jibz has played with DEPPACK v0.2, optimizing it (he
+  cleaned 3 bytes from DEPACK core) and has eliminated my self-modifying
+  part (he really seems to hate them), but he hasn't implemented
+  optimizations from last DEPPTINY, leaving them to me. Easy work, as it was
+  already done. I spent half an hour with it and apply his last optimizations
+  on my last version of DEPPACK (876), and send it back to him.
+
+ 1-12-98    Tuesday
+        I apply the optimization of the core to DEPACK and DEPPTINY. Works
+  perfectly, and now it's only 395.
+
+ 4-12-98    Friday
+        I haven't recieved nothing yet, but I can see in his page that he's
+  working in aPLib v0.20b. A long weekend awaits me, because there's no
+  class next Monday and Tuesday.
+
+ 6-12-98  > Sunday >
+        I spent morning with a friend, and I could connect a little while.
+  The response was there, so I took it. He tells me he's porting my routines
+  to 16 bit C compilers, Borland ones are working and others are on the way.
+  In the afternoon I look carefully last optimizations applied to DEPPACK
+  (871): very instructive. They save a lot of bytes to uncompressed program,
+  but after compresion he only won 6 bytes. I feel inspired and remove 7
+  bytes to uncompressed program, that become a gain of 16 bytes after aPACK
+  compression. I feel very proud because one of the bytes I've killed was
+  inside DEPACK core, so in the evening I send Jibz the whole pack from
+  other friend's home: DEPACK, DEPPACK (855) and DEPPTINY (394). I thought
+  they were going to be last optimizations before aPLib v0.20b release, but
+  I was completly wrong.
+
+14-12-98    Monday
+        I've finished classes today, and there's been no feedback from Jibz
+  yet, but I must go to University on Wednesday and Friday. Managed to cut
+  2 bytes from DEPPTINY.
+
+15-12-98    Tuesday
+        Got an idea: Cleaned 4 bytes from DEPPTINY and 2 from DEPPACK.
+
+16-12-98    Wednesday >
+        Got another idea: Cleaned 2 bytes from DEPACK core, so I send him
+  again the whole package: DEPACK, DEPPACK (851), and DEPPTINY (386), not
+  knowing if it will be there in time or not...
+
+18-12-98    Friday
+        Went to University, but computer rooms where closed. AAAAAARGH!
+
+20-12-98  > Sunday
+        Finally could connect, and catch Jibz's response. A new smaller
+  version of aPACK leaves DEPPACK in 815 bytes. Great! I cut 4 more bytes
+  from DEPPTINY and 2 from DEPPACK. Start coding DEPPACK 0.3b, capable of
+  decompressing files of any size. I thought that "57300 bytes lookback"
+  meant that only 57300 previous bytes were needed to unpack, but it I tried
+  to use 64K and it didn't work at all. I spent the night trying to find
+  bugs, and was not sure if it was possible to do what I wanted to do. At
+  5 a.m., tired and frustraded I leave it for impossible.
+
+21-12-98    Monday
+        I debug the depacking of some files to see the values it can take.
+  I set the limit in 128K and finally progressive-write got running! I make
+  progressive-read (much easier), and test the resultant DEPPACK v0.3 in
+  some extreme files. I fix some bugs and down the limit to 96K, and it
+  still works. I make the DEPPTINY v0.3 from this, but it's too big, and
+  can't get it under 512 bytes, so I'm leaving it with 582 bytes.
+
+22-12-98    Tuesday
+        I clean the code a little, eliminate all self-modifying parts and
+  optimize a bit. As DEPPTINY v0.3 can't fit a diskette sector, I make
+  DEPPTINY v0.2, and it's 439 bytes long (the old 382 bytes long DEPPTINY
+  was still first version, with 64K infile limit).
+
+23-12-98    Wednesday >
+        Fixed one small bug. I'll send him new versions of DEPPACK v0.3
+  and DEPPTINY v0.2 and v0.3
+
+ 7-01-99    Thursday
+        Back to classes, computer rooms closed due to remote-boot server
+  is down. I wanna check mail!
+
+12-01-99  > Tuesday
+        I see a quite old message, he has managed to cut the size of
+  DEPPTINY v0.3 down to 550 bytes. Maybe it's possible to fit under 513
+  bytes, but still I doubt it. He also sent me a pre-release BETA of
+  aPACK.
+
+13-01-99    Wednesday >
+        As I found a bug on tested aPACK, I wrote Jibz about it and telling
+  him I'm about to start my exams, so he shouldn't wait for my new DEPPTINY
+  version to release aPLib.
+
+15-01-99  > Friday >
+        aPLib 0.20b has finally been released. Jibz has adapted my code to
+  his syntax, and re-added the C conexion parts. No problem about it, after
+  all, aPLib is HIS product, and this way the format is more regular.
+  There's also a TASM version which work with BC. Examples still almost
+  unchanged, he just updated the date from 1998 to 1998-99
+        But to my nasty surprise, the adapted routines are outdated, and my
+  last core optimizations (3 bytes) were not added. I add them and also short
+  some jumps in TASM version. I send corrections to him, but I'm not sure if
+  he'll update it in v0.20b or in next release...
+
+17-01-99    Sunday
+        Can't resist the temptation. Take a look on DEPPTINY. Kill 9 bytes.
+  Now it's 541.
+
+18-01-99    Monday >
+        Send new DEPPTINY to Jibz.
+
+19-01-99  > Tuesday
+        AAAAARRGH! He did it! Managed to reduce 29 bytes, leaving DEPPTINY
+  with 512. Hurra! The only-one diskette sector size has been reached! This
+  guy is really incredible... And core size has been reduced 5 more bytes...
+
+27-01-99    Wednesday
+        Oooops! DEPPTINY is buggy... It seems that last optimizations where
+  a little bit too agressive. Urg! it's my fault!!!. It was my last 9 bytes
+  killed!. Can't believe it and can't understand why it fails. Let's debug
+  it... Ok I found my bug. Hop! Fixed. No penalty bytes. It's still 512.
+
+28-01-99    Thursday >
+        Send bugfixed DEPPTINY to Joergen.
+
+15-02-99    Monday
+        It has taken me three months to realize that DEPPACK and DEPPTINY
+  were supporting drives and paths from the begining, despite what DEPPACK
+  says in the usage message. How could I be SO stupid.
+
+23-02-99    Tuesday
+        Started porting last DEPPTINY optimizations to DEPPACK. It's getting
+  harder than I thought. Killed 1 byte on DEPPTINY > 511.
+
+24-02-99    Wednesday >
+        Send the 511 one... Instead of looking to all optimizations and put
+  and adapt the ones I can to DEPPACK, I've grown a new DEPPACK from last
+  DEPPTINY, adding the error messages, but it can't handle "bad infile"
+  detection as it was done with previous DEPPACK. It fails on the same way
+  of DEPPTINY, and I'm not sure why DEPPTINY fails anyway... It's driving
+  me insane!!!
+
+25-02-99    Thursday >
+        Send the new non perfect DEPPACK to Jibz. Let's see if he can find
+  something about the mysterious bug.
+
+ 1-03-99    Monday
+        Kill another byte from DEPPTINY > 510. Gonna test it. Arg! Another
+  pretty bug! Let's see... DEPPACK works right... 512-DEPPTINY works right
+  511-DEPPTINY fails... Strange. Oh, now I've seen it... Bugfixed. Ported
+  the 5 bytes core optimizations to DEPACK16 routines, and cleaned 3 bytes
+  from C connection part from them.
+
+ 3-03-99    Wednesday >
+        Send the bugfixed 510 DEPPTINY.
+
+ 8-03-99    Tuesday >
+        Removing those 3 bytes from C connection part wasn't such a good
+  idea, but 1 of them at least can be safely removed. Re-send the non
+  perfect DEPPACK.
+
+ 9-03-99  > Wednesday
+        Jibz spent 3 bytes to make DEPPTINY a bit safer (it was assuming
+  that high part of ESP was always 0), and removed 6 more bytes from it.
+  Now it's only 507, and better than previous ones. I think we could also
+  spend one more byte to clear the direction flag, leaving it with 508.
+
+11-03-99    Friday >
+        Send the 508 one and this updated history till the entry before this
+  one :-)
+
+16-03-99    Tuesday
+        Ported the last optimizations to my own C-less version of DEPACK16.
+  Started to look again at DEPPACK. Let's start from old DEPPACK instead of
+  growing it from DEPPTINY. I'm checking the good behaviour of the whole
+  thing with every bit changed. It's a really frustrating job.
+
+17-03-99    Wednesday
+        I've isolated 3 test versions of DEPPACK, one of them detects the
+  "bad infile" in the test file, another gives always the same result and
+  the last one produces different results depending of previous memory
+  state. Still I can't understand why it happens.
+
+18-03-99    Thursday >
+        Send the test files to Jibz. Let's see if we can find out what the
+   hell is happening together.
+
+21-03-99    Sunday
+        I've finally find out a possible solution (with expensive 9 bytes
+   fix) to detect bad infiles. Seems to work well. Ported it to the "grown
+   from DEPPTINY" one.
+
+22-03-99    Monday >
+        Send the fix to Jibz.
+
+24-03-99    Wednesday
+        Ported the fix to DEPPTINY, removing another test to keep it under
+  512 (actually 511). Found a bug in DEPPACK Jibz advised me about a while
+  ago. Let's debug it once again. Fixed. Let's make a major test of
+  everything. Ooopss!! First file tested: new bug found. This one crashes
+  the system, for both brand-new DEPPACK and DEPPTINY. Seems to happen when
+  saving last part. Let's debug it again. Ok, fixed too.
+
+25-03-99    Thursday >
+        Send everything... Some files were corrupted, and I'm told that
+  current version is 0.22 instead of 0.21. Make the changes and resend it
+  all.
+
+26-03-99    Friday
+        It seems that a really strange bug now happens only under DOS and
+  not under Windows, corrupting last part of a big test file. This version
+  seems doomed.
+
+ 6-04-99    Tuesday
+        3 more bytes from DEPPACK has been removed. Tomorrow I'll send it
+
+27-04-99    Tuesday >
+        Send DEPPACK and DEPPTINY to aPACK mail-list to see if someone
+  knows what is happening.
+
+26-05-99  > Wednesday
+        aPLib 0.22b has finally been released. As it happened with 0.20,
+  some files aren't updated. Jibz didn't respond about the strange bug when
+  I asked him information in the mail-list, and there's no reference about
+  it in the release. Maybe it wasn't DEPPACK problem after all. Tomorrow
+  I'll send him newer versions of updated files.
+
+28-05-99  > Friday >
+        I've finally sent the updated files, and a silent update with those
+  files has been made in Jibz's homepage.
+
+ 1-06-99  > Tuesday
+        Oleg Prokhorov has found the famous bug. Microsoft fault, because:
+  wasn't DOS supposed to be a 16 bit O.S.? Then why the hell is it
+  corrupting the high part of eax when calling an API function? The fix
+  cost 2 bytes for each version, so it makes DEPPTINY grow to 513 (arg!).
+
+ 3-06-99    Thursday
+        I think we should sacrifice again the cld intruction in DEPPTINY
+  to keep it in 512
+
+13-07-99    Tuesday
+        I've found 2 small mistakes in the files I sent for the updated
+  version. DEPACK16.NAS claims to be v0.21b, and DEPACK16.ASM has a
+  "adc ecx, ecx" instead the "adc cx,cx" it should have. (So TASM users
+  get a 1 byte bigger version than NASM ones). Removed 8 bytes from
+  DEPPACK. Now it's 954/878 bytes long.
+
+15-07-99    Thursday >
+        Send everything
+
+20-07-99  > Tuesday
+        Jibz has managed to cut 11 bytes from DEPPTINY!!!! Of course cld
+  is welcomed again, leaving it in 502.
+
+25-07-99    Sunday
+        Ported Jibz's last optimizations to DEPPACK (941/873) and source
+  codes, and added back the missing bad infile test to DEPPTINY (506).
+  Oops! I changed the wrong "adc ecx,ecx" to "adc cx,cx", fixed. Tomorrow
+  I'll send it.
+
+ 2-09-99    Thursday
+        Removed 1 byte from DEPPACK (940/872)
+
+22-11-99    Monday
+        3 bytes removed from DEPPTINY (503: Getting near the 500 barrier...)
+  and DEPPACK (937/833 -> Using Chut's 4C, algorithm 02).
+
+24-11-99    Thursday
+        The new 4C-02 v1.01 leaves DEPPACK at 832.
+
+28-11-99    Monday
+        The updated 16 bit depackers finally appear at Jibz's homepage.
+
+29-02-00    Tuesday
+        Removed 2 more bytes from DEPPTINY (501) and DEPPACK (935/827 ->
+  Using Chut's 4C-02 version 1.00 alpha). Start commenting DEPPTINY a bit
+  more...
+
+ 2-03-00    Thrusday
+        Removed another byte from both (500, 934/826).
+
+ 4-03-00    Saturday
+        And one more (499!, 933/826). I'm thinking about performing a
+  memory test to check you actually have those 162K needed to run the
+  programs. I guess 13 bytes are more than enough for DEPPTINY.
+
+10-03-00    Friday
+        Removed 2 more bytes from both again (497,931/822).
+
+ 3-04-00    Monday
+        Removed 2 VERY evident do-nothing bytes from DEPPACK (929/821).
+
+ 4-04-00    Tuesday >
+        Added memory check (7 bytes for DEPPTINY (504), 29 for DEPPACK
+  (962/848)). Continue adding comments to DEPPTINY... and put'em in DEPPACK
+  too. Now I feel it's small, safe and clear enough to raise the version to
+  v0.9 (nearly perfect?).
+
+ 5-04-00  > Wednesday
+        Jibz cutted 2 bytes from core, and 6 more from DEPPACK's syntax
+  text, leaving sizes of 502 for DEPPTINY and 954/841 for DEPPACK. Also,
+  aPLib's version number has been increased to v0.26b.
+
+25-04-00    Tuesday
+        aPLib 0.26 has been released.
+
+ 8-05-00    Monday >
+        1 byte removed from core. One bug detected in TASM version of
+  DEPACK16.ASM
+
+14-05-00    Sunday
+        Removed another byte from DEPPTINY (500).
+
+23-05-00    Tuesday >
+        Removed another byte from both DEPPTINY (499) and DEPPACK (952/836).
+  My mail server has changed from bart to aluesi, so my email is now:
+
+  metalb@aluesi.us.es
+
+ 2-07-00    Sunday
+        Removed another byte from both DEPPTINY (498) and DEPPACK (951/836)
+
+ 3-07-00    Monday >
+        Another one! (497,950/831)
+
+ 8-07-00    Saturday
+        Another one! (496,949/831)
+
+14-10-00    Saturday
+        BUGFIX: Up till now, the depackers didn't work with a drive for
+  outfile. I've been able to fix this, and costed 17 bytes for DEPPTINY
+  (513, aargh! CLD sacrifice again?). aPPACK also suffers from this bug.
+
+15-10-00    Sunday
+        No sacrifice. I removed one more byte -> 512!. Applied bugfix to
+  DEPPACK (967/858). Version raised to v0.99 (now, I will just add timestamp
+  preservation for v1.00, only for DEPPACK, as DEPPTINY can't handle any
+  more code).
+
+19-10-00    Thrusday >
+        Added timestamp preservation to DEPPACK (983/864). Version raised
+  to v1.0 . Next improvement: long filenames support?
+
+27-10-00    Friday >
+        Removed 9 bytes from DEPPACK (974/851), and 7 from DEPPTINY (505).
+
+29-10-00    Sunday >
+        Removed 4 more bytes from DEPPTINY (501) and 7 from DEPPACK
+  (967/851 (Hmmm, no gain after compression). Now the timestamp preservation
+  nearly fits in DEPPTINY!... 3 bytes left to be removed to add it.
+
+23-02-01  > Friday
+        Jibz sent me a beta version of new aPLib 0.34, and asked me to
+  update my depackers, because the encoding method has changed, and also
+  the aPPack program has added a header to the files. Well, it will take
+  just a few bytes to update the decode routine, so it would fit in
+  DEPPTINY, but the header adds even more bytes, so I feel I can't fit it
+  under 512, so I'll discontinue development of DEPPTINY and concentrate
+  just on DEPPACK. But perhaps a headerless DEPPTINY will be included for
+  anyone who wants to see the last optimizations.
+
+25-02-01    Sunday
+        Updated the decoding routine. Just 10 bytes. It works cutting the
+  first 8 bytes from new packed files. DEPPTINY is ready.
+
+28-02-01    Wednesday >
+        Added header support, of course including more tests for bad infile
+  detection based on header. It makes 1023/903 for DEPPACK. Version raised
+  to 1.1 . Version 1.2 will probably include partial long filenames support.
+
+19-10-01  > Friday
+	Received a new beta of aPLib 0.34. Header size has grown from 8 to 
+  24 bytes, adding CRC info and info about packed file.
+
+22-10-01    Monday >
+	Made a few changes to DEPPACK to support new headers, but new tests
+  using CRCs and size of packed file are not added... yet!. No size penalty.
+
+24-10-01    Wednesday >
+        DEPPACK now reads the header in two steps, to skip the header
+  whatever it's size is, making it compatible with future aPPack versions.
+  This costs a few bytes (1034/913).

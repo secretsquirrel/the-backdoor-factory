@@ -1,0 +1,102 @@
+
+Compression
+===========
+
+The following is a description of the aPLib compression functionality.
+
+
+Compression Functions
+---------------------
+
+.. c:function:: size_t aP_pack(const void *source, void *destination, \
+                               size_t length, void *workmem, \
+                               int (*callback)(size_t, size_t, size_t, void *), \
+                               void *cbparam)
+
+    Compress *length* bytes of data from *source* to *destination*, using
+    *workmem* as temporary storage.
+
+    The *destination* buffer should be large enough to hold
+    ``aP_max_packed_size(length)`` bytes.
+
+    The *workmem* buffer should be ``aP_workmem_size(length)`` bytes large.
+
+    The callback function, *callback*, must take four parameters. The first is
+    *length*, the second is the number of input bytes that has been
+    compressed, the third is how many output bytes they have been compressed
+    to, and the fourth is *cbparam*. If you do not have a callback, use
+    ``NULL`` instead. If the callback returns a non-zero value then
+    :c:func:`aP_pack()` will continue compressing -- if it returns zero,
+    :c:func:`aP_pack()` will stop and return ``APLIB_ERROR``.
+
+    :param source: pointer to data to be compressed
+    :param destination: pointer to where compressed data should be stored
+    :param length: length of uncompressed data in bytes
+    :param workmem: pointer to work memory used during compression
+    :param callback: pointer to callback function (or ``NULL``)
+    :param cbparam: callback argument
+    :return: length of compressed data, or ``APLIB_ERROR`` on error
+
+.. c:function:: size_t aP_workmem_size(size_t input_size)
+
+    Compute required size of *workmem* buffer used by :c:func:`aP_pack()` for
+    compressing *input_size* bytes of data.
+
+    The current code always returns 640k (640*1024).
+
+    :param input_size: length of uncompressed data in bytes
+    :return: required length of work buffer
+
+.. c:function:: size_t aP_max_packed_size(size_t input_size)
+
+    Compute maximum possible compressed size when compressing *input_size*
+    bytes of incompressible data.
+
+    The current code returns ``(input_size + (input_size / 8) + 64)``.
+
+    :param input_size: length of uncompressed data in bytes
+    :return: maximum possible size of compressed data
+
+
+Safe Wrapper Functions
+----------------------
+
+.. c:function:: size_t aPsafe_pack(const void *source, void *destination, \
+                                   size_t length, void *workmem, \
+                                   int (*callback)(size_t, size_t, size_t, void *), \
+                                   void *cbparam)
+
+    Wrapper function for :c:func:`aP_pack()`, which adds a header to the
+    compressed data containing the length of the original data, and CRC32
+    checksums of the original and compressed data.
+
+    :param source: pointer to data to be compressed
+    :param destination: pointer to where compressed data should be stored
+    :param length: length of uncompressed data in bytes
+    :param workmem: pointer to work memory used during compression
+    :param callback: pointer to callback function (or ``NULL``)
+    :param cbparam: callback argument
+    :return: length of compressed data, or ``APLIB_ERROR`` on error
+
+    .. seealso:: :c:func:`aP_pack()`
+
+
+Example
+-------
+
+.. code-block:: c
+
+    /* allocate workmem and destination memory */
+    char *workmem    = malloc(aP_workmem_size(length));
+    char *compressed = malloc(aP_max_packed_size(length));
+
+    /* compress data[] to compressed[] */
+    size_t outlength = aPsafe_pack(data, compressed, length, workmem, NULL, NULL);
+
+    /* if APLIB_ERROR is returned, and error occured */
+    if (outlength == APLIB_ERROR) {
+            printf("An error occured!\n");
+    }
+    else {
+            printf("Compressed %u bytes to %u bytes\n", length, outlength);
+    }

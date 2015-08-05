@@ -1,0 +1,257 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Compression &mdash; aPLib 1.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/grey.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="aPLib 1.1.1 documentation" href="index.html" />
+    <link rel="next" title="Decompression" href="decompression.html" />
+    <link rel="prev" title="General Information" href="general.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="decompression.html" title="Decompression"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="general.html" title="General Information"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">aPLib 1.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="compression">
+<h1>Compression<a class="headerlink" href="#compression" title="Permalink to this headline">¶</a></h1>
+<p>The following is a description of the aPLib compression functionality.</p>
+<div class="section" id="compression-functions">
+<h2>Compression Functions<a class="headerlink" href="#compression-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.aP_pack">
+size_t <tt class="descname">aP_pack</tt><big>(</big>const void<em>&nbsp;*source</em>, void<em>&nbsp;*destination</em>, size_t<em>&nbsp;length</em>, void<em>&nbsp;*workmem</em>, int<em>&nbsp;(*callback)(size_t</em>, size_t, size_t, void<em>&nbsp;*)</em>, void<em>&nbsp;*cbparam</em><big>)</big><a class="headerlink" href="#c.aP_pack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compress <em>length</em> bytes of data from <em>source</em> to <em>destination</em>, using
+<em>workmem</em> as temporary storage.</p>
+<p>The <em>destination</em> buffer should be large enough to hold
+<tt class="docutils literal"><span class="pre">aP_max_packed_size(length)</span></tt> bytes.</p>
+<p>The <em>workmem</em> buffer should be <tt class="docutils literal"><span class="pre">aP_workmem_size(length)</span></tt> bytes large.</p>
+<p>The callback function, <em>callback</em>, must take four parameters. The first is
+<em>length</em>, the second is the number of input bytes that has been
+compressed, the third is how many output bytes they have been compressed
+to, and the fourth is <em>cbparam</em>. If you do not have a callback, use
+<tt class="docutils literal"><span class="pre">NULL</span></tt> instead. If the callback returns a non-zero value then
+<a class="reference internal" href="#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> will continue compressing &#8211; if it returns zero,
+<a class="reference internal" href="#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> will stop and return <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; pointer to data to be compressed</li>
+<li><strong>destination</strong> &#8211; pointer to where compressed data should be stored</li>
+<li><strong>length</strong> &#8211; length of uncompressed data in bytes</li>
+<li><strong>workmem</strong> &#8211; pointer to work memory used during compression</li>
+<li><strong>callback</strong> &#8211; pointer to callback function (or <tt class="docutils literal"><span class="pre">NULL</span></tt>)</li>
+<li><strong>cbparam</strong> &#8211; callback argument</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of compressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.aP_workmem_size">
+size_t <tt class="descname">aP_workmem_size</tt><big>(</big>size_t<em>&nbsp;input_size</em><big>)</big><a class="headerlink" href="#c.aP_workmem_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute required size of <em>workmem</em> buffer used by <a class="reference internal" href="#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> for
+compressing <em>input_size</em> bytes of data.</p>
+<p>The current code always returns 640k (640*1024).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input_size</strong> &#8211; length of uncompressed data in bytes</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">required length of work buffer</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.aP_max_packed_size">
+size_t <tt class="descname">aP_max_packed_size</tt><big>(</big>size_t<em>&nbsp;input_size</em><big>)</big><a class="headerlink" href="#c.aP_max_packed_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute maximum possible compressed size when compressing <em>input_size</em>
+bytes of incompressible data.</p>
+<p>The current code returns <tt class="docutils literal"><span class="pre">(input_size</span> <span class="pre">+</span> <span class="pre">(input_size</span> <span class="pre">/</span> <span class="pre">8)</span> <span class="pre">+</span> <span class="pre">64)</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input_size</strong> &#8211; length of uncompressed data in bytes</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">maximum possible size of compressed data</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="safe-wrapper-functions">
+<h2>Safe Wrapper Functions<a class="headerlink" href="#safe-wrapper-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.aPsafe_pack">
+size_t <tt class="descname">aPsafe_pack</tt><big>(</big>const void<em>&nbsp;*source</em>, void<em>&nbsp;*destination</em>, size_t<em>&nbsp;length</em>, void<em>&nbsp;*workmem</em>, int<em>&nbsp;(*callback)(size_t</em>, size_t, size_t, void<em>&nbsp;*)</em>, void<em>&nbsp;*cbparam</em><big>)</big><a class="headerlink" href="#c.aPsafe_pack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper function for <a class="reference internal" href="#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a>, which adds a header to the
+compressed data containing the length of the original data, and CRC32
+checksums of the original and compressed data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; pointer to data to be compressed</li>
+<li><strong>destination</strong> &#8211; pointer to where compressed data should be stored</li>
+<li><strong>length</strong> &#8211; length of uncompressed data in bytes</li>
+<li><strong>workmem</strong> &#8211; pointer to work memory used during compression</li>
+<li><strong>callback</strong> &#8211; pointer to callback function (or <tt class="docutils literal"><span class="pre">NULL</span></tt>)</li>
+<li><strong>cbparam</strong> &#8211; callback argument</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of compressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a></p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* allocate workmem and destination memory */</span>
+<span class="kt">char</span> <span class="o">*</span><span class="n">workmem</span>    <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="n">aP_workmem_size</span><span class="p">(</span><span class="n">length</span><span class="p">));</span>
+<span class="kt">char</span> <span class="o">*</span><span class="n">compressed</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="n">aP_max_packed_size</span><span class="p">(</span><span class="n">length</span><span class="p">));</span>
+
+<span class="cm">/* compress data[] to compressed[] */</span>
+<span class="kt">size_t</span> <span class="n">outlength</span> <span class="o">=</span> <span class="n">aPsafe_pack</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">compressed</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">workmem</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+
+<span class="cm">/* if APLIB_ERROR is returned, and error occured */</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">outlength</span> <span class="o">==</span> <span class="n">APLIB_ERROR</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;An error occured!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">else</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Compressed %u bytes to %u bytes</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">outlength</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Compression</a><ul>
+<li><a class="reference internal" href="#compression-functions">Compression Functions</a></li>
+<li><a class="reference internal" href="#safe-wrapper-functions">Safe Wrapper Functions</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="general.html"
+                        title="previous chapter">General Information</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="decompression.html"
+                        title="next chapter">Decompression</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/compression.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="decompression.html" title="Decompression"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="general.html" title="General Information"
+             >previous</a> |</li>
+        <li><a href="index.html">aPLib 1.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 1998-2014, Joergen Ibsen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

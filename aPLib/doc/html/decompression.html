@@ -1,0 +1,381 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Decompression &mdash; aPLib 1.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/grey.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="aPLib 1.1.1 documentation" href="index.html" />
+    <link rel="next" title="Acknowledgements" href="acknowledgements.html" />
+    <link rel="prev" title="Compression" href="compression.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="acknowledgements.html" title="Acknowledgements"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="compression.html" title="Compression"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">aPLib 1.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="decompression">
+<h1>Decompression<a class="headerlink" href="#decompression" title="Permalink to this headline">¶</a></h1>
+<p>The following is a description of the aPLib decompression functionality.</p>
+<div class="section" id="decompression-functions">
+<h2>Decompression Functions<a class="headerlink" href="#decompression-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.aP_depack">
+size_t <tt class="descname">aP_depack</tt><big>(</big>const void<em>&nbsp;*source</em>, void<em>&nbsp;*destination</em><big>)</big><a class="headerlink" href="#c.aP_depack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decompress compressed data from <em>source</em> to <em>destination</em>.</p>
+<p>The <em>destination</em> buffer must be large enough to hold the decompressed
+data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; pointer to compressed data</li>
+<li><strong>destination</strong> &#8211; pointer to where decompressed data should be stored</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of decompressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not included in the libraries, but is available in
+<tt class="docutils literal"><span class="pre">src/c/depack.c</span></tt>. <a class="reference internal" href="#c.aP_depack_asm_fast" title="aP_depack_asm_fast"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm_fast()</span></tt></a> can be used
+instead.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.aP_depack_safe">
+size_t <tt class="descname">aP_depack_safe</tt><big>(</big>const void<em>&nbsp;*source</em>, size_t<em>&nbsp;srclen</em>, void<em>&nbsp;*destination</em>, size_t<em>&nbsp;dstlen</em><big>)</big><a class="headerlink" href="#c.aP_depack_safe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decompress compressed data from <em>source</em> to <em>destination</em>.</p>
+<p>This function reads at most <em>srclen</em> bytes from <em>source</em>, and writes
+at most <em>dstlen</em> bytes to <em>destination</em>. If there is not enough
+source or destination space, or a decoding error occurs, the function
+returns <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; pointer to compressed data</li>
+<li><strong>srclen</strong> &#8211; size of source buffer in bytes</li>
+<li><strong>destination</strong> &#8211; pointer to where decompressed data should be stored</li>
+<li><strong>dstlen</strong> &#8211; size of destination buffer in bytes</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of decompressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not included in the libraries, but is available in
+<tt class="docutils literal"><span class="pre">src/c/depacks.c</span></tt>. <a class="reference internal" href="#c.aP_depack_asm_safe" title="aP_depack_asm_safe"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm_safe()</span></tt></a> can be used
+instead.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.aP_depack_asm">
+size_t <tt class="descname">aP_depack_asm</tt><big>(</big>const void<em>&nbsp;*source</em>, void<em>&nbsp;*destination</em><big>)</big><a class="headerlink" href="#c.aP_depack_asm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decompress compressed data from <em>source</em> to <em>destination</em>.</p>
+<p>The <em>destination</em> buffer must be large enough to hold the decompressed
+data.</p>
+<p>Optimised for size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; pointer to compressed data</li>
+<li><strong>destination</strong> &#8211; pointer to where decompressed data should be stored</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of decompressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.aP_depack_asm_fast">
+size_t <tt class="descname">aP_depack_asm_fast</tt><big>(</big>const void<em>&nbsp;*source</em>, void<em>&nbsp;*destination</em><big>)</big><a class="headerlink" href="#c.aP_depack_asm_fast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decompress compressed data from <em>source</em> to <em>destination</em>.</p>
+<p>The <em>destination</em> buffer must be large enough to hold the decompressed
+data.</p>
+<p>Optimised for speed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; pointer to compressed data</li>
+<li><strong>destination</strong> &#8211; pointer to where decompressed data should be stored</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of decompressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.aP_depack_asm_safe">
+size_t <tt class="descname">aP_depack_asm_safe</tt><big>(</big>const void<em>&nbsp;*source</em>, size_t<em>&nbsp;srclen</em>, void<em>&nbsp;*destination</em>, size_t<em>&nbsp;dstlen</em><big>)</big><a class="headerlink" href="#c.aP_depack_asm_safe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decompress compressed data from <em>source</em> to <em>destination</em>.</p>
+<p>This function reads at most <em>srclen</em> bytes from <em>source</em>, and writes
+at most <em>dstlen</em> bytes to <em>destination</em>. If there is not enough
+source or destination space, or a decoding error occurs, the function
+returns <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; pointer to compressed data</li>
+<li><strong>srclen</strong> &#8211; size of source buffer in bytes</li>
+<li><strong>destination</strong> &#8211; pointer to where decompressed data should be stored</li>
+<li><strong>dstlen</strong> &#8211; size of destination buffer in bytes</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of decompressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#c.aPsafe_depack" title="aPsafe_depack"><tt class="xref c c-func docutils literal"><span class="pre">aPsafe_depack()</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.aP_crc32">
+unsigned int <tt class="descname">aP_crc32</tt><big>(</big>const void<em>&nbsp;*source</em>, size_t<em>&nbsp;length</em><big>)</big><a class="headerlink" href="#c.aP_crc32" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute CRC32 value of <em>length</em> bytes of data from <em>source</em>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; pointer to data to process</li>
+<li><strong>length</strong> &#8211; size in bytes of data</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">CRC32 value</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="safe-wrapper-functions">
+<h2>Safe Wrapper Functions<a class="headerlink" href="#safe-wrapper-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.aPsafe_check">
+size_t <tt class="descname">aPsafe_check</tt><big>(</big>const void<em>&nbsp;*source</em><big>)</big><a class="headerlink" href="#c.aPsafe_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute CRC32 of compressed data in <em>source</em> and check it against value
+stored in header. Return length of decompressed data stored in header.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; compressed data to process</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of decompressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.aPsafe_get_orig_size">
+size_t <tt class="descname">aPsafe_get_orig_size</tt><big>(</big>const void<em>&nbsp;*source</em><big>)</big><a class="headerlink" href="#c.aPsafe_get_orig_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return length of decompressed data stored in header of compressed data in
+<em>source</em>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; compressed data to process</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of decompressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.aPsafe_depack">
+size_t <tt class="descname">aPsafe_depack</tt><big>(</big>const void<em>&nbsp;*source</em>, size_t<em>&nbsp;srclen</em>, void<em>&nbsp;*destination</em>, size_t<em>&nbsp;dstlen</em><big>)</big><a class="headerlink" href="#c.aPsafe_depack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper function for <a class="reference internal" href="#c.aP_depack_asm_safe" title="aP_depack_asm_safe"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm_safe()</span></tt></a>, which checks the CRC32
+of the compressed data, decompresses, and checks the CRC32 of the
+decompressed data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> &#8211; pointer to compressed data</li>
+<li><strong>srclen</strong> &#8211; size of source buffer in bytes</li>
+<li><strong>destination</strong> &#8211; pointer to where decompressed data should be stored</li>
+<li><strong>dstlen</strong> &#8211; size of destination buffer in bytes</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">length of decompressed data, or <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> on error</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#c.aP_depack_asm_safe" title="aP_depack_asm_safe"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm_safe()</span></tt></a></p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* get original size */</span>
+<span class="kt">size_t</span> <span class="n">orig_size</span> <span class="o">=</span> <span class="n">aPsafe_get_orig_size</span><span class="p">(</span><span class="n">compressed</span><span class="p">);</span>
+
+<span class="cm">/* allocate memory for decompressed data */</span>
+<span class="kt">char</span> <span class="o">*</span><span class="n">data</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="n">orig_size</span><span class="p">);</span>
+
+<span class="cm">/* decompress compressed[] to data[] */</span>
+<span class="kt">size_t</span> <span class="n">outlength</span> <span class="o">=</span> <span class="n">aPsafe_depack</span><span class="p">(</span><span class="n">compressed</span><span class="p">,</span> <span class="n">compressed_size</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">orig_size</span><span class="p">);</span>
+
+<span class="cm">/* check decompressed length */</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">outlength</span> <span class="o">!=</span> <span class="n">orig_size</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;An error occured!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">else</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Decompressed %u bytes</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">outlength</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Decompression</a><ul>
+<li><a class="reference internal" href="#decompression-functions">Decompression Functions</a></li>
+<li><a class="reference internal" href="#safe-wrapper-functions">Safe Wrapper Functions</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="compression.html"
+                        title="previous chapter">Compression</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="acknowledgements.html"
+                        title="next chapter">Acknowledgements</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/decompression.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="acknowledgements.html" title="Acknowledgements"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="compression.html" title="Compression"
+             >previous</a> |</li>
+        <li><a href="index.html">aPLib 1.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 1998-2014, Joergen Ibsen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

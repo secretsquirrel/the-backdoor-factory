@@ -61,7 +61,7 @@ if __name__ == "__main__":
     '''
     Will create patched binaries for each payload for the type of binary provided.
     Each payload has it's own port number.
-    Usage: ./testNarness.py file 127.0.0.1 8080
+    Usage: ./payloadtests.py file 127.0.0.1 8080
     '''
     if len(sys.argv) != 4:
         print "Will create patched binaries for each stock shellcode/payload for the "

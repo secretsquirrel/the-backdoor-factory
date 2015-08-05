@@ -1,0 +1,8 @@
+aplib.def Interface Definition for APLIB.DLL (OS/2)
+aplibu.pas Interface Unit to ..\..\lib\omf\aplib.lib
+aplibud.pas Dynamic Version of aplibu
+appack.pas demo program for the Compressor
+apunpack.pas demo program for the Decompressor
+make_exe.cmd make demo executables (adapt path)
+test_exe.cmd test make_exe result
+vpc.cfg VPC.CFG compiler parameter (adapt path)

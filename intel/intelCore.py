@@ -105,7 +105,7 @@ class intelCore():
         For x64 files. Updated to use Capstone-Engine.
         """
         print "[*] Reading win64 entry instructions"
-        self.f.seek(self.flItms['LocOfEntryinCode'])
+        self.f.seek(self.flItms['LocOfEntryinCode'], 0)
         self.count = 0
         self.flItms['ImpList'] = []
         md = Cs(CS_ARCH_X86, CS_MODE_64)
@@ -136,7 +136,7 @@ class intelCore():
         executable entry point to jump to the first code cave.
         """
         print "[*] Patching initial entry instructions"
-        self.f.seek(self.flItms['LocOfEntryinCode'])
+        self.f.seek(self.flItms['LocOfEntryinCode'], 0)
         #This is the JMP command in the beginning of the
         #code entry point that jumps to the codecave
         self.f.write(struct.pack('=B', int('E9', 16)))

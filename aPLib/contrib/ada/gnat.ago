@@ -1,0 +1,5 @@
+-O2 -gnatp
+-i -aOACU_Win -largs ..\..\lib\coff\aplib.lib
+
+
+WINDOWS_TARGET

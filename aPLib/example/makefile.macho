@@ -1,0 +1,29 @@
+##
+## aPLib compression library  -  the smaller the better :)
+##
+## GCC makefile (Linux, FreeBSD, BeOS and QNX)
+##
+## Copyright (c) 1998-2014 Joergen Ibsen
+## All Rights Reserved
+##
+
+target  = appack
+objects = appack.o
+
+cflags  = -Wall -O2 
+ldflags = $(cflags)
+incdir  = ../lib/macho64
+libs    = $(incdir)/aplib.a
+
+.PHONY: all clean
+
+all: $(target)
+
+$(target): $(objects)
+	gcc $(ldflags) -o $@ $^ $(libs)
+
+%.o : %.c
+	gcc -c -I$(incdir) $(cflags) -o $@ $<
+
+clean:
+	$(RM) $(objects) $(target)

@@ -1,0 +1,23 @@
+
+Welcome to the aPLib documentation!
+===================================
+
+aPLib is a compression library based on the algorithm used in aPACK (my 16-bit
+executable packer). aPLib is an easy-to-use alternative to many of the
+heavy-weight compression libraries available.
+
+The compression ratios achieved by aPLib combined with the speed and tiny
+footprint of the decompressors (as low as 169 bytes!) makes it the ideal
+choice for many products.
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   license
+   general
+   compression
+   decompression
+   acknowledgements
+   changes

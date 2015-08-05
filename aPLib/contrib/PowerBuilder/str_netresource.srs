@@ -1,0 +1,12 @@
+$PBExportHeader$str_netresource.srs
+global type str_netresource from structure
+	unsignedlong		dwscope
+	unsignedlong		dwtype
+	unsignedlong		dwdisplaytype
+	unsignedlong		dwusage
+	string		lplocalname
+	string		lpremotename
+	string		lpcomment
+	string		lpprovider
+end type
+

@@ -33,48 +33,31 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 def eat_code_caves(flItms, caveone, cavetwo):
+    """
+    Return the difference between caves RVA positions
+    """
+
     try:
         if flItms['CavesPicked'][cavetwo][0] == flItms['CavesPicked'][caveone][0]:
             return int(flItms['CavesPicked'][cavetwo][1], 16) - int(flItms['CavesPicked'][caveone][1], 16)
+
         else:
             caveone_found = False
             cavetwo_found = False
-            forward = True
-            windows_memoffset_holder = 0
             for section in flItms['Sections']:
                 if flItms['CavesPicked'][caveone][0] == section[0] and caveone_found is False:
+                    rva_one = int(flItms['CavesPicked'][caveone][1], 16) - int(flItms['CavesPicked'][caveone][4], 16) + flItms['CavesPicked'][caveone][8]
                     caveone_found = True
-                    if cavetwo_found is False:
-                        windows_memoffset_holder += section[1] + 4096 - section[1] % 4096 - section[3]
-                        forward = True
-                        continue
-                    if section[1] % 4096 == 0:
-                        continue
-                    break
 
                 if flItms['CavesPicked'][cavetwo][0] == section[0] and cavetwo_found is False:
+                    rva_two = int(flItms['CavesPicked'][cavetwo][1], 16) - int(flItms['CavesPicked'][cavetwo][4], 16) + flItms['CavesPicked'][cavetwo][8]
                     cavetwo_found = True
-                    if caveone_found is False:
-                        windows_memoffset_holder += -(section[1] + 4096 - section[1] % 4096 - section[3])
-                        forward = False
-                        continue
-                    if section[1] % 4096 == 0:
-                        continue
-                    break
 
-                if caveone_found is True or cavetwo_found is True:
-                    if section[1] % 4096 == 0:
-                            continue
-                    if forward is True:
-                        windows_memoffset_holder += section[1] + 4096 - section[1] % 4096 - section[3]
-                    if forward is False:
-                        windows_memoffset_holder += -(section[1] + 4096 - section[1] % 4096 - section[3])
-                    continue
-
-                #Need a way to catch all the sections in between other sections
-
-            return int(flItms['CavesPicked'][cavetwo][1], 16) - int(flItms['CavesPicked'][caveone][1], 16) + windows_memoffset_holder
+                if caveone_found is True and cavetwo_found is True:
+                    if flItms['CavesPicked'][caveone][1] < flItms['CavesPicked'][cavetwo][1]:
+                        return -(rva_one - rva_two)
+                    else:
+                        return rva_two - rva_one
 
     except Exception:
-        #print "EAT CODE CAVE", str(e)
         return 0

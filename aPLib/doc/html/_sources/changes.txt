@@ -1,0 +1,343 @@
+
+Version History
+===============
+
+**v1.1.1** *
+    Add ``VERSIONINFO`` resource to dll files, and fix subsystem in 32-bit dll
+    for Win95 compatibility, thanks to Richard Russell.
+
+    Add Apple II example, thanks to Peter Ferrie.
+
+    Add PowerBASIC example, thanks to Wayne Diamond.
+    
+    Use `Sphinx <http://sphinx-doc.org/>`_ to generate docs.
+    
+**v1.1.0** *
+    Added Linux ELF shared library support, thanks to Vov Pov.
+
+    Added a Python example, thx to Marco Fabbricatore.
+
+    Fixed a bug in 64-bit :c:func:`aPsafe_check()`.
+
+    Cleaned up compression code.
+
+    Changed to semver version numbering.
+
+**v1.01** *
+    Added undecorated names to 32-bit dll again, thanks to James C. Fuller.
+
+**v1.00** *
+    Changed the license so aPLib can now be used free of charge for commercial
+    use as well.
+
+    Added support for 64-bit compression and decompression. Since I do not
+    have a running 64-bit system myself, any feedback on how it works would
+    be great.
+
+    Removed support for a number of old compilers/assemblers. If you still
+    need these, please use the previous release or contact me (if you need
+    object files for Delphi, simply unpack the OMF library).
+
+    Moved most of the examples to the contrib folder since I no longer have
+    the old development tools installed to check they work.
+
+    All the assembly source files included are now FASM syntax.
+
+    Simplified the build process using objconv by Agner Fog.
+
+    Jumped the version number to v1.00 to signify the code is stable.
+
+**v0.44** *
+    Made a few updates to the documentation.
+
+    Fixed a rare crash, thx to Rafael Ahucha!
+
+**v0.43** *
+    Added Visual Basic 6 wrapper, thx to Jon Johnson!
+
+    Added PowerBuilder 9.0 objects, thx to James Sheekey!
+  
+    Fixed a rare crash, thx to cyberbob!
+
+**v0.42** *
+    Added C and assembler implementations of a new safe depacker
+    :c:func:`aP_depack_safe()` and :c:func:`aP_depack_asm_safe()`.
+
+    Updated the ``aPsafe_`` wrapper functions.
+
+    Renamed ``lib/vc`` to ``lib/mscoff`` and ``lib/watcom`` to ``lib/omf`` to
+    better reflect that they are not limited to those specific compilers.
+
+    Updated examples and documentation.
+
+**v0.41**
+    Added a `Borland C++ Builder <http://www.borland.com/>`_ example, thx to
+    mouser!
+
+    Fixed vc library compatibility with
+    `Pelles C <http://www.smorgasbordet.com/pellesc/>`_.
+
+**v0.40**
+    The documentation was rewritten in html, and moved to a separate folder.
+
+    All examples were updated. The ``dll_asm``, ``dos32`` and ``tlink32``
+    examples were removed, and a small .NET example was added.
+
+**v0.39**
+    All aPLib functions now return ``-1`` on error instead of ``0``. Added a
+    macro ``APLIB_ERROR`` for this value to all include files.
+
+**v0.38**
+    The aPLib compression functions should now be fully thread-safe. Updated
+    the C decompression code for thread-safety.
+
+**v0.37**
+    Changed the parameters for the callback function. It is now called with
+    the input size, input bytes processed, output bytes produced, and a
+    user-supplied callback parameter. Thx to f0dder!
+
+**v0.36** *
+    Fixed a bug which could cause a match to be found in the area before the
+    input buffer under certain conditions, thx to Veit!
+
+    Changed the extension of the C example files from ``cpp`` to ``c``.
+
+    The ELF32 version was tested under FreeBSD, thx to Oleg!
+
+**v0.35**
+    Worked with a number of 'issues' in the build process.
+
+    Fixed the C depacker so it no longer modifies the input buffer, thx to
+    Trevor Mensah!
+
+**v0.34** *
+    Updated the 16bit, Ada, Delphi, C/C++, TMT Pascal and Virtual Pascal
+    examples, thx to METALBRAIN, Gautier, Oleg and Veit!
+
+    Added a MASM32 example program, thx to Steve Hutchesson!
+
+    Fixed another bug which could cause :c:func:`aP_pack()` to read one byte
+    past the input buffer, thx to Reiner Proels!
+
+    NOTE!! the dll version now expects the callback function to use the
+    stdcall calling convention.
+
+    The libraries now include the function :c:func:`aP_max_packed_size()`,
+    which given the input size returns the maximum possible size
+    :c:func:`aP_pack()` may produce (i.e. the worst case output size of
+    totally incompressible data). At the moment the function simply returns
+    ``(inputsize + (inputsize / 8) + 64)``.
+
+**v0.33**
+    Added ELF32 version of aPLib, which has been tested with Linux, BeOS and
+    QNX. Modified the C example to work under these operating systems too.
+
+**v0.32**
+    Discovered some mixups between different versions of the examples ..
+    started rewriting some of them. Added a header to the files created by
+    most of the examples.
+
+**v0.31**
+   Improved compression ratio a little.
+
+**v0.30**
+    Fixed a bug in one of the 16bit depackers, thx to Peter Hegel!
+
+    Updated the C/C++ example.
+
+**v0.29**
+    Updated the Ada example, thx to Gautier!
+
+    I have removed the 'b' from the version number.
+
+**v0.28b**
+    Updated the 16bit depacker examples, thx to METALBRAIN!
+
+    Renamed the SRC/C depacker files.
+
+**v0.27b**
+    Fixed a bug which could cause :c:func:`aP_pack()` to read one byte past
+    the input buffer.
+
+**v0.26b** *
+    Added Visual C++ and Borland C examples.
+
+    Rewrote the example program, so there is only a single source file, which
+    works with BCC32, DJGPP, VC++ and Watcom.
+
+    Added an import library for Visual C++ in ``lib/dll``, and an example of
+    how to use it (``examples/c/make_dll.bat``).
+
+    The libraries now include the function :c:func:`aP_workmem_size()`, which
+    given the input size returns the amount of memory required for the work
+    buffer (you still have to allocate it yourself). This should make
+    upgrading easier in case I change the memory requirement in a later
+    version. At the moment the function simply returns 640k.
+
+**v0.25b**
+    Added a TMT Pascal example, thx to Oleg Prokhorov!
+
+    Moved the Ada and VPascal examples to the example dir.
+
+    Updated the documentation.
+
+**v0.24b**
+    Updated the 16bit depacker examples, thx to METALBRAIN!
+
+    Made all assembler depackers smaller, thx to TAD and METALBRAIN!
+
+**v0.23b**
+    Recompiled with the latest VC++ and DJGPP versions.
+
+    Did a few speed optimisations -- most versions should be a little faster.
+
+**v0.22b** *
+    Improved the compression speed a little more.
+
+    Cleaned up the code, which made the library somewhat smaller.
+
+    Added a C depacker.
+
+    Silent update: Updated the 16bit depackers - thx to METALBRAIN. There is
+    still one problem with the 16bit example depackers, but it will be fixed
+    for the next release.
+
+**v0.21b**
+    Improved compression ratio and speed.
+
+    Added Ada support by Gautier - thx!
+
+    Reduced the memory requirement from 1mb to 640k -- which should be enough
+    for anybody ;).
+
+**v0.20b** *
+    Added Delphi support and example by Alexey Solodovnikov - thx!
+
+    Rewrote the aPPack example, removing some errors, and added 16bit
+    depackers - thx to METALBRAIN!
+
+    Removed a lot of unneeded information from the object files.
+
+    Rearranged all the folders -- hope it's not too confusing ;).
+
+    Removed all the example binaries from this file, and made them available
+    in a separate file instead.
+
+    Added the real aPACK / aPLib homepage URL, since home.ml.org was down for
+    a period.
+
+**v0.19b** *
+    Fixed a little mem bug (hopefully), thx to ANAKiN!
+
+    Ratio improved a little on large files.
+
+    Finally got around to updating my DJGPP installation :)
+
+    NOTE!! I have revised the license conditions -- please read APLIB.DOC.
+
+**v0.18b** *
+    Added the new VPascal interfacing code by Veit Kannegieser.
+
+    Added a library compiled for VC.
+
+    Worked a little on the depackers.
+
+**v0.17b** *
+    NOTE!! the callback function now has to return a value. This is to make it
+    possible for the callback function to abort the packing without exiting
+    the program. If the callback returns ``1``, :c:func:`aP_pack()` will
+    continue -- if it returns ``0``, :c:func:`aP_pack()` will stop and return
+    ``0``.
+
+    The aPACK / aPLib homepage is now up on: apack.home.ml.org
+
+    I have not gotten the new VPascal interfacing code from Veit yet, so I
+    will add it again in the next version :)
+
+    Since I have added so much new stuff, I am releasing this version to get
+    some feedback (hint!), to find out where to go from here. If you have
+    Visual C++, Borland C++, Borland C++ Builder, Visual Basic, Delphi or
+    other 32-bit compilers/linkers, I am very interested in any problems you
+    might have using aPLib (especially the DLL version).
+
+**v0.16b**
+    NOTE!! :c:func:`aP_pack()` NO LONGER allocates the memory it needs itself.
+    This was changed because otherwise you would need to supply malloc and
+    free functions to the packer. Now you just call :c:func:`aP_pack()` with a
+    pointer to 1mb of mem. This is also faster if you compress multiple sets
+    of data, because mem is not allocated and deallocated every time.
+
+    Added new VPascal interfacing code by Veit Kannegieser - thx!
+
+    Added DOS32 and TLINK32 (Win32 PE) example code and executables.
+
+    Also added a DLL version of aPLib, and some example code for it. By the
+    way -- the DLL version works fine as a wdl file for WDOSX!
+
+    Speeded up the fast depackers a tiny bit.
+
+**v0.15b**
+    Quite a few people have pointed out to me that AR was not the cleverest
+    library format to use, so I changed to OMF format, which works with (at
+    least) Watcom, DOS32 and TASM32/TLINK32.
+
+    Added assembler depackers for TASM and WASM, and added the fast assembler
+    depacker for NASM.
+  
+    The Watcom and DJGPP libraries now also contain compiled versions of
+    :c:func:`aP_depack_asm()` and :c:func:`aP_depack_asm_fast()`, and the
+    ``APDEPACK.H`` files with the inline assembler versions have been removed.
+
+**v0.14b** *
+    Made some minor enhancements to the packer - ratio is a little better.
+
+    Added depacking code for NASM, converted by Archee/CoNTRACT - thx!
+
+**v0.13b**
+    Added depacking code for Pascal (Virtual Pascal), converted by Veit
+    Kannegieser - thx!
+
+    Switched to AR format for the Watcom library.
+
+**v0.12b** *
+    Changed the libraries to make them C-compatible.
+
+**v0.11b**
+    :c:func:`aP_depack_asm_fast()` is a little faster.
+
+**v0.10b** *
+    Compression is a little faster :)
+
+**v0.09b**
+    Compression is a little better :)
+
+**v0.08b** *
+    First release version of aPLib :)
+
+**v0.07b**
+    Fixed a bug that gave errors when compressing multiple sets of data (thx
+    x-otic!).
+
+    Cleaned up the code a little.
+
+**v0.06b**
+    Changed the packer, so it uses a fixed amount of mem (about 1 meg).
+
+    A few bugs fixed.
+
+**v0.05b**
+    First version of the aPLib library included.
+
+**v0.04b**
+    Added the DJGPP fast asm unpacker.
+
+**v0.03b**
+    Optimised the depacker a little.
+
+**v0.02b**
+    Second try ;-P
+
+**v0.01b**
+    First try!
+
+Project started March 5th 1998.

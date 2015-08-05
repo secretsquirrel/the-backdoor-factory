@@ -62,7 +62,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         Version:   3.0.5
+         Version:   3.1.0
          """
 
     author = """\
@@ -251,10 +251,12 @@ class bdfMain():
                       " effectively removing the certificate from the binary for all intents"
                       " and purposes."
                       )
-    parser.add_option("-R", "--runas_admin", dest="CHECK_ADMIN", default=False, action="store_true",
-                      help="Checks the PE binaries for \'requestedExecutionLevel level=\"highestAvailable\"\'"
-                      ". If this string is included in the binary, it must run as system/admin. Doing this "
-                      "slows patching speed significantly."
+    parser.add_option("-R", "--runas_admin", dest="RUNAS_ADMIN", default=False, action="store_true",
+                      help="EXPERIMENTAL "
+                      "Checks the PE binaries for \'requestedExecutionLevel level=\"highestAvailable\"\'"
+                      ". If this string is included in the binary, it must run as system/admin. If not "
+		      "in Support Check mode it will attmept to patch highestAvailable into the manifest " 
+		      "if requestedExecutionLevel entry exists."
                       )
     parser.add_option("-L", "--patch_dll", dest="PATCH_DLL", default=True, action="store_false",
                       help="Use this setting if you DON'T want to patch DLLs. Patches by default."
@@ -267,7 +269,14 @@ class bdfMain():
                       help="For payloads that have the ability to beacon out, set the time in secs"
                       )
     parser.add_option("-m", "--patch-method", dest="PATCH_METHOD", default="manual", action="store",
-                      type="string", help="Patching methods for PE files, 'manual' and 'automatic'")
+                      type="string", help="Patching methods for PE files, 'manual','automatic', "
+                      "and onionduke")
+    parser.add_option("-b", "--user_malware", dest="SUPPLIED_BINARY", default=None, action="store",
+                      help="For onionduke. Provide your desired binary.")
+    parser.add_option("-X", "--xp_mode", dest="XP_MODE", default=False, action="store_true",
+                      help="Default: DO NOT support for XP legacy machines, use -X to support XP"
+                      ". By default the binary will crash on XP machines (e.g. sandboxes)"
+                      )
 
     (options, args) = parser.parse_args()
 
@@ -329,9 +338,11 @@ class bdfMain():
                                            options.CAVE_MINER,
                                            options.IMAGE_TYPE,
                                            options.ZERO_CERT,
-                                           options.CHECK_ADMIN,
+                                           options.RUNAS_ADMIN,
                                            options.PATCH_DLL,
-                                           options.PATCH_METHOD
+                                           options.PATCH_METHOD,
+                                           options.SUPPLIED_BINARY,
+                                           options.XP_MODE
                                            )
                 elif is_supported is "ELF":
                     supported_file = elfbin(options.FILE,
@@ -420,9 +431,11 @@ class bdfMain():
                                                options.CAVE_MINER,
                                                options.IMAGE_TYPE,
                                                options.ZERO_CERT,
-                                               options.CHECK_ADMIN,
+                                               options.RUNAS_ADMIN,
                                                options.PATCH_DLL,
-                                               options.PATCH_METHOD
+                                               options.PATCH_METHOD,
+                                               options.SUPPLIED_BINARY,
+                                               options.XP_MODE,
                                                )
                         supported_file.OUTPUT = None
                         supported_file.output_options()
@@ -493,9 +506,11 @@ class bdfMain():
                                options.DELETE_ORIGINAL,
                                options.IMAGE_TYPE,
                                options.ZERO_CERT,
-                               options.CHECK_ADMIN,
+                               options.RUNAS_ADMIN,
                                options.PATCH_DLL,
-                               options.PATCH_METHOD
+                               options.PATCH_METHOD,
+                               options.SUPPLIED_BINARY,
+                               options.XP_MODE,
                                )
         supported_file.injector()
         sys.exit()
@@ -528,9 +543,11 @@ class bdfMain():
                                options.CAVE_MINER,
                                options.IMAGE_TYPE,
                                options.ZERO_CERT,
-                               options.CHECK_ADMIN,
+                               options.RUNAS_ADMIN,
                                options.PATCH_DLL,
-                               options.PATCH_METHOD
+                               options.PATCH_METHOD,
+                               options.SUPPLIED_BINARY,
+                               options.XP_MODE,
                                )
     elif is_supported is "ELF":
         supported_file = elfbin(options.FILE,

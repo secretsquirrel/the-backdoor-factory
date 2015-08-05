@@ -1,0 +1,111 @@
+
+General Information
+===================
+
+
+Introduction
+------------
+
+aPLib is a compression library based on the algorithm used in aPACK (my 16-bit
+executable packer). aPLib is an easy-to-use alternative to many of the
+heavy-weight compression libraries available.
+
+The compression ratios achieved by aPLib combined with the speed and tiny
+footprint of the decompressors (as low as 169 bytes!) makes it the ideal
+choice for many products.
+
+Since the first public release in 1998, aPLib has been one of the top pure
+LZ-based compression libraries available. It is used in a wide range of
+products including executable compression and protection software, archivers,
+games, embedded systems, and handheld devices.
+
+
+Compatibility
+-------------
+
+The aPLib package includes pre-compiled libraries in a number of formats
+(COFF, ELF, OMF).
+
+No standard library functions are used, so the libraries can work with most
+x86/x64 compilers, as long as the name decoration and calling conventions
+match.
+
+The ELF folders contain a version of aPLib which uses PIC to allow it to be
+linked into shared libraries on linux.
+
+
+Thread-safety
+-------------
+
+All compression and decompression functions are thread-safe.
+
+
+Using aPLib
+-----------
+
+For C/C++ you simply include ``aplib.h`` and link with the appropriate library
+for your compiler. If you only need to decompress data, or if you modify the
+decompression code, you can compile and link with one of the decompression
+implementations in the ``src`` folder.
+
+For other languages you can either check if there is a useable example, or use
+the DLL version. Most linkers allow calling C functions in an external
+library, so usually there is a way to use one of the libraries.
+
+aPLib performs memory-to-memory compression and decompression, so getting data
+into an input buffer and allocating an output buffer is your responsibility.
+
+All functions return ``APLIB_ERROR`` (which is ``-1``) if an error occurs.
+
+Attempting to compress incompressible data can lead to expansion. You can get
+the maximum possible coded size by passing the size of the input to the
+function :c:func:`aP_max_packed_size()`.
+
+When calling :c:func:`aP_pack()` you have to supply a work buffer. You can get
+the required size of this buffer by passing the size of the input to the
+function :c:func:`aP_workmem_size()` (in the current version this function
+always returns 640k).
+
+If you do not have a callback for :c:func:`aP_pack()`, you can pass ``NULL``
+(i.e. ``0``) instead. The callback functionality allows your program to keep
+track of the compression progress, and if required to stop the compression.
+
+:c:func:`aP_depack()`, :c:func:`aP_depack_asm()`, and
+:c:func:`aP_depack_asm_fast()` assume that they are given valid compressed
+data -- if not they will most likely crash. This is to ensure that the basic
+decompression code is as small, fast and easy to understand as possible. You
+can use :c:func:`aP_depack_safe()` or :c:func:`aP_depack_asm_safe()` if you
+need to catch decompression errors. Also the safe wrapper functions provide a
+nice interface that helps prevent potential crashes.
+
+
+Safe Wrapper Functions
+----------------------
+
+Starting with aPLib v0.34, there are additional functions included which
+provide a better way of handling the compressed data in the example, and also
+serve as an example of how to add functionality through function wrappers.
+
+The :c:func:`aPsafe_pack()` and :c:func:`aPsafe_depack()` functions are
+wrappers for their regular ``aP_`` counterparts, which add a header to the
+compressed data. This header includes a tag, information about the compressed
+and decompressed size of the data, and CRC32 values for the compressed and
+decompressed data.
+
+The ``example`` folder contains a simple command line packer that uses aPLib
+to compress and decompress data. The ``aPsafe_`` functions are used in this
+example, because they provide extra functionality like retrieving the original
+size of compressed data.
+
+
+Contact Information
+-------------------
+
+If you have any questions, suggestions or bug-reports about aPLib, please feel
+free to contact me by e-mail at:
+
+    contact@ibsensoftware.com
+
+You can get the latest version of aPLib and my other software at:
+
+    http://www.ibsensoftware.com/

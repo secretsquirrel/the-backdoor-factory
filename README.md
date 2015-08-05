@@ -1,12 +1,20 @@
 
 ##The Backdoor Factory (BDF)
-
-#### YOU MUST BE *THIS* TALL TO RIDE THIS RIDE
-
 For security professionals and researchers only.
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
+
+Shmoocon 2015:
+    
+    Video: https://archive.org/details/joshpitts_shmoocon2015
+
+    Paper: https://www.dropbox.com/s/te7e35c8xcnyfzb/JoshPitts-UserlandPersistenceOnMacOSX.pdf
+
+
+DerbyCon 2014: 
+
+    Video: http://www.youtube.com/watch?v=LjUN9MACaTs
 
 
 DerbyCon 2013: 
@@ -16,18 +24,6 @@ DerbyCon 2013:
     Injection Module Demo: http://www.youtube.com/watch?v=04aJAex2o3U
 
     Slides: http://www.slideshare.net/midnite_runr/patching-windows-executables-with-the-backdoor-factory
-
-
-DerbyCon 2014: 
-
-    Video: http://www.youtube.com/watch?v=LjUN9MACaTs
-
-
-Shmoocon 2015:
-    
-    Video: https://archive.org/details/joshpitts_shmoocon2015
-
-    Paper: https://www.dropbox.com/s/te7e35c8xcnyfzb/JoshPitts-UserlandPersistenceOnMacOSX.pdf
 
 
 Contact the developer on:
@@ -43,8 +39,11 @@ Under a BSD 3 Clause License
 
 See the wiki: https://github.com/secretsquirrel/the-backdoor-factory/wiki
 
-Dependences
 ---
+
+###Dependences
+#####*To use OnionDuke you MUST be on an intel machine because aPLib has no support for the ARM chipset yet.*
+
 
 [Capstone engine](http://www.capstone-engine.org) can be installed from PyPi with:
 
@@ -115,10 +114,11 @@ Recently tested on many binaries.
       -Jump (j), for code cave jumping
       -Single (s), for patching all your shellcode into one cave
       -Append (a), for creating a code cave
-      -Ignore (i), nevermind, ignore this binary
-    Can ignore DLLs.
+      -Ignore (i or q), nevermind, ignore this binary
+    Can ignore DLLs
     Import Table Patching
-    AutoPatching
+    AutoPatching (-m automtic)
+    Onionduke (-m onionduke)
 
 ###ELF Files
 
@@ -223,22 +223,29 @@ Sample Usage:
 
 ###Changelog
 
-####7/17/2015
-    * Fix to correct early exit on gatherng PE info.
 
-
-####7/06/2015
-
-    * Clean exit if text section name is mangled or out of order.
-
+####08/05/2015
+    
+   * BH USA UPDATES, w00t!
+   * OnionDuke, use -m onionduke
+    * Supports user supplied exe's and dll's
+    * Usage: ./backdoor.py -f originalfile.exe -m onionduke -b pentest.dll/exe 
+   * XP MODE = Prior IAT based payloads did not support XP, Wine, or Windows 98.  If you need to support XP use the -X flag. I'm not supporting anything less than XP (and not XP x64).
+   * Invoke UAC prompt to runas as admin. *experimental* - patches the PE manifest if requestedExecutionLevel exists.
+   * Stability updates:
+  	* Fixed a bug with incorrect RVA calculation jmp'ing across 2+ code caves 
+  	* Better checks to determine if a new section for the IAT will write into appended data and therefore fail
+   * Speed Improvements:
+    * Faster code cave finding while using *automatic* mode (-m automatic)
+    * Faster rsrc parsing to find manifest file 
 
 ####5/01/2015
 
-    * Bug fix to the reverse_tcp_stager_threaded payload when using single caves payload
+   * Bug fix to the reverse_tcp_stager_threaded payload when using single caves payload
 
 ####4/28/2015
 
-    * Adding check for Bound Imports (PE files with bound imports will not be patched)
+   * Adding check for Bound Imports (PE files with bound imports will not be patched)
 
 ####4/14/2015
 
@@ -275,7 +282,7 @@ breaks BDF.
 Fixes to support cython capstone implementation null byte truncation issue
 
 
-####12/27/201
+####12/27/2014
 
 Added payloadtests.py
 

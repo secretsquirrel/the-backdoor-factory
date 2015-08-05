@@ -1,0 +1,33 @@
+
+Acknowledgements
+================
+
+Greetings and thanks to:
+
+* d'b for our continuous discussions of compression techniques :)
+* TAD for all the great ideas and the good discussions
+* The people who made the Epsilon Compression Page
+* Pasi 'Albert' Ojala for his info on PuCrunch
+* RIT Research Labs for making Dos Navigator .. it's the BEST!
+* LiuTaoTao for making TR .. one of the best debuggers around!
+* Eugene Suslikov (SEN) for making HIEW .. it ROCKS!
+* Oleg for his work on the TMT Pascal code
+* Veit Kannegieser for his work on the VPascal code
+* METALBRAIN for his work on the 16bit depackers
+* Gautier for his work on the Ada code
+* Alexey Solodovnikov for his work on the Delphi code
+* Steve Hutchesson for his work on the MASM32 code
+* Agner Fog for objconv and his great info on calling conventions
+* All other people who make good software freely available for non-commercial
+  use!
+
+A special thanks to the beta-testers:
+
+* x-otic (thx mate ;)
+* Oleg Prokhorov (great optimisations and bug reports!)
+* Lawrence E. Boothby
+* METALBRAIN (believe in miracles, my friend ;)
+* eL PuSHeR
+* Elli
+* Veit Kannegieser
+* Gautier

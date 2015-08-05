@@ -1,0 +1,357 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Version History &mdash; aPLib 1.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/grey.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="aPLib 1.1.1 documentation" href="index.html" />
+    <link rel="prev" title="Acknowledgements" href="acknowledgements.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="acknowledgements.html" title="Acknowledgements"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">aPLib 1.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="version-history">
+<h1>Version History<a class="headerlink" href="#version-history" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt><strong>v1.1.1</strong> *</dt>
+<dd><p class="first">Add <tt class="docutils literal"><span class="pre">VERSIONINFO</span></tt> resource to dll files, and fix subsystem in 32-bit dll
+for Win95 compatibility, thanks to Richard Russell.</p>
+<p>Add Apple II example, thanks to Peter Ferrie.</p>
+<p>Add PowerBASIC example, thanks to Wayne Diamond.</p>
+<p class="last">Use <a class="reference external" href="http://sphinx-doc.org/">Sphinx</a> to generate docs.</p>
+</dd>
+<dt><strong>v1.1.0</strong> *</dt>
+<dd><p class="first">Added Linux ELF shared library support, thanks to Vov Pov.</p>
+<p>Added a Python example, thx to Marco Fabbricatore.</p>
+<p>Fixed a bug in 64-bit <a class="reference internal" href="decompression.html#c.aPsafe_check" title="aPsafe_check"><tt class="xref c c-func docutils literal"><span class="pre">aPsafe_check()</span></tt></a>.</p>
+<p>Cleaned up compression code.</p>
+<p class="last">Changed to semver version numbering.</p>
+</dd>
+<dt><strong>v1.01</strong> *</dt>
+<dd>Added undecorated names to 32-bit dll again, thanks to James C. Fuller.</dd>
+<dt><strong>v1.00</strong> *</dt>
+<dd><p class="first">Changed the license so aPLib can now be used free of charge for commercial
+use as well.</p>
+<p>Added support for 64-bit compression and decompression. Since I do not
+have a running 64-bit system myself, any feedback on how it works would
+be great.</p>
+<p>Removed support for a number of old compilers/assemblers. If you still
+need these, please use the previous release or contact me (if you need
+object files for Delphi, simply unpack the OMF library).</p>
+<p>Moved most of the examples to the contrib folder since I no longer have
+the old development tools installed to check they work.</p>
+<p>All the assembly source files included are now FASM syntax.</p>
+<p>Simplified the build process using objconv by Agner Fog.</p>
+<p class="last">Jumped the version number to v1.00 to signify the code is stable.</p>
+</dd>
+<dt><strong>v0.44</strong> *</dt>
+<dd><p class="first">Made a few updates to the documentation.</p>
+<p class="last">Fixed a rare crash, thx to Rafael Ahucha!</p>
+</dd>
+<dt><strong>v0.43</strong> *</dt>
+<dd><p class="first">Added Visual Basic 6 wrapper, thx to Jon Johnson!</p>
+<p>Added PowerBuilder 9.0 objects, thx to James Sheekey!</p>
+<p class="last">Fixed a rare crash, thx to cyberbob!</p>
+</dd>
+<dt><strong>v0.42</strong> *</dt>
+<dd><p class="first">Added C and assembler implementations of a new safe depacker
+<a class="reference internal" href="decompression.html#c.aP_depack_safe" title="aP_depack_safe"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_safe()</span></tt></a> and <a class="reference internal" href="decompression.html#c.aP_depack_asm_safe" title="aP_depack_asm_safe"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm_safe()</span></tt></a>.</p>
+<p>Updated the <tt class="docutils literal"><span class="pre">aPsafe_</span></tt> wrapper functions.</p>
+<p>Renamed <tt class="docutils literal"><span class="pre">lib/vc</span></tt> to <tt class="docutils literal"><span class="pre">lib/mscoff</span></tt> and <tt class="docutils literal"><span class="pre">lib/watcom</span></tt> to <tt class="docutils literal"><span class="pre">lib/omf</span></tt> to
+better reflect that they are not limited to those specific compilers.</p>
+<p class="last">Updated examples and documentation.</p>
+</dd>
+<dt><strong>v0.41</strong></dt>
+<dd><p class="first">Added a <a class="reference external" href="http://www.borland.com/">Borland C++ Builder</a> example, thx to
+mouser!</p>
+<p class="last">Fixed vc library compatibility with
+<a class="reference external" href="http://www.smorgasbordet.com/pellesc/">Pelles C</a>.</p>
+</dd>
+<dt><strong>v0.40</strong></dt>
+<dd><p class="first">The documentation was rewritten in html, and moved to a separate folder.</p>
+<p class="last">All examples were updated. The <tt class="docutils literal"><span class="pre">dll_asm</span></tt>, <tt class="docutils literal"><span class="pre">dos32</span></tt> and <tt class="docutils literal"><span class="pre">tlink32</span></tt>
+examples were removed, and a small .NET example was added.</p>
+</dd>
+<dt><strong>v0.39</strong></dt>
+<dd>All aPLib functions now return <tt class="docutils literal"><span class="pre">-1</span></tt> on error instead of <tt class="docutils literal"><span class="pre">0</span></tt>. Added a
+macro <tt class="docutils literal"><span class="pre">APLIB_ERROR</span></tt> for this value to all include files.</dd>
+<dt><strong>v0.38</strong></dt>
+<dd>The aPLib compression functions should now be fully thread-safe. Updated
+the C decompression code for thread-safety.</dd>
+<dt><strong>v0.37</strong></dt>
+<dd>Changed the parameters for the callback function. It is now called with
+the input size, input bytes processed, output bytes produced, and a
+user-supplied callback parameter. Thx to f0dder!</dd>
+<dt><strong>v0.36</strong> *</dt>
+<dd><p class="first">Fixed a bug which could cause a match to be found in the area before the
+input buffer under certain conditions, thx to Veit!</p>
+<p>Changed the extension of the C example files from <tt class="docutils literal"><span class="pre">cpp</span></tt> to <tt class="docutils literal"><span class="pre">c</span></tt>.</p>
+<p class="last">The ELF32 version was tested under FreeBSD, thx to Oleg!</p>
+</dd>
+<dt><strong>v0.35</strong></dt>
+<dd><p class="first">Worked with a number of &#8216;issues&#8217; in the build process.</p>
+<p class="last">Fixed the C depacker so it no longer modifies the input buffer, thx to
+Trevor Mensah!</p>
+</dd>
+<dt><strong>v0.34</strong> *</dt>
+<dd><p class="first">Updated the 16bit, Ada, Delphi, C/C++, TMT Pascal and Virtual Pascal
+examples, thx to METALBRAIN, Gautier, Oleg and Veit!</p>
+<p>Added a MASM32 example program, thx to Steve Hutchesson!</p>
+<p>Fixed another bug which could cause <a class="reference internal" href="compression.html#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> to read one byte
+past the input buffer, thx to Reiner Proels!</p>
+<p>NOTE!! the dll version now expects the callback function to use the
+stdcall calling convention.</p>
+<p class="last">The libraries now include the function <a class="reference internal" href="compression.html#c.aP_max_packed_size" title="aP_max_packed_size"><tt class="xref c c-func docutils literal"><span class="pre">aP_max_packed_size()</span></tt></a>,
+which given the input size returns the maximum possible size
+<a class="reference internal" href="compression.html#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> may produce (i.e. the worst case output size of
+totally incompressible data). At the moment the function simply returns
+<tt class="docutils literal"><span class="pre">(inputsize</span> <span class="pre">+</span> <span class="pre">(inputsize</span> <span class="pre">/</span> <span class="pre">8)</span> <span class="pre">+</span> <span class="pre">64)</span></tt>.</p>
+</dd>
+<dt><strong>v0.33</strong></dt>
+<dd>Added ELF32 version of aPLib, which has been tested with Linux, BeOS and
+QNX. Modified the C example to work under these operating systems too.</dd>
+<dt><strong>v0.32</strong></dt>
+<dd>Discovered some mixups between different versions of the examples ..
+started rewriting some of them. Added a header to the files created by
+most of the examples.</dd>
+<dt><strong>v0.31</strong></dt>
+<dd>Improved compression ratio a little.</dd>
+<dt><strong>v0.30</strong></dt>
+<dd><p class="first">Fixed a bug in one of the 16bit depackers, thx to Peter Hegel!</p>
+<p class="last">Updated the C/C++ example.</p>
+</dd>
+<dt><strong>v0.29</strong></dt>
+<dd><p class="first">Updated the Ada example, thx to Gautier!</p>
+<p class="last">I have removed the &#8216;b&#8217; from the version number.</p>
+</dd>
+<dt><strong>v0.28b</strong></dt>
+<dd><p class="first">Updated the 16bit depacker examples, thx to METALBRAIN!</p>
+<p class="last">Renamed the SRC/C depacker files.</p>
+</dd>
+<dt><strong>v0.27b</strong></dt>
+<dd>Fixed a bug which could cause <a class="reference internal" href="compression.html#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> to read one byte past
+the input buffer.</dd>
+<dt><strong>v0.26b</strong> *</dt>
+<dd><p class="first">Added Visual C++ and Borland C examples.</p>
+<p>Rewrote the example program, so there is only a single source file, which
+works with BCC32, DJGPP, VC++ and Watcom.</p>
+<p>Added an import library for Visual C++ in <tt class="docutils literal"><span class="pre">lib/dll</span></tt>, and an example of
+how to use it (<tt class="docutils literal"><span class="pre">examples/c/make_dll.bat</span></tt>).</p>
+<p class="last">The libraries now include the function <a class="reference internal" href="compression.html#c.aP_workmem_size" title="aP_workmem_size"><tt class="xref c c-func docutils literal"><span class="pre">aP_workmem_size()</span></tt></a>, which
+given the input size returns the amount of memory required for the work
+buffer (you still have to allocate it yourself). This should make
+upgrading easier in case I change the memory requirement in a later
+version. At the moment the function simply returns 640k.</p>
+</dd>
+<dt><strong>v0.25b</strong></dt>
+<dd><p class="first">Added a TMT Pascal example, thx to Oleg Prokhorov!</p>
+<p>Moved the Ada and VPascal examples to the example dir.</p>
+<p class="last">Updated the documentation.</p>
+</dd>
+<dt><strong>v0.24b</strong></dt>
+<dd><p class="first">Updated the 16bit depacker examples, thx to METALBRAIN!</p>
+<p class="last">Made all assembler depackers smaller, thx to TAD and METALBRAIN!</p>
+</dd>
+<dt><strong>v0.23b</strong></dt>
+<dd><p class="first">Recompiled with the latest VC++ and DJGPP versions.</p>
+<p class="last">Did a few speed optimisations &#8211; most versions should be a little faster.</p>
+</dd>
+<dt><strong>v0.22b</strong> *</dt>
+<dd><p class="first">Improved the compression speed a little more.</p>
+<p>Cleaned up the code, which made the library somewhat smaller.</p>
+<p>Added a C depacker.</p>
+<p class="last">Silent update: Updated the 16bit depackers - thx to METALBRAIN. There is
+still one problem with the 16bit example depackers, but it will be fixed
+for the next release.</p>
+</dd>
+<dt><strong>v0.21b</strong></dt>
+<dd><p class="first">Improved compression ratio and speed.</p>
+<p>Added Ada support by Gautier - thx!</p>
+<p class="last">Reduced the memory requirement from 1mb to 640k &#8211; which should be enough
+for anybody ;).</p>
+</dd>
+<dt><strong>v0.20b</strong> *</dt>
+<dd><p class="first">Added Delphi support and example by Alexey Solodovnikov - thx!</p>
+<p>Rewrote the aPPack example, removing some errors, and added 16bit
+depackers - thx to METALBRAIN!</p>
+<p>Removed a lot of unneeded information from the object files.</p>
+<p>Rearranged all the folders &#8211; hope it&#8217;s not too confusing ;).</p>
+<p>Removed all the example binaries from this file, and made them available
+in a separate file instead.</p>
+<p class="last">Added the real aPACK / aPLib homepage URL, since home.ml.org was down for
+a period.</p>
+</dd>
+<dt><strong>v0.19b</strong> *</dt>
+<dd><p class="first">Fixed a little mem bug (hopefully), thx to ANAKiN!</p>
+<p>Ratio improved a little on large files.</p>
+<p>Finally got around to updating my DJGPP installation :)</p>
+<p class="last">NOTE!! I have revised the license conditions &#8211; please read APLIB.DOC.</p>
+</dd>
+<dt><strong>v0.18b</strong> *</dt>
+<dd><p class="first">Added the new VPascal interfacing code by Veit Kannegieser.</p>
+<p>Added a library compiled for VC.</p>
+<p class="last">Worked a little on the depackers.</p>
+</dd>
+<dt><strong>v0.17b</strong> *</dt>
+<dd><p class="first">NOTE!! the callback function now has to return a value. This is to make it
+possible for the callback function to abort the packing without exiting
+the program. If the callback returns <tt class="docutils literal"><span class="pre">1</span></tt>, <a class="reference internal" href="compression.html#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> will
+continue &#8211; if it returns <tt class="docutils literal"><span class="pre">0</span></tt>, <a class="reference internal" href="compression.html#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> will stop and return
+<tt class="docutils literal"><span class="pre">0</span></tt>.</p>
+<p>The aPACK / aPLib homepage is now up on: apack.home.ml.org</p>
+<p>I have not gotten the new VPascal interfacing code from Veit yet, so I
+will add it again in the next version :)</p>
+<p class="last">Since I have added so much new stuff, I am releasing this version to get
+some feedback (hint!), to find out where to go from here. If you have
+Visual C++, Borland C++, Borland C++ Builder, Visual Basic, Delphi or
+other 32-bit compilers/linkers, I am very interested in any problems you
+might have using aPLib (especially the DLL version).</p>
+</dd>
+<dt><strong>v0.16b</strong></dt>
+<dd><p class="first">NOTE!! <a class="reference internal" href="compression.html#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> NO LONGER allocates the memory it needs itself.
+This was changed because otherwise you would need to supply malloc and
+free functions to the packer. Now you just call <a class="reference internal" href="compression.html#c.aP_pack" title="aP_pack"><tt class="xref c c-func docutils literal"><span class="pre">aP_pack()</span></tt></a> with a
+pointer to 1mb of mem. This is also faster if you compress multiple sets
+of data, because mem is not allocated and deallocated every time.</p>
+<p>Added new VPascal interfacing code by Veit Kannegieser - thx!</p>
+<p>Added DOS32 and TLINK32 (Win32 PE) example code and executables.</p>
+<p>Also added a DLL version of aPLib, and some example code for it. By the
+way &#8211; the DLL version works fine as a wdl file for WDOSX!</p>
+<p class="last">Speeded up the fast depackers a tiny bit.</p>
+</dd>
+<dt><strong>v0.15b</strong></dt>
+<dd><p class="first">Quite a few people have pointed out to me that AR was not the cleverest
+library format to use, so I changed to OMF format, which works with (at
+least) Watcom, DOS32 and TASM32/TLINK32.</p>
+<p>Added assembler depackers for TASM and WASM, and added the fast assembler
+depacker for NASM.</p>
+<p class="last">The Watcom and DJGPP libraries now also contain compiled versions of
+<a class="reference internal" href="decompression.html#c.aP_depack_asm" title="aP_depack_asm"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm()</span></tt></a> and <a class="reference internal" href="decompression.html#c.aP_depack_asm_fast" title="aP_depack_asm_fast"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm_fast()</span></tt></a>, and the
+<tt class="docutils literal"><span class="pre">APDEPACK.H</span></tt> files with the inline assembler versions have been removed.</p>
+</dd>
+<dt><strong>v0.14b</strong> *</dt>
+<dd><p class="first">Made some minor enhancements to the packer - ratio is a little better.</p>
+<p class="last">Added depacking code for NASM, converted by Archee/CoNTRACT - thx!</p>
+</dd>
+<dt><strong>v0.13b</strong></dt>
+<dd><p class="first">Added depacking code for Pascal (Virtual Pascal), converted by Veit
+Kannegieser - thx!</p>
+<p class="last">Switched to AR format for the Watcom library.</p>
+</dd>
+<dt><strong>v0.12b</strong> *</dt>
+<dd>Changed the libraries to make them C-compatible.</dd>
+<dt><strong>v0.11b</strong></dt>
+<dd><a class="reference internal" href="decompression.html#c.aP_depack_asm_fast" title="aP_depack_asm_fast"><tt class="xref c c-func docutils literal"><span class="pre">aP_depack_asm_fast()</span></tt></a> is a little faster.</dd>
+<dt><strong>v0.10b</strong> *</dt>
+<dd>Compression is a little faster :)</dd>
+<dt><strong>v0.09b</strong></dt>
+<dd>Compression is a little better :)</dd>
+<dt><strong>v0.08b</strong> *</dt>
+<dd>First release version of aPLib :)</dd>
+<dt><strong>v0.07b</strong></dt>
+<dd><p class="first">Fixed a bug that gave errors when compressing multiple sets of data (thx
+x-otic!).</p>
+<p class="last">Cleaned up the code a little.</p>
+</dd>
+<dt><strong>v0.06b</strong></dt>
+<dd><p class="first">Changed the packer, so it uses a fixed amount of mem (about 1 meg).</p>
+<p class="last">A few bugs fixed.</p>
+</dd>
+<dt><strong>v0.05b</strong></dt>
+<dd>First version of the aPLib library included.</dd>
+<dt><strong>v0.04b</strong></dt>
+<dd>Added the DJGPP fast asm unpacker.</dd>
+<dt><strong>v0.03b</strong></dt>
+<dd>Optimised the depacker a little.</dd>
+<dt><strong>v0.02b</strong></dt>
+<dd>Second try ;-P</dd>
+<dt><strong>v0.01b</strong></dt>
+<dd>First try!</dd>
+</dl>
+<p>Project started March 5th 1998.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="acknowledgements.html"
+                        title="previous chapter">Acknowledgements</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/changes.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="acknowledgements.html" title="Acknowledgements"
+             >previous</a> |</li>
+        <li><a href="index.html">aPLib 1.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 1998-2014, Joergen Ibsen.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

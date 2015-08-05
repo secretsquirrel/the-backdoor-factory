@@ -1,0 +1,39 @@
+Compress File:
+
+Integer li_rtn 
+String  ls_source
+String  ls_dest
+
+uo_external_function_compression compression_func
+
+compression_func = Create uo_external_function_compression
+
+ls_source = as_source + as_file
+ls_dest   = as_dest   + compression_func.uof_compressed_name(as_file)
+
+li_rtn = compression_func.uof_compress(ls_source, ls_dest, as_message)
+
+Destroy compression_func
+
+Return li_rtn
+
+
+
+
+Decompress File:
+Integer li_rtn 
+String  ls_source
+String  ls_dest
+
+uo_external_function_compression compression_func
+
+compression_func = Create uo_external_function_compression
+
+ls_source = as_source + compression_func.uof_compressed_name(as_file)
+ls_dest   = as_dest   + as_file
+
+li_rtn = compression_func.uof_decompress(ls_source, ls_dest, as_message)
+
+Destroy compression_func
+
+Return li_rtn

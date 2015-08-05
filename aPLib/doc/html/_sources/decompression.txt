@@ -1,0 +1,158 @@
+
+Decompression
+=============
+
+The following is a description of the aPLib decompression functionality.
+
+
+Decompression Functions
+-----------------------
+
+.. c:function:: size_t aP_depack(const void *source, void *destination)
+
+    Decompress compressed data from *source* to *destination*.
+
+    The *destination* buffer must be large enough to hold the decompressed
+    data.
+
+    :param source: pointer to compressed data
+    :param destination: pointer to where decompressed data should be stored
+    :return: length of decompressed data, or ``APLIB_ERROR`` on error
+
+    .. note::
+        This function is not included in the libraries, but is available in
+        ``src/c/depack.c``. :c:func:`aP_depack_asm_fast()` can be used
+        instead.
+
+.. c:function:: size_t aP_depack_safe(const void *source, size_t srclen, \
+                                      void *destination, size_t dstlen)
+
+    Decompress compressed data from *source* to *destination*.
+
+    This function reads at most *srclen* bytes from *source*, and writes
+    at most *dstlen* bytes to *destination*. If there is not enough
+    source or destination space, or a decoding error occurs, the function
+    returns ``APLIB_ERROR``.
+
+    :param source: pointer to compressed data
+    :param srclen: size of source buffer in bytes
+    :param destination: pointer to where decompressed data should be stored
+    :param dstlen: size of destination buffer in bytes
+    :return: length of decompressed data, or ``APLIB_ERROR`` on error
+
+    .. note::
+        This function is not included in the libraries, but is available in
+        ``src/c/depacks.c``. :c:func:`aP_depack_asm_safe()` can be used
+        instead.
+
+.. c:function:: size_t aP_depack_asm(const void *source, void *destination)
+
+    Decompress compressed data from *source* to *destination*.
+
+    The *destination* buffer must be large enough to hold the decompressed
+    data.
+
+    Optimised for size.
+
+    :param source: pointer to compressed data
+    :param destination: pointer to where decompressed data should be stored
+    :return: length of decompressed data, or ``APLIB_ERROR`` on error
+
+
+.. c:function:: size_t aP_depack_asm_fast(const void *source, \
+                                          void *destination)
+
+    Decompress compressed data from *source* to *destination*.
+
+    The *destination* buffer must be large enough to hold the decompressed
+    data.
+
+    Optimised for speed.
+
+    :param source: pointer to compressed data
+    :param destination: pointer to where decompressed data should be stored
+    :return: length of decompressed data, or ``APLIB_ERROR`` on error
+
+.. c:function:: size_t aP_depack_asm_safe(const void *source, size_t srclen, \
+                                          void *destination, size_t dstlen)
+
+    Decompress compressed data from *source* to *destination*.
+
+    This function reads at most *srclen* bytes from *source*, and writes
+    at most *dstlen* bytes to *destination*. If there is not enough
+    source or destination space, or a decoding error occurs, the function
+    returns ``APLIB_ERROR``.
+
+    :param source: pointer to compressed data
+    :param srclen: size of source buffer in bytes
+    :param destination: pointer to where decompressed data should be stored
+    :param dstlen: size of destination buffer in bytes
+    :return: length of decompressed data, or ``APLIB_ERROR`` on error
+
+    .. seealso:: :c:func:`aPsafe_depack()`
+
+.. c:function:: unsigned int aP_crc32(const void *source, size_t length)
+
+    Compute CRC32 value of *length* bytes of data from *source*.
+
+    :param source: pointer to data to process
+    :param length: size in bytes of data
+    :return: CRC32 value
+
+
+Safe Wrapper Functions
+----------------------
+
+.. c:function:: size_t aPsafe_check(const void *source)
+
+    Compute CRC32 of compressed data in *source* and check it against value
+    stored in header. Return length of decompressed data stored in header.
+
+    :param source: compressed data to process
+    :return: length of decompressed data, or ``APLIB_ERROR`` on error
+
+.. c:function:: size_t aPsafe_get_orig_size(const void *source)
+
+    Return length of decompressed data stored in header of compressed data in
+    *source*.
+
+    :param source: compressed data to process
+    :return: length of decompressed data, or ``APLIB_ERROR`` on error
+
+.. c:function:: size_t aPsafe_depack(const void *source, size_t srclen, \
+                                     void *destination, size_t dstlen)
+
+    Wrapper function for :c:func:`aP_depack_asm_safe`, which checks the CRC32
+    of the compressed data, decompresses, and checks the CRC32 of the
+    decompressed data.
+
+    :param source: pointer to compressed data
+    :param srclen: size of source buffer in bytes
+    :param destination: pointer to where decompressed data should be stored
+    :param dstlen: size of destination buffer in bytes
+    :return: length of decompressed data, or ``APLIB_ERROR`` on error
+
+    .. seealso:: :c:func:`aP_depack_asm_safe()`
+
+
+Example
+-------
+
+.. code-block:: c
+
+    /* get original size */
+    size_t orig_size = aPsafe_get_orig_size(compressed);
+
+    /* allocate memory for decompressed data */
+    char *data = malloc(orig_size);
+
+    /* decompress compressed[] to data[] */
+    size_t outlength = aPsafe_depack(compressed, compressed_size, data, orig_size);
+
+    /* check decompressed length */
+    if (outlength != orig_size) {
+            printf("An error occured!\n");
+    }
+    else {
+            printf("Decompressed %u bytes\n", outlength);
+    }

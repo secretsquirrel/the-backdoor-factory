@@ -1,0 +1,139 @@
+aPLib Ada binding  v. 4-Nov-2001
+--------------------------------
+
+Files
+-----
+
+aplibada.txt  this file
+aplib.ads     package specification for aPLib Ada binding
+aplib.adb     package body for aPLib Ada binding
+apacdemo.adb  demo
+gnat.ago      local GNAT options file for AdaGIDE
+mk_gndos.bat  make command for demo with GNAT for DOS compiler
+mk_gnwin.bat  make command for demo with GNAT for Windows compiler
+mk_aonix.bat  make command for demo with Aonix ObjectAda for Windows compiler
+
+
+Usage
+-----
+
+The APLib package contains two generic procedures, Pack and Depack,
+that you can use for compressing and decompressing any sort of data
+into any other sort. For parametres, see specification: aplib.ads .
+
+For the packed data type, it's simpler
+to use an array of bytes, so you can easily calibrate
+the safe size of packed data by calling the
+function Evaluate_max_packed_space - see again aplib.ads.
+
+
+Read apacdemo.adb to see an example how to implement it.
+
+
+Binding the aPLib library
+-------------------------
+
+* For GNAT compiler make your program (here the demo) with the command
+
+  [DOS:    ] gnatmake apacdemo -largs aplib.a   [lib from DJGPP]
+  [Windows:] gnatmake apacdemo -largs aplib.lib [lib from VC]
+  [Any:]     gnatmake apacdemo -largs aplib.xxx [lib from ???]
+
+  Add usual options if needed.
+  
+  If you are using the AdaGIDE interface, just load apacdemo.adb and
+  build (F3).
+
+* For ObjectAda compiler it should work... but I didn't find
+  how (it crashes for now).
+
+Portability: full, provided the aPLib exists on your platform,
+of course !
+
+How to run the demo
+-------------------
+
+The command
+
+  apacdemo a.x b.y c.z
+
+will pack the contents of files a.x b.y c.z into
+packed.000, packed.001, packed.002 and unpack into
+pack_unp.000, pack_unp.001, pack_unp.002 .
+
+Typical output:
+
+________________________________________________________________
+APack_Demo
+
+Command: apacdemo file1 file2 file3 ...
+
+When no file specified, 'apacdemo.exe' is used
+The data are packed, unpacked and compared with originals.
+
+File name: C:\Temp\Test
+
+     [====/..............................................]  8%
+
+Unpacked size    :     7885938
+Packed size      :      706040
+Work memory size :      655360
+Compression ratio: 8%
+Packed file name           : packed.001
+Re-depacked file name      : pack_unp.001
+
+Real time for compression  :  118.453919016
+Real time for decompression:  0.172979478 - ratio  1.46031E-03
+Unpacked and original being same: TRUE
+________________________________________________________________
+
+How to get an Ada95 compiler
+----------------------------
+
+* Search the Net for the GNU compiler, named GNAT.
+  Full Ada95 implementation with libraries & sources.
+  
+Free download: ftp://cs.nyu.edu/pub/gnat/
+or search there:
+  http://ftpsearch.lycos.com/cgi-bin/search?form=normal&query=gnat
+
+Support: http://www.gnat.com/
+
+There is a nice IDE for Windows, AdaGIDE @
+  http://www.usafa.af.mil/dfcs/bios/mcc_html/adagide.html
+
+* The DOS version of GNAT is in a distribution named EZ2LOAD.
+It is unofficial and unsupported! Technically, there is "DJGPP inside".
+
+Main:
+  ftp://ftp.gwu.edu/pub/ada/ez2load/
+Search:
+  http://ftpsearch.lycos.com/cgi-bin/search?form=normal&query=ez2load
+
+Current DOS version is GNAT 3.10p, using DJGPP 2.01 as back-end.
+A GNAT 3.13p, using DJGPP 2.02, is currently being tested.
+
+* There is also a commercial compiler for Windows, ObjectAda
+
+    http://www.aonix.com/content/products/objectada/objectada.html
+
+  with a _free_ version (number of lines/modules limited) that contains
+all tools, however: the Microsoft tools, an IDE in Visual *** style,
+command line tools also.
+
+* If you really need to buy one, there is a cool one (not too
+expensive), see http://www.rrsoftware.com/ .
+
+Questions about the Ada port
+----------------------------
+
+Send them to following e-mail: gdemont@hotmail.com
+
+Other compression folies in Ada:
+  - the historic LHARC as simple taskable & streamable template
+      http://www.mysunrise.ch/users/gdm/gsoft.htm
+  - an Unzipper, from Info-Zip
+      http://www.mysunrise.ch/users/gdm/unzipada.htm
+
+Enjoy - Gautier
+

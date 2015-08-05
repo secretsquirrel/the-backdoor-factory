@@ -1,0 +1,22 @@
+/* slightly less colorful style overrides */
+
+@import url("default.css");
+
+th {
+    background-color: #eee;
+}
+
+div.seealso {
+    background-color: #eee;
+    border: 1px solid #ccc;
+}
+
+pre {
+    background-color: #eeeeee;
+    border: 1px solid #ccc;
+}
+
+tt {
+    background-color: inherit;
+    font-size: inherit;
+}
