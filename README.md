@@ -223,6 +223,8 @@ Sample Usage:
 
 ###Changelog
 
+####08/11/2015
+   * Stability fix for auto cave selection for rare caves of overlap
 
 ####08/05/2015
     
