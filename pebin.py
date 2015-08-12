@@ -123,6 +123,8 @@ class pebin():
         if self.PATCH_METHOD.lower() == 'automatic':
             self.CAVE_JUMPING = True
             self.ADD_SECTION = False
+        if self.PATCH_METHOD.lower() == 'replace':
+            self.PATCH_DLL = False    
 
     def run_this(self):
         if self.INJECTOR is True:
@@ -1453,6 +1455,7 @@ class pebin():
         """
         print "[*] In the backdoor module"
         # TODO: Take out Injector
+
         if self.INJECTOR is False:
             os_name = os.name
             if not os.path.exists("backdoored"):
@@ -1461,6 +1464,11 @@ class pebin():
                 self.OUTPUT = "backdoored\\" + self.OUTPUT
             else:
                 self.OUTPUT = "backdoored/" + self.OUTPUT
+
+        if self.PATCH_METHOD.lower() == 'replace':
+            self.flItms['backdoorfile'] = self.SUPPLIED_BINARY
+            shutil.copy2(self.SUPPLIED_BINARY, self.OUTPUT)
+            return True
 
         issupported = self.support_check()
 

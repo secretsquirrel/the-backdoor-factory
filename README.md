@@ -223,6 +223,13 @@ Sample Usage:
 
 ###Changelog
 
+####08/12/2015
+   * Added 'replace' PATCH_METHOD - a straight PE copy pasta of the supplied binary
+   * More for usage with BDFProxy
+
+        Usage: ./backdoor.py -f weee.exe -m replace -b supplied_binary.exe
+
+
 ####08/11/2015
    * Stability fix for auto cave selection for rare caves of overlap
 
