@@ -1466,6 +1466,7 @@ class pebin():
                 self.OUTPUT = "backdoored/" + self.OUTPUT
 
         if self.PATCH_METHOD.lower() == 'replace':
+            print "[*] Using replace method, copying supplied binary"
             self.flItms['backdoorfile'] = self.SUPPLIED_BINARY
             shutil.copy2(self.SUPPLIED_BINARY, self.OUTPUT)
             return True
