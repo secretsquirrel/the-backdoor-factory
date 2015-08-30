@@ -123,6 +123,8 @@ class pebin():
         if self.PATCH_METHOD.lower() == 'automatic':
             self.CAVE_JUMPING = True
             self.ADD_SECTION = False
+        if self.PATCH_METHOD.lower() == 'replace':
+            self.PATCH_DLL = False    
 
     def run_this(self):
         if self.INJECTOR is True:
@@ -303,9 +305,9 @@ class pebin():
                     print "[*] UPX packed, continuing..."
 
                 if ('.text\x00\x00\x00' == sectionValues[0] or
-                   'AUTO\x00\x00\x00\x00' == sectionValues[0] or
-                   'UPX1\x00\x00\x00\x00' == sectionValues[0] or
-                   'CODE\x00\x00\x00\x00' == sectionValues[0]):
+                    'AUTO\x00\x00\x00\x00' == sectionValues[0] or
+                    'UPX1\x00\x00\x00\x00' == sectionValues[0] or
+                    'CODE\x00\x00\x00\x00' == sectionValues[0]):
                     self.flItms['textSectionName'] = sectionValues[0]
                     self.flItms['textVirtualSize'] = sectionValues[1]
                     self.flItms['textVirtualAddress'] = sectionValues[2]
@@ -872,14 +874,13 @@ class pebin():
         if self.PATCH_METHOD.lower() == 'automatic':
             print "[*] Attempting PE File Automatic Patching"
             availableCaves = {}
-            #sort caves by type (rsrc, others)
             # Take away the rsrc restriction, solved
             for caveNumber, caveValues in pickACave.iteritems():
                 if caveValues[0] is None:
                     continue
                 elif caveValues[3] >= 50:
                     availableCaves[caveNumber] = caveValues[3]
-                    
+                        
             #serialize caves:
 
             payloadDict = {}
@@ -898,13 +899,13 @@ class pebin():
                     # now drop the caves that are big enough in a set
                     # and randomly select from it
                     _tempCaves = {}
-                    for refnum, caveSize in availableCaves.iteritems():
-                        if caveSize >= ref[1]:
-                            _tempCaves[refnum] = caveSize
                     if _tempCaves == {}:
                         # nothing? get out
-                        break
-
+                        for refnum, caveSize in availableCaves.iteritems():
+                            if caveSize >= ref[1]:
+                                _tempCaves[refnum] = caveSize
+                        if _tempCaves == {}:
+                            break
                     selection = choice(_tempCaves.keys())
                     print '[!] Selected:', str(selection) + ":", ("Section Name: {0}; Cave begin: {1} End: {2}; "
                                                                   "Cave Size: {3}; Payload Size: {4}".format(pickACave[selection][0], pickACave[selection][1],
@@ -912,7 +913,17 @@ class pebin():
                                                                                           ))
                     trackSectionName.add(pickACave[selection][0])
                     #remove the selection from the dict
-                    availableCaves.pop(selection)
+                    popSet = set()
+                    for cave_ref, cave_vals in availableCaves.iteritems():
+                        if pickACave[cave_ref][1] <= pickACave[selection][1] <= pickACave[cave_ref][2] or \
+                            pickACave[cave_ref][1] <= pickACave[selection][2] <= pickACave[cave_ref][2] or \
+                            pickACave[selection][1] <= pickACave[cave_ref][1] <= pickACave[selection][2] or \
+                            pickACave[selection][1] <= pickACave[cave_ref][2] <= pickACave[selection][2]:
+                            popSet.add(cave_ref)
+                    for item in popSet:
+                        availableCaves.pop(item)     
+                    if selection in availableCaves.keys():
+                        availableCaves.pop(selection)
                     CavesPicked[ref[0]] = pickACave[selection]
                 break
 
@@ -1444,6 +1455,7 @@ class pebin():
         """
         print "[*] In the backdoor module"
         # TODO: Take out Injector
+
         if self.INJECTOR is False:
             os_name = os.name
             if not os.path.exists("backdoored"):
@@ -1452,6 +1464,12 @@ class pebin():
                 self.OUTPUT = "backdoored\\" + self.OUTPUT
             else:
                 self.OUTPUT = "backdoored/" + self.OUTPUT
+
+        if self.PATCH_METHOD.lower() == 'replace':
+            print "[*] Using replace method, copying supplied binary"
+            self.flItms['backdoorfile'] = self.SUPPLIED_BINARY
+            shutil.copy2(self.SUPPLIED_BINARY, self.OUTPUT)
+            return True
 
         issupported = self.support_check()
 
