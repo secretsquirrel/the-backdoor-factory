@@ -1,6 +1,6 @@
 '''
 
-Copyright (c) 2013-2014, Joshua Pitts
+Copyright (c) 2013-2015, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -32,7 +32,6 @@ POSSIBILITY OF SUCH DAMAGE.
 '''
 
 import struct
-import sys
 
 
 class freebsd_elfI32_shellcode():
