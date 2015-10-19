@@ -92,7 +92,7 @@ class pebin():
                  INJECTOR=False, CHANGE_ACCESS=True, VERBOSE=False, SUPPORT_CHECK=False,
                  SHELL_LEN=300, FIND_CAVES=False, SUFFIX=".old", DELETE_ORIGINAL=False, CAVE_MINER=False,
                  IMAGE_TYPE="ALL", ZERO_CERT=True, RUNAS_ADMIN=False, PATCH_DLL=True, PATCH_METHOD="MANUAL",
-                 SUPPLIED_BINARY=None, XP_MODE=False):
+                 SUPPLIED_BINARY=None, XP_MODE=False, IDT_IN_CAVE=False):
         self.FILE = FILE
         self.OUTPUT = OUTPUT
         self.SHELL = SHELL
@@ -121,6 +121,7 @@ class pebin():
         self.flItms = {}
         self.iat_cave_loc = 0
         self.SUPPLIED_BINARY = SUPPLIED_BINARY
+        self.flItms['IDT_IN_CAVE'] = IDT_IN_CAVE
         if self.PATCH_METHOD.lower() == 'automatic':
             self.CAVE_JUMPING = True
             self.ADD_SECTION = False
@@ -1592,13 +1593,12 @@ class pebin():
             if "UPX".lower() in self.flItms['textSectionName'].lower():
                 print "[!] Cannot patch a new IAT into a UPX binary at this time."
                 return False
-            if self.flItms['neededAPIs'] != set():
+            if self.flItms['neededAPIs'] != set() and self.flItms['IDT_IN_CAVE'] is True:
                 iat_result = self.patch_in_new_iat()
                 print "[*] Checking updated IAT for thunks"
                 self.check_apis(self.flItms['backdoorfile'])
             if iat_result is False or self.flItms['neededAPIs'] != set():
                 #reset the file
-                print "[!] Patching Import Directory in code cave failed"
                 shutil.copy2(self.FILE, self.flItms['backdoorfile'])
                 iat_result = self.create_new_iat()
                 if iat_result is False:

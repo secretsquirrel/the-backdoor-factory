@@ -231,7 +231,7 @@ Sample Usage:
 
 ####10/19/2015
   * Fixed bug in IAT directory cave assignment that caused BDF crash
-
+  * Made the feature optional with -A flag
 
 ####10/13/2015
    * Changed the Import Table Directory modifications from adding a new section to using an existing code cave
