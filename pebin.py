@@ -708,8 +708,6 @@ class pebin():
             self.build_imports()
             #and remove here
 
-            print "len(self.flItms['addedIAT'])", len(self.flItms['addedIAT'])
-
             self.binary.write(self.flItms['addedIAT'])
             self.binary.write(struct.pack("<B", 0x0) * (self.flItms['NewSectionSize'] -
                               len(self.flItms['addedIAT']) - len(self.flItms['Import_Directory_Table']) + 20))
@@ -717,7 +715,6 @@ class pebin():
             self.binary.write(struct.pack('<I', self.flItms['SizeOfImage']))
             self.binary.write(struct.pack("<I", (self.flItms['ImportTableSize']) + self.flItms['apiCount'] * 8 + 20))
             self.binary.seek(0)
-            print "new IAT size:", self.flItms['ImportTableSize'] + self.flItms['apiCount'] * 8 + 20
             #For trimming File of cert (if there)
 
         #get file data again
@@ -960,12 +957,13 @@ class pebin():
             # Take away the rsrc restriction, solved
             for caveNumber, caveValues in pickACave.iteritems():
                 # caveValues[0], Begin Cave, [1] End of Cave
-                # stay clear of iat_cave_loc starting
-                if caveValues[0] <= self.iat_cave_loc[0] <= caveValues[1]:
-                    continue
+                # stay clear of iat_cave_loc, will be zero if never touched
+                if self.iat_cave_loc != 0:
+                    if caveValues[0] <= self.iat_cave_loc[0] <= caveValues[1]:
+                        continue
                 # stay clear of iat_cave_loc ending
-                if caveValues[0] <= self.iat_cave_loc[1] <= caveValues[1]:
-                    continue
+                    if caveValues[0] <= self.iat_cave_loc[1] <= caveValues[1]:
+                        continue
                 if caveValues[0] is None:
                     continue
                 elif caveValues[3] >= 50:
@@ -1590,6 +1588,7 @@ class pebin():
 
         if 'apis_needed' in self.flItms:
             self.check_apis(self.FILE)
+            iat_result = ''
             if "UPX".lower() in self.flItms['textSectionName'].lower():
                 print "[!] Cannot patch a new IAT into a UPX binary at this time."
                 return False
