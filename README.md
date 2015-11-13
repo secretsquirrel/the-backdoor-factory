@@ -229,6 +229,9 @@ Sample Usage:
 
 ###Changelog
 
+####11/13/2015
+  * Added proper truncating of a PE file after signature pointer is cleared in PE header - e.g. proper unsigning.  Resulting in better support for IAT patching
+
 ####10/19/2015
   * Fixed bug in IAT directory cave assignment that caused BDF crash
   * Made the feature optional with -A flag

