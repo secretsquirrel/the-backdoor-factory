@@ -1429,7 +1429,7 @@ class pebin():
                 # update size of image remember to round up the next Section Alignment
                 od_stub.seek(0x138, 0)
 
-                if (0x16000 + self.flItms['rsrcVirtualSize'] % self.flItms['SectionAlignment']) != 0:
+                if ((0x16000 + self.flItms['rsrcVirtualSize']) % self.flItms['SectionAlignment']) != 0:
                     size = ((0x16000 + self.flItms['rsrcVirtualSize']) -
                             ((0x16000 + self.flItms['rsrcVirtualSize']) % self.flItms['SectionAlignment'])
                             + self.flItms['SectionAlignment']
@@ -1483,10 +1483,7 @@ class pebin():
             _temp_name += ".exe"
             od_stub.write(_temp_name)
 
-            #randomize Win32 Version Value
-            od_stub.seek(0x134, 0)
-            od_stub.write(struct.pack("<I", random.randint(0, 4294967295)))
-
+            
         #check submitted file to see if it is a DLL:
         with open(self.SUPPLIED_BINARY, 'r') as self.binary:
             print "[?] Checking if user supplied is a DLL"

@@ -229,6 +229,10 @@ Sample Usage:
 
 ###Changelog
 
+####11/17/2015
+
+ * Bug fix in rsrc section for onionduke patching and remove of random win32 version value in PE Header
+
 ####11/13/2015
   * Added proper truncating of a PE file after signature pointer is cleared in PE header - e.g. proper unsigning.  Resulting in better support for IAT patching
 
