@@ -56,8 +56,12 @@ See the wiki: https://github.com/secretsquirrel/the-backdoor-factory/wiki
     sudo pip install capstone
 
 Pefile, most recent:
-https://code.google.com/p/pefile/
+    
+    https://code.google.com/p/pefile/
 
+osslsigncode (included in repo): 
+    
+    http://sourceforge.net/p/osslsigncode/osslsigncode/ci/master/tree/
 
 Kali Install:
 
