@@ -257,7 +257,7 @@ On successful run you should see this line in BDF output:
 ###Changelog
 
 ####12/18/2015
- * Added PE codesiging support.  You must provide your own codesigning cert.
+ * Added PE codesiging support.  You must provide your own codesigning cert. See here: https://github.com/secretsquirrel/the-backdoor-factory#pecodesigning
 
 ####11/17/2015
 
