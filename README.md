@@ -223,6 +223,7 @@ Sample Usage:
 BDF can sign PE files if you have a codesigning cert. It uses osslsigncode.
 Put your signing cert and private key in the certs/ directory.  Prep your certs using openssl commands from this blog post:
 http://secureallthethings.blogspot.com/2015/12/add-pe-code-signing-to-backdoor-factory.html
+
 Put your private key password in a file (gasp) as so (exactly as so): 
     
     echo -n yourpassword > certs/passFile.txt
@@ -237,7 +238,7 @@ Your certs/ directory should look excatly as so:
     certs
     ├── passFile.txt
     ├── signingPrivateKey.pem
-    └── signingcert.cer
+    └── signingCert.cer
 
 On successful run you should see this line in BDF output:
 
