@@ -218,7 +218,34 @@ Sample Usage:
     This will pop calc.exe on a target windows workstation. So 1337. Much pwn. Wow.
 
 ---
+###PEcodeSigning
 
+BDF can sign PE files if you have a codesigning cert. It uses osslsigncode.
+Put your signing cert and private key in the certs/ directory.  Prep your certs using openssl commands from this blog post:
+http://secureallthethings.blogspot.com/2015/12/add-pe-code-signing-to-backdoor-factory.html
+Put your private key password in a file (gasp) as so (exactly as so): 
+    
+    echo -n yourpassword > certs/passFile.txt
+
+Name your certs EXACTLY as follows:
+	
+    signingCert.cer => certs/signingCert.cer
+    signingPrivateKey.pem => certs/signingPrivateKey.pem
+
+Your certs/ directory should look excatly as so:
+    
+    certs
+    ├── passFile.txt
+    ├── signingPrivateKey.pem
+    └── signingcert.cer
+
+On successful run you should see this line in BDF output:
+
+    [*] Code Signing Succeeded
+
+
+
+---
 ###Hunt and backdoor: Injector | Windows Only
     The injector module will look for target executables to backdoor on disk.  It will check to see if you have identified the target as a service, check to see if the process is running, kill the process and/or service, inject the executable with the shellcode, save the original file to either file.exe.old or another suffix of choice, and attempt to restart the process or service.  
     Edit the python dictionary "list_of_targets" in the 'injector' module for targets of your choosing.
@@ -228,6 +255,9 @@ Sample Usage:
 ---
 
 ###Changelog
+
+####12/18/2015
+ * Added PE codesiging support.  You must provide your own codesigning cert.
 
 ####11/17/2015
 

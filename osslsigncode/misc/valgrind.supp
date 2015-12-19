@@ -1,0 +1,14 @@
+{
+		ignore-curl-init-leaks
+		Memcheck:Leak
+		fun:malloc
+		...
+		fun:curl_global_init
+}
+{
+		ignore-curl-init-leaks2
+		Memcheck:Leak
+		fun:calloc
+		...
+		fun:curl_global_init
+}

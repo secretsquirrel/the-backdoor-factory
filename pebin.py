@@ -92,7 +92,7 @@ class pebin():
                  INJECTOR=False, CHANGE_ACCESS=True, VERBOSE=False, SUPPORT_CHECK=False,
                  SHELL_LEN=300, FIND_CAVES=False, SUFFIX=".old", DELETE_ORIGINAL=False, CAVE_MINER=False,
                  IMAGE_TYPE="ALL", ZERO_CERT=True, RUNAS_ADMIN=False, PATCH_DLL=True, PATCH_METHOD="MANUAL",
-                 SUPPLIED_BINARY=None, XP_MODE=False, IDT_IN_CAVE=False):
+                 SUPPLIED_BINARY=None, XP_MODE=False, IDT_IN_CAVE=False, CODE_SIGN=False):
         self.FILE = FILE
         self.OUTPUT = OUTPUT
         self.SHELL = SHELL
@@ -121,6 +121,7 @@ class pebin():
         self.flItms = {}
         self.iat_cave_loc = 0
         self.SUPPLIED_BINARY = SUPPLIED_BINARY
+        self.CODE_SIGN = CODE_SIGN
         self.flItms['IDT_IN_CAVE'] = IDT_IN_CAVE
         if self.PATCH_METHOD.lower() == 'automatic':
             self.CAVE_JUMPING = True
@@ -1757,6 +1758,20 @@ class pebin():
                     self.binary.write(self.flItms['completeShellcode'])
 
         self.binary.close()
+
+        if self.CODE_SIGN is True:
+			# cert was removed earlier 
+            p = subprocess.Popen(['osslsigncode', '-certs', 'certs/signingCert.cer', '-key', \
+                                  'certs/signingPrivateKey.pem', '-n', 'Security','-in', \
+                                   self.flItms["backdoorfile"], '-out', self.flItms["backdoorfile"], '-readpass', 'certs/passFile.txt'] \
+                                 , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p.wait()
+            out, err = p.communicate()
+            if 'succeeded' in out.lower():
+                print "[*] Code Signing Succeeded"
+            else:
+                print "[!!!!] Code Signing Failed check your certs [!!!!]" 
+                print str(err).strip("\n")
 
         if self.VERBOSE is True:
             self.print_flItms(self.flItms)

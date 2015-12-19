@@ -62,7 +62,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         Version:   3.2.4
+         Version:   3.3.0
          """
 
     author = """\
@@ -282,6 +282,10 @@ class bdfMain():
                       "by calling this flag it will be put in a code cave.  This can cause bianry "
                       "failure is some cases. Test on target binaries first."
                       )
+    parser.add_option("-C","--code_sign", dest="CODE_SIGN", default=False, action="store_true", 
+                      help="For those with codesigning certs wishing to sign PE binaries only. " 
+                      "Name your signing key and private key signingcert.cer and signingPrivateKey.pem "
+                      "repectively in the certs directory it's up to you to obtain signing certs.")
 
     (options, args) = parser.parse_args()
 
@@ -307,7 +311,7 @@ class bdfMain():
         print choice(menu)
         print author
         print version
-        time.sleep(1)
+        time.sleep(.5)
     else:
         print "\t Backdoor Factory"
         print author
@@ -442,7 +446,8 @@ class bdfMain():
                                                options.PATCH_METHOD,
                                                options.SUPPLIED_BINARY,
                                                options.XP_MODE,
-                                               options.IDT_IN_CAVE
+                                               options.IDT_IN_CAVE,
+                                               options.CODE_SIGN,
                                                )
                         supported_file.OUTPUT = None
                         supported_file.output_options()
@@ -518,7 +523,8 @@ class bdfMain():
                                options.PATCH_METHOD,
                                options.SUPPLIED_BINARY,
                                options.XP_MODE,
-                               options.IDT_IN_CAVE
+                               options.IDT_IN_CAVE,
+                               options.CODE_SIGN,
                                )
         supported_file.injector()
         sys.exit()
@@ -556,7 +562,8 @@ class bdfMain():
                                options.PATCH_METHOD,
                                options.SUPPLIED_BINARY,
                                options.XP_MODE,
-                               options.IDT_IN_CAVE
+                               options.IDT_IN_CAVE,
+                               options.CODE_SIGN,
                                )
     elif is_supported is "ELF":
         supported_file = elfbin(options.FILE,

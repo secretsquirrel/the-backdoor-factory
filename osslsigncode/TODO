@@ -1,0 +1,8 @@
+- signature extraction/removal/verificaton on MSI/CAB files
+- improved signature verification on PE files
+- clean up / untangle code
+- separate timestamping
+- man page
+- remove mmap usage to increase portability
+- tests
+- fix other stuff marked 'XXX'
