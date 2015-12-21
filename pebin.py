@@ -123,6 +123,7 @@ class pebin():
         self.SUPPLIED_BINARY = SUPPLIED_BINARY
         self.CODE_SIGN = CODE_SIGN
         self.flItms['IDT_IN_CAVE'] = IDT_IN_CAVE
+        self.flItms['curdir'] = os.path.dirname(__file__)
         if self.PATCH_METHOD.lower() == 'automatic':
             self.CAVE_JUMPING = True
             self.ADD_SECTION = False
@@ -1761,9 +1762,9 @@ class pebin():
 
         if self.CODE_SIGN is True:
 			# cert was removed earlier 
-            p = subprocess.Popen(['osslsigncode', '-certs', 'certs/signingCert.cer', '-key', \
-                                  'certs/signingPrivateKey.pem', '-n', 'Security','-in', \
-                                   self.flItms["backdoorfile"], '-out', self.flItms["backdoorfile"], '-readpass', 'certs/passFile.txt'] \
+            p = subprocess.Popen(['osslsigncode', '-certs', self.flItms['curdir'] + '/' + 'certs/signingCert.cer', '-key', \
+                                  self.flItms['curdir'] + '/' + 'certs/signingPrivateKey.pem', '-n', 'Security','-in', \
+                                   self.flItms["backdoorfile"], '-out', self.flItms["backdoorfile"], '-readpass', self.flItms['curdir'] + '/' + 'certs/passFile.txt'] \
                                  , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             p.wait()
             out, err = p.communicate()

