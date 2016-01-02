@@ -16,7 +16,7 @@ fi
 uname -a | grep -i kali &> /dev/null 
 if [ $? -eq 0 ]; then
 	apt-get update
-	apt-get install -y python-capstone autoconf 
+	apt-get install -y python-capstone autoconf libtool curl libcurl4-openssl-dev
 
 	echo '[*] Install osslsigncode'
     cd osslsigncode
@@ -45,7 +45,7 @@ uname -a | grep -v "kali" | grep -i linux &> /dev/null
 if [ $? -eq 0 ]; then
 
 	if hash pip 2>/dev/null; then
-		sudo apt-get install -y python-pip autoconf
+		sudo apt-get install -y python-pip autoconf libtool curl libcurl4-openssl-dev
 	        pip install pefile
 	        #install capstone
 		pip install capstone
