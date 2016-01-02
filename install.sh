@@ -4,6 +4,7 @@
 # capstone (newest)
 # pefile
 # python-capstone
+# autogen
 
 
 if [[ $EUID -ne 0 ]]; then
@@ -15,7 +16,7 @@ fi
 uname -a | grep -i kali &> /dev/null 
 if [ $? -eq 0 ]; then
 	apt-get update
-	apt-get install -y python-capstone 
+	apt-get install -y python-capstone autogen 
 
 	echo '[*] Install osslsigncode'
     cd osslsigncode
@@ -44,7 +45,7 @@ uname -a | grep -v "kali" | grep -i linux &> /dev/null
 if [ $? -eq 0 ]; then
 
 	if hash pip 2>/dev/null; then
-		sudo apt-get install -y python-pip
+		sudo apt-get install -y python-pip autogen
 	        pip install pefile
 	        #install capstone
 		pip install capstone
