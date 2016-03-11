@@ -978,8 +978,8 @@ class winI64_shellcode():
         rbp
         r12
         r13
-        r14: GetProcAddress
-        r15: LoadLibraryA
+        r14: LoadLibraryA
+        r15: GetProcAddress
 
         '''
 
@@ -1226,8 +1226,8 @@ class winI64_shellcode():
         rbp
         r12
         r13
-        r14: GetProcAddress
-        r15: LoadLibraryA
+        r14: LoadLibraryA
+        r15: GetProcAddress
 
         '''
 
@@ -1729,8 +1729,8 @@ class winI64_shellcode():
                             )
         # socket is in r12
         # rdi has the struct for the socket
-        # r14: GetProcAddress
-        # r15: LoadLibraryA
+        # r14: LoadLibraryA
+        # r15: GetProcAddress
         # r13 has ws2_32 handle
         # reminder: RCX, RDX, R8, R9 for the first four integer or pointer arguments
         self.shellcode2 += ("\x90\x90\x90\x90"

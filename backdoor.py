@@ -62,7 +62,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         Version:   3.1.3
+         Version:   3.3.1
          """
 
     author = """\
@@ -255,8 +255,8 @@ class bdfMain():
                       help="EXPERIMENTAL "
                       "Checks the PE binaries for \'requestedExecutionLevel level=\"highestAvailable\"\'"
                       ". If this string is included in the binary, it must run as system/admin. If not "
-		      "in Support Check mode it will attmept to patch highestAvailable into the manifest " 
-		      "if requestedExecutionLevel entry exists."
+                      "in Support Check mode it will attmept to patch highestAvailable into the manifest "
+                      "if requestedExecutionLevel entry exists."
                       )
     parser.add_option("-L", "--patch_dll", dest="PATCH_DLL", default=True, action="store_false",
                       help="Use this setting if you DON'T want to patch DLLs. Patches by default."
@@ -275,8 +275,17 @@ class bdfMain():
                       help="For onionduke. Provide your desired binary.")
     parser.add_option("-X", "--xp_mode", dest="XP_MODE", default=False, action="store_true",
                       help="Default: DO NOT support for XP legacy machines, use -X to support XP"
-                      ". By default the binary will crash on XP machines (e.g. sandboxes)"
+                      ". By default the binary will crash on XP machines (e.g. sandboxes)")
+    parser.add_option("-A", "--idt_in_cave", dest="IDT_IN_CAVE", default=False, action="store_true",
+                      help="EXPERIMENTAL "
+                      "By default a new Import Directory Table is created in a new section, "
+                      "by calling this flag it will be put in a code cave.  This can cause bianry "
+                      "failure is some cases. Test on target binaries first."
                       )
+    parser.add_option("-C","--code_sign", dest="CODE_SIGN", default=False, action="store_true", 
+                      help="For those with codesigning certs wishing to sign PE binaries only. " 
+                      "Name your signing key and private key signingcert.cer and signingPrivateKey.pem "
+                      "repectively in the certs directory it's up to you to obtain signing certs.")
 
     (options, args) = parser.parse_args()
 
@@ -302,7 +311,7 @@ class bdfMain():
         print choice(menu)
         print author
         print version
-        time.sleep(1)
+        time.sleep(.5)
     else:
         print "\t Backdoor Factory"
         print author
@@ -342,7 +351,8 @@ class bdfMain():
                                            options.PATCH_DLL,
                                            options.PATCH_METHOD,
                                            options.SUPPLIED_BINARY,
-                                           options.XP_MODE
+                                           options.XP_MODE,
+                                           options.IDT_IN_CAVE
                                            )
                 elif is_supported is "ELF":
                     supported_file = elfbin(options.FILE,
@@ -436,6 +446,8 @@ class bdfMain():
                                                options.PATCH_METHOD,
                                                options.SUPPLIED_BINARY,
                                                options.XP_MODE,
+                                               options.IDT_IN_CAVE,
+                                               options.CODE_SIGN,
                                                )
                         supported_file.OUTPUT = None
                         supported_file.output_options()
@@ -511,6 +523,8 @@ class bdfMain():
                                options.PATCH_METHOD,
                                options.SUPPLIED_BINARY,
                                options.XP_MODE,
+                               options.IDT_IN_CAVE,
+                               options.CODE_SIGN,
                                )
         supported_file.injector()
         sys.exit()
@@ -548,6 +562,8 @@ class bdfMain():
                                options.PATCH_METHOD,
                                options.SUPPLIED_BINARY,
                                options.XP_MODE,
+                               options.IDT_IN_CAVE,
+                               options.CODE_SIGN,
                                )
     elif is_supported is "ELF":
         supported_file = elfbin(options.FILE,

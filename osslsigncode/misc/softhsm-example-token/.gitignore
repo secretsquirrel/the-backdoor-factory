@@ -1,0 +1,5 @@
+softhsm.conf
+test.*
+openssl.conf
+config.py
+softhsm.*
