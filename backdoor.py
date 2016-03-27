@@ -352,7 +352,8 @@ class bdfMain():
                                            options.PATCH_METHOD,
                                            options.SUPPLIED_BINARY,
                                            options.XP_MODE,
-                                           options.IDT_IN_CAVE
+                                           options.IDT_IN_CAVE,
+                                           options.CODE_SIGN,
                                            )
                 elif is_supported is "ELF":
                     supported_file = elfbin(options.FILE,
@@ -514,8 +515,8 @@ class bdfMain():
                                options.SUPPORT_CHECK,
                                options.SHELL_LEN,
                                options.FIND_CAVES,
-                               options.CAVE_MINER,
                                options.SUFFIX,
+                               options.CAVE_MINER,
                                options.DELETE_ORIGINAL,
                                options.IMAGE_TYPE,
                                options.ZERO_CERT,
