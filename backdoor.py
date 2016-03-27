@@ -514,6 +514,7 @@ class bdfMain():
                                options.SUPPORT_CHECK,
                                options.SHELL_LEN,
                                options.FIND_CAVES,
+                               options.CAVE_MINER,
                                options.SUFFIX,
                                options.DELETE_ORIGINAL,
                                options.IMAGE_TYPE,
