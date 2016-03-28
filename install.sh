@@ -80,12 +80,17 @@ fi
 #OS X appack install
 uname -a | grep -i Darwin &> /dev/null
 if [ $? -eq 0 ]; then
+	brew install autoconf
+	brew install automake
+	brew install libtool
+	
 	pip install pefile
-
+	pip install capstone
+	
 	echo '[*] Install osslsigncode'
-    cd osslsigncode
-    ./autogen.sh
-    ./configure
+    	cd osslsigncode
+    	./autogen.sh
+    	./configure
 	make
 	make install
     cd ..	
@@ -93,6 +98,6 @@ if [ $? -eq 0 ]; then
 	cd ./aPLib/example/
 	clang -c -I../lib/macho64 -Wall -O2  -o appack.o appack.c -v 
 	clang -Wall -O2  -o appack appack.o ../lib/macho64/aplib.a -v 
-	cp ./appack /usr/bin/appack
+	cp ./appack /usr/local/bin/appack
 fi
 
