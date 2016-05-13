@@ -269,7 +269,7 @@ class bdfMain():
                       help="For payloads that have the ability to beacon out, set the time in secs"
                       )
     parser.add_option("-m", "--patch-method", dest="PATCH_METHOD", default="manual", action="store",
-                      type="string", help="Patching methods for PE files, 'manual','automatic', "
+                      type="string", help="Patching methods for PE files, 'manual','automatic', replace, "
                       "and onionduke")
     parser.add_option("-b", "--user_malware", dest="SUPPLIED_BINARY", default=None, action="store",
                       help="For onionduke. Provide your desired binary.")
