@@ -295,7 +295,6 @@ On successful run you should see this line in BDF output:
 
         Usage: ./backdoor.py -f weee.exe -m replace -b supplied_binary.exe
 
-
 ####08/11/2015
    * Stability fix for auto cave selection for rare caves of overlap
 
