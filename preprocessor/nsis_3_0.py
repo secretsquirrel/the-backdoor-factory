@@ -5,9 +5,9 @@
 #############################################
 
 # ENABLE preprocessor
-enabled = False 
+enabled = True 
 
-# if you want a temp file to be used.
+# If you want the temp file used in the preprocessor saved
 # THE NAME is self.tmp_file
 keep_temp = False
 

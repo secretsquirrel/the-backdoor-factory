@@ -266,6 +266,14 @@ On successful run you should see this line in BDF output:
 
 ###Changelog
 
+####06/19/2016
+
+* Added the preprocessor and other optimizations
+* The preprocessor allows the user to modify the binary prior to payload injection
+* Invoke with the -p flag
+* See samples in ./preprocessor/
+
+
 ####12/20/2015
 
  * Added directory paths to BDF to find certs directory.
