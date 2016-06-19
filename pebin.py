@@ -1,5 +1,5 @@
 '''
-Copyright (c) 2013-2015, Joshua Pitts
+Copyright (c) 2013-2016, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -44,6 +44,7 @@ import cStringIO
 import random
 import string
 import re
+import tempfile
 from random import choice
 from winapi import winapi
 from intel.intelCore import intelCore
@@ -92,7 +93,7 @@ class pebin():
                  INJECTOR=False, CHANGE_ACCESS=True, VERBOSE=False, SUPPORT_CHECK=False,
                  SHELL_LEN=300, FIND_CAVES=False, SUFFIX=".old", DELETE_ORIGINAL=False, CAVE_MINER=False,
                  IMAGE_TYPE="ALL", ZERO_CERT=True, RUNAS_ADMIN=False, PATCH_DLL=True, PATCH_METHOD="MANUAL",
-                 SUPPLIED_BINARY=None, XP_MODE=False, IDT_IN_CAVE=False, CODE_SIGN=False):
+                 SUPPLIED_BINARY=None, XP_MODE=False, IDT_IN_CAVE=False, CODE_SIGN=False, PREPROCESS=False):
         self.FILE = FILE
         self.OUTPUT = OUTPUT
         self.SHELL = SHELL
@@ -124,6 +125,10 @@ class pebin():
         self.CODE_SIGN = CODE_SIGN
         self.flItms['IDT_IN_CAVE'] = IDT_IN_CAVE
         self.flItms['curdir'] = os.path.dirname(__file__)
+        self.PREPROCESS = PREPROCESS
+        self.ORIGINAL_FILE = self.FILE
+        self.tmp_file = None
+        self.keep_temp = False
         if self.PATCH_METHOD.lower() == 'automatic':
             self.CAVE_JUMPING = True
             self.ADD_SECTION = False
@@ -142,6 +147,7 @@ class pebin():
             print ("Looking for caves with a size of %s bytes (measured as an integer" % self.SHELL_LEN)
             self.find_all_caves()
             return True
+
         if self.SUPPORT_CHECK is True:
             if not self.FILE:
                 print "You must provide a file to see if it is supported (-f)"
@@ -349,39 +355,171 @@ class pebin():
         self.binary.seek(self.flItms['BoundImportLOCinCode'])
         self.flItms['ImportTableALL'] = self.binary.read(self.flItms['BoundImportSize'])
         self.flItms['NewIATLoc'] = self.flItms['BoundImportLOCinCode'] + 40
+        
         #ParseLoadConfigTable
+        self.flItms['LoadConfigTablePresent'] = False
+                
         for section in reversed(self.flItms['Sections']):
             if self.flItms['LoadConfigTableRVA'] >= section[2]:
                 #go to exact export directory location
+                self.flItms['LoadConfigTablePresent'] = True
                 self.binary.seek((self.flItms['LoadConfigTableRVA'] - section[2]) + section[4])
+                self.flItms['LoadConfigTable_OFFSET'] = - section[2] + section[4]
                 break
-        self.flItms['LoadConfigDirectory_Size'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_TimeDataStamp'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_MajorVersion'] = struct.unpack('<H', self.binary.read(2))[0]
-        self.flItms['LoadConfigDirectory_MinorVersion'] = struct.unpack('<H', self.binary.read(2))[0]
-        self.flItms['LoadConfigDirectory_GFC'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_GFS'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_CSDT'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_DFBT'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_DTFT'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_LPTV'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_MAS'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_VMT'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_PHF'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_PAM'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_CSDV'] = struct.unpack('<H', self.binary.read(2))[0]
-        self.flItms['LoadConfigDirectory_Reserved'] = struct.unpack('<H', self.binary.read(2))[0]
-        self.flItms['LoadConfigDirectory_ELVA'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_SCVA'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_SEHTVA'] = struct.unpack('<I', self.binary.read(4))[0]
-        self.flItms['LoadConfigDirectory_SEHC'] = struct.unpack('<I', self.binary.read(4))[0]
-        if self.flItms['LoadConfigDirectory_Size'] > 0x48:
-            #grab CFG info
-            self.flItms['LCD_CFG_address_CF_PTR'] = struct.unpack('<I', self.binary.read(4))[0]
-            self.flItms['LCD_CFG_Reserved'] = struct.unpack('<I', self.binary.read(4))[0]
-            self.flItms['LCD_CFG_Func_Table'] = struct.unpack('<I', self.binary.read(4))[0]
-            self.flItms['LCD_CFG_Func_Count'] = struct.unpack('<I', self.binary.read(4))[0]
-            self.flItms['LCD_CFG_Guard_Flags'] = struct.unpack('<I', self.binary.read(4))[0]
+
+        if self.flItms['LoadConfigTablePresent'] is True:
+                
+            # This is for 32bit... need x64
+            self.flItms['LoadConfigDirectory_Size'] = struct.unpack('<I', self.binary.read(4))[0]
+            self.flItms['LoadConfigDirectory_TimeDataStamp'] = struct.unpack('<I', self.binary.read(4))[0]
+            self.flItms['LoadConfigDirectory_MajorVersion'] = struct.unpack('<H', self.binary.read(2))[0]
+            self.flItms['LoadConfigDirectory_MinorVersion'] = struct.unpack('<H', self.binary.read(2))[0]
+            self.flItms['LoadConfigDirectory_GFC'] = struct.unpack('<I', self.binary.read(4))[0]
+            self.flItms['LoadConfigDirectory_GFS'] = struct.unpack('<I', self.binary.read(4))[0]
+            self.flItms['LoadConfigDirectory_CSDT'] = struct.unpack('<I', self.binary.read(4))[0]
+            
+            if self.flItms['Magic'] == 0x20B:
+                #  winx64
+                self.flItms['LoadConfigDirectory_DFBT'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LoadConfigDirectory_DTFT'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LoadConfigDirectory_LPTV'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LoadConfigDirectory_MAS'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LoadConfigDirectory_VMT'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LoadConfigDirectory_PAM'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LoadConfigDirectory_PHF'] = struct.unpack('<I', self.binary.read(4))[0]
+            else:
+                #  winx86
+                self.flItms['LoadConfigDirectory_DFBT'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LoadConfigDirectory_DTFT'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LoadConfigDirectory_LPTV'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LoadConfigDirectory_MAS'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LoadConfigDirectory_VMT'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LoadConfigDirectory_PHF'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LoadConfigDirectory_PAM'] = struct.unpack('<I', self.binary.read(4))[0]
+            
+            self.flItms['LoadConfigDirectory_CSDV'] = struct.unpack('<H', self.binary.read(2))[0]
+            self.flItms['LoadConfigDirectory_Reserved'] = struct.unpack('<H', self.binary.read(2))[0]
+            
+            if self.flItms['Magic'] == 0x20B:
+                self.flItms['LoadConfigDirectory_ELVA'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LoadConfigDirectory_SCVA'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LoadConfigDirectory_SEHTVA'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LoadConfigDirectory_SEHC'] = struct.unpack('<Q', self.binary.read(8))[0]
+           
+            else:
+                self.flItms['LoadConfigDirectory_ELVA'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LoadConfigDirectory_SCVA'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LoadConfigDirectory_SEHTVA'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LoadConfigDirectory_SEHC'] = struct.unpack('<I', self.binary.read(4))[0]
+            
+            if self.flItms['LoadConfigDirectory_Size'] > 0x48:
+                #grab CFG info
+                if self.flItms['Magic'] == 0x20B:
+                    self.flItms['LCD_CFG_address_CF_PTR_LOC'] = self.binary.tell()
+                    self.flItms['LCD_CFG_address_CF_PTR'] = struct.unpack('<Q', self.binary.read(8))[0]
+                    self.flItms['LCD_CFG_dispatch_fptr'] = struct.unpack('<Q', self.binary.read(8))[0]
+                    self.flItms['LCD_CFG_Func_Table'] = struct.unpack('<Q', self.binary.read(8))[0]
+                    self.flItms['LCD_CFG_Func_Count'] = struct.unpack('<Q', self.binary.read(8))[0]
+                    # Zero out LCD_CFG_Guard_Flags to disable CFG
+                    self.flItms['LCD_CFG_Guard_Flags'] = struct.unpack('<Q', self.binary.read(8))[0]
+                else:
+                    self.flItms['LCD_CFG_address_CF_PTR_LOC'] = self.binary.tell()
+                    self.flItms['LCD_CFG_address_CF_PTR'] = struct.unpack('<I', self.binary.read(4))[0]
+                    self.flItms['LCD_CFG_dispatch_fptr'] = struct.unpack('<I', self.binary.read(4))[0]
+                    self.flItms['LCD_CFG_Func_Table'] = struct.unpack('<I', self.binary.read(4))[0]
+                    self.flItms['LCD_CFG_Func_Count'] = struct.unpack('<I', self.binary.read(4))[0]
+                    # Zero out LCD_CFG_Guard_Flags to disable CFG
+                    self.flItms['LCD_CFG_Guard_Flags'] = struct.unpack('<I', self.binary.read(4))[0]
+
+                #  Find CFG_PTR_LOC 
+                print "LCD_CFG_dispatch_fptr", hex(self.flItms['LCD_CFG_dispatch_fptr'])
+                if self.flItms['LCD_CFG_dispatch_fptr'] != 0:
+                    self.flItms['LCD_CFG_dispatch_fptr_LOC'] = self.flItms['LCD_CFG_dispatch_fptr'] - self.flItms['ImageBase'] + self.flItms['LoadConfigTable_OFFSET']
+                    self.binary.seek(self.flItms['LCD_CFG_dispatch_fptr_LOC'],0)
+                    if self.flItms['Magic'] == 0x20B:
+                        self.flItms['CFG_text_LOC'] = struct.unpack('<Q', self.binary.read(8))[0] 
+                    else: 
+                        self.flItms['CFG_text_LOC'] = struct.unpack('<I', self.binary.read(4))[0]
+
+    def loadthis(self, amod):
+        section = amod.split('.')
+        mod = ".".join(section[:-1])
+        amod = __import__(mod)
+        for item in section[1:]:
+            amod = getattr(amod, item)
+        return amod
+
+    def preprocess(self):
+        # files in directory
+        ignore = ['__init__.py']
+
+        for afile in os.listdir("./preprocessor"):
+            if afile in ignore:
+                continue
+            if ".pyc" in afile:
+                continue
+            
+            if len(afile.split(".")) > 2:
+                print "!" * 50
+                print "\t[!] Make sure there are no '.' in your preprocessor filename:", afile
+                print "!" * 50
+                
+                return False
+            
+            name = "preprocessor." +  afile.strip(".py")
+            
+            preprocessor_name = __import__( name, fromlist=[''])
+            
+            if preprocessor_name.enabled is True:
+                print "[*] Executing preprocessor:", afile.strip(".py")
+            else:
+                continue
+            
+            if preprocessor_name.file_format.lower() in ['pe', 'all']: #'elf', 'macho', 'mach-o']:
+                print '[*] Running preprocessor', afile.strip(".py"), "against", preprocessor_name.file_format, "formats"
+            else:
+                continue
+            
+
+            # Allow if any processors to keep it 
+            if self.keep_temp is False:
+                self.keep_temp = preprocessor_name.keep_temp
+            
+            # create tempfile here always
+            
+            if self.tmp_file == None:
+                self.tmp_file = tempfile.NamedTemporaryFile()
+                self.tmp_file.write(open(self.FILE, 'rb').read())
+                self.tmp_file.seek(0)
+                print "[*] Creating temp file:", self.tmp_file.name
+            else:
+                print "[*] Using existing tempfile from prior preprocessor"
+            
+            load_name = name +  ".preprocessor"
+            preproc = self.loadthis(load_name)
+            
+            m = preproc(self)
+            
+            print "=" * 50
+            
+            # execute preprocessor
+            result = m.run()
+            
+            if result is False:
+                print "[!] Preprocessor Failure :("
+
+            print "=" * 50
+            
+            # After running push it to BDF.
+            
+            self.FILE = self.tmp_file.name[:]
+    
+            # check for support after each modification
+            if preprocessor_name.recheck_support is True:
+                issupported = self.support_check()
+                if issupported is False:
+                    print self.FILE, "is not supported."
+                    return False                
 
     def check_apis(self, aFile):
         ####################################
@@ -418,6 +556,7 @@ class pebin():
 
         keys = self.flItms.keys()
         keys.sort()
+        print "*" * 25, "BEGIN flItms", "*" * 25
         for item in keys:
             if type(self.flItms[item]) == int:
                 print item + ':', hex(self.flItms[item])
@@ -437,7 +576,7 @@ class pebin():
                     print "-" * 50
             else:
                 print item + ':', self.flItms[item]
-        print "*" * 50, "END flItms"
+        print "*" * 25, "END flItms", "*" * 25
 
     def change_section_flags(self, section):
         """
@@ -1572,6 +1711,9 @@ class pebin():
         if issupported is False:
             return None
 
+        if self.PREPROCESS is True:
+            self.preprocess()
+        
         if self.PATCH_METHOD == 'onionduke':
             print "[!] Attempting OnionDuke patching"
             # move OS check here.
@@ -1598,7 +1740,8 @@ class pebin():
         #Creating file to backdoor
         self.flItms['backdoorfile'] = self.OUTPUT
         shutil.copy2(self.FILE, self.flItms['backdoorfile'])
-
+        # Delete tempfile here
+        
         #Removing the cert is better early on
         self.remove_signing()
 
@@ -1777,6 +1920,21 @@ class pebin():
         if self.VERBOSE is True:
             self.print_flItms(self.flItms)
 
+        # CHECK AND DELETE TMP FILE HERE
+            
+        if self.tmp_file != None:
+        
+            if self.keep_temp is True:
+                # tmpfilename_orginalname.exe
+                print "[*] Saving TempFile to:", os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE 
+                shutil.copy2(self.FILE, os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE )
+            try:
+                shutil.rmtree(self.tmp_file.name)
+            except: # OSError:
+                pass
+                #print "[*] TempFile already removed."
+
+        
         return True
 
     def output_options(self):

