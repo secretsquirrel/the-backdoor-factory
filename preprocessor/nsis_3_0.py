@@ -44,9 +44,10 @@ class preprocessor:
         with open(self.BDF.tmp_file.name, 'r+b') as self.f:
             self.check_NSIS()
             if self.nsis_binary is True:
-                print "\t[*] NSIS Binary loaded"
+                print "\t[*] NSIS 3.0 Binary loaded"
                 self.patch_crc32_check()
-
+            else:
+                print "\t[*] NSIS 3.0 Binary NOT loaded"
 
     def check_NSIS(self):
         check_one = False
