@@ -93,11 +93,11 @@ AS_IF([test "x$have_gsf" = "xyes"],
 
 PKG_CHECK_MODULES(
 	[OPENSSL],
-	[libcrypto >= 1.0.0],
+	[libcrypto >= 0.9.8],
 	,
 	[PKG_CHECK_MODULES(
 		[OPENSSL],
-		[openssl >= 1.0.0],
+		[openssl >= 0.9.8],
 		,
 		[AC_CHECK_LIB(
 			[crypto],
