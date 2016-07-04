@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 import struct
 import os
 import shutil
+import sys
 import tempfile
 from intel.LinuxIntelELF32 import linux_elfI32_shellcode
 from intel.LinuxIntelELF64 import linux_elfI64_shellcode
