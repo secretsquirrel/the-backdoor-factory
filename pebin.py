@@ -454,6 +454,7 @@ class pebin():
         ignore = ['__init__.py']
         abspath = os.path.abspath(__file__)
         dname = os.path.dirname(abspath)
+        sys.path.append(dname)
         for afile in os.listdir(dname + "/preprocessor"):
             if afile in ignore:
                 continue
