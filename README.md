@@ -278,6 +278,10 @@ On successful run you should see this line in BDF output:
 
 ###Changelog
 
+####07/04/2016
+
+* Support for dynamic paths in BDFProxy for preprocessor
+
 ####06/19/2016
 
 * Added the preprocessor and other optimizations
