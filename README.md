@@ -4,6 +4,8 @@ For security professionals and researchers only.
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
+[![Black Hat Arsenal](https://www.toolswatch.org/badges/arsenal/2015.svg)](https://www.blackhat.com/us-15/arsenal.html)
+
 Black Hat USA 2015:
 
     Video: https://www.youtube.com/watch?v=OuyLzkG16Uk
