@@ -1,5 +1,7 @@
 
 ##The Backdoor Factory (BDF)
+
+[![Join the chat at https://gitter.im/secretsquirrel/the-backdoor-factory](https://badges.gitter.im/secretsquirrel/the-backdoor-factory.svg)](https://gitter.im/secretsquirrel/the-backdoor-factory?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 For security professionals and researchers only.
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
