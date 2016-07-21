@@ -7,7 +7,7 @@ For security professionals and researchers only.
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
-[![Join the chat at https://gitter.im/secretsquirrel/the-backdoor-factory](https://badges.gitter.im/secretsquirrel/the-backdoor-factory.svg)](https://gitter.im/secretsquirrel/the-backdoor-factory?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)[![Black Hat Arsenal](https://www.toolswatch.org/badges/arsenal/2015.svg)](https://www.blackhat.com/us-15/arsenal.html)
+[![Join the chat at https://gitter.im/secretsquirrel/the-backdoor-factory](https://badges.gitter.im/secretsquirrel/the-backdoor-factory.svg)](https://gitter.im/secretsquirrel/the-backdoor-factory?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  [![Black Hat Arsenal](https://www.toolswatch.org/badges/arsenal/2015.svg)](https://www.blackhat.com/us-15/arsenal.html)
 
 Black Hat USA 2015:
 
