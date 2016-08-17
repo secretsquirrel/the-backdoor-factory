@@ -432,7 +432,7 @@ class pebin():
                     self.flItms['LCD_CFG_Guard_Flags'] = struct.unpack('<I', self.binary.read(4))[0]
 
                 #  Find CFG_PTR_LOC 
-                print "LCD_CFG_dispatch_fptr", hex(self.flItms['LCD_CFG_dispatch_fptr'])
+                #print "LCD_CFG_dispatch_fptr", hex(self.flItms['LCD_CFG_dispatch_fptr'])
                 if self.flItms['LCD_CFG_dispatch_fptr'] != 0:
                     self.flItms['LCD_CFG_dispatch_fptr_LOC'] = self.flItms['LCD_CFG_dispatch_fptr'] - self.flItms['ImageBase'] + self.flItms['LoadConfigTable_OFFSET']
                     self.binary.seek(self.flItms['LCD_CFG_dispatch_fptr_LOC'],0)
