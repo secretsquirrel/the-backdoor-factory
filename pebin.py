@@ -412,27 +412,26 @@ class pebin():
                 self.flItms['LoadConfigDirectory_SEHTVA'] = struct.unpack('<I', self.binary.read(4))[0]
                 self.flItms['LoadConfigDirectory_SEHC'] = struct.unpack('<I', self.binary.read(4))[0]
             
-            if self.flItms['LoadConfigDirectory_Size'] > 0x48:
-                #grab CFG info
-                if self.flItms['Magic'] == 0x20B:
-                    self.flItms['LCD_CFG_address_CF_PTR_LOC'] = self.binary.tell()
-                    self.flItms['LCD_CFG_address_CF_PTR'] = struct.unpack('<Q', self.binary.read(8))[0]
-                    self.flItms['LCD_CFG_dispatch_fptr'] = struct.unpack('<Q', self.binary.read(8))[0]
-                    self.flItms['LCD_CFG_Func_Table'] = struct.unpack('<Q', self.binary.read(8))[0]
-                    self.flItms['LCD_CFG_Func_Count'] = struct.unpack('<Q', self.binary.read(8))[0]
-                    # Zero out LCD_CFG_Guard_Flags to disable CFG
-                    self.flItms['LCD_CFG_Guard_Flags'] = struct.unpack('<Q', self.binary.read(8))[0]
-                else:
-                    self.flItms['LCD_CFG_address_CF_PTR_LOC'] = self.binary.tell()
-                    self.flItms['LCD_CFG_address_CF_PTR'] = struct.unpack('<I', self.binary.read(4))[0]
-                    self.flItms['LCD_CFG_dispatch_fptr'] = struct.unpack('<I', self.binary.read(4))[0]
-                    self.flItms['LCD_CFG_Func_Table'] = struct.unpack('<I', self.binary.read(4))[0]
-                    self.flItms['LCD_CFG_Func_Count'] = struct.unpack('<I', self.binary.read(4))[0]
-                    # Zero out LCD_CFG_Guard_Flags to disable CFG
-                    self.flItms['LCD_CFG_Guard_Flags'] = struct.unpack('<I', self.binary.read(4))[0]
+            #grab CFG info
+            if self.flItms['Magic'] == 0x20B and self.flItms['LoadConfigDirectory_Size'] > 0x70:
+                self.flItms['LCD_CFG_address_CF_PTR_LOC'] = self.binary.tell()
+                self.flItms['LCD_CFG_address_CF_PTR'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LCD_CFG_dispatch_fptr'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LCD_CFG_Func_Table'] = struct.unpack('<Q', self.binary.read(8))[0]
+                self.flItms['LCD_CFG_Func_Count'] = struct.unpack('<Q', self.binary.read(8))[0]
+                # Zero out LCD_CFG_Guard_Flags to disable CFG
+                self.flItms['LCD_CFG_Guard_Flags'] = struct.unpack('<Q', self.binary.read(8))[0]
+            elif self.flItms['Magic'] == 0x10B and self.flItms['LoadConfigDirectory_Size'] > 0x48:
+                self.flItms['LCD_CFG_address_CF_PTR_LOC'] = self.binary.tell()
+                self.flItms['LCD_CFG_address_CF_PTR'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LCD_CFG_dispatch_fptr'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LCD_CFG_Func_Table'] = struct.unpack('<I', self.binary.read(4))[0]
+                self.flItms['LCD_CFG_Func_Count'] = struct.unpack('<I', self.binary.read(4))[0]
+                # Zero out LCD_CFG_Guard_Flags to disable CFG
+                self.flItms['LCD_CFG_Guard_Flags'] = struct.unpack('<I', self.binary.read(4))[0]
 
-                #  Find CFG_PTR_LOC 
-                #print "LCD_CFG_dispatch_fptr", hex(self.flItms['LCD_CFG_dispatch_fptr'])
+            #  Find CFG_PTR_LOC 
+            if "LCD_CFG_dispatch_fptr" in self.flItms:
                 if self.flItms['LCD_CFG_dispatch_fptr'] != 0:
                     self.flItms['LCD_CFG_dispatch_fptr_LOC'] = self.flItms['LCD_CFG_dispatch_fptr'] - self.flItms['ImageBase'] + self.flItms['LoadConfigTable_OFFSET']
                     self.binary.seek(self.flItms['LCD_CFG_dispatch_fptr_LOC'],0)
