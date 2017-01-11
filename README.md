@@ -281,6 +281,11 @@ On successful run you should see this line in BDF output:
 
 ###Changelog
 
+####01/11/2016
+
+* Fix entry point truncation bug that led to improper recovery in rare instances
+
+
 ####07/04/2016
 
 * Support for dynamic paths in BDFProxy for preprocessor
