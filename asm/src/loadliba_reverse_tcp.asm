@@ -90,7 +90,7 @@ try_connect:
 ;  jnz short try_connect
 
 failure:
-; LoadLibA is in EBX and GetprocessAddress is in ESI
+; LoadLibA is in EBX and GetProcAddress is in ESI
 ; socket is in EDI MUST BE GOING OUT
 ; No need to exit.
 ;kernel32.dll!ExitProcess

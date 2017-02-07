@@ -773,7 +773,7 @@ class winI32_shellcode():
                             "\x68\x52\x74\x6c\x45"  # RtlExitUserThread
                             "\x54"                  # push esp
                             "\x50"                  # push eax
-                            "\xff\x17"              # call getprocessaddress
+                            "\xff\x17"              # call getprocaddress
                             "\x6a\x00"              # push 0
                             "\xff\xd0"              # call eax
                             )
