@@ -46,14 +46,14 @@ import string
 import re
 import tempfile
 from random import choice
-from winapi import winapi
-from intel.intelCore import intelCore
-from intel.intelmodules import eat_code_caves
-from intel.WinIntelPE32 import winI32_shellcode
-from intel.WinIntelPE64 import winI64_shellcode
-from onionduke import onionduke
-from onionduke.onionduke import write_rsrc
-from onionduke.onionduke import xor_file
+from bdfactory.winapi import winapi
+from bdfactory.intel.intelCore import intelCore
+from bdfactory.intel.intelmodules import eat_code_caves
+from bdfactory.intel.WinIntelPE32 import winI32_shellcode
+from bdfactory.intel.WinIntelPE64 import winI64_shellcode
+from bdfactory.onionduke import onionduke
+from bdfactory.onionduke.onionduke import write_rsrc
+from bdfactory.onionduke.onionduke import xor_file
 
 
 MachineTypes = {'0x0': 'AnyMachineType',

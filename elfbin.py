@@ -37,11 +37,11 @@ import os
 import shutil
 import sys
 import tempfile
-from intel.LinuxIntelELF32 import linux_elfI32_shellcode
-from intel.LinuxIntelELF64 import linux_elfI64_shellcode
-from intel.FreeBSDIntelELF32 import freebsd_elfI32_shellcode
+from bdfactory.intel.LinuxIntelELF32 import linux_elfI32_shellcode
+from bdfactory.intel.LinuxIntelELF64 import linux_elfI64_shellcode
+from bdfactory.intel.FreeBSDIntelELF32 import freebsd_elfI32_shellcode
 #from intel.FreeBSDIntelELF64 import freebsd_elfI64_shellcode
-from arm.LinuxARMLELF32 import linux_elfarmle32_shellcode
+from bdfactory.arm.LinuxARMLELF32 import linux_elfarmle32_shellcode
 
 
 class elf():
