@@ -49,9 +49,9 @@ import signal
 import time
 from random import choice
 from optparse import OptionParser
-from pebin import pebin
-from elfbin import elfbin
-from machobin import machobin
+from bdfactory.pebin import pebin
+from bdfactory.elfbin import elfbin
+from bdfactory.machobin import machobin
 
 
 def signal_handler(signal, frame):

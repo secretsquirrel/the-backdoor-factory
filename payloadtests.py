@@ -32,9 +32,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 '''
 
-import pebin
-import machobin
-import elfbin
+import bdfactory.pebin
+import bdfactory.machobin
+import bdfactory.elfbin
 import sys
 import os
 

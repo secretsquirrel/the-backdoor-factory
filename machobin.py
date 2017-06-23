@@ -37,8 +37,8 @@ import struct
 import shutil
 import tempfile
 import sys
-from intel.MachoIntel64 import macho_intel64_shellcode
-from intel.MachoIntel32 import macho_intel32_shellcode
+from bdfactory.intel.MachoIntel64 import macho_intel64_shellcode
+from bdfactory.intel.MachoIntel32 import macho_intel32_shellcode
 
 
 class machobin():
