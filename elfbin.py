@@ -344,6 +344,8 @@ class elfbin():
             if self.EI_CLASS == 0x2:
                 if self.EI_OSABI == 0x00:
                     self.bintype = linux_elfI64_shellcode
+                elif self.EI_OSABI == 0x03:
+                    self.bintype = linux_elfI64_shellcode
                 #elif self.EI_OSABI == 0x09:
                 #    self.bintype = freebsd_elfI64_shellcode
         elif self.e_machine == 0x28:  # ARM chipset
