@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 
-Copyright (c) 2013-2016, Joshua Pitts
+Copyright (c) 2013-2017, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -343,6 +343,8 @@ class elfbin():
         elif self.e_machine == 0x3E:  # x86-64 chipset
             if self.EI_CLASS == 0x2:
                 if self.EI_OSABI == 0x00:
+                    self.bintype = linux_elfI64_shellcode
+                elif self.EI_OSABI == 0x03:
                     self.bintype = linux_elfI64_shellcode
                 #elif self.EI_OSABI == 0x09:
                 #    self.bintype = freebsd_elfI64_shellcode

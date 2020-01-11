@@ -1,8 +1,9 @@
 
-##The Backdoor Factory (BDF) 0patch BRANCH
+##The Backdoor Factory (BDF) 0patch BRANCH IS NO LONGER MAINTAINED OR SUPPORTED
 
-For security professionals and researchers only.
+BLOG: http://secureallthethings.blogspot.com/2017/08/closing-door-end-of-backdoor-factory.html 
 
+## The Backdoor Factory (BDF)
 ### USAGE WITH 0PATCH
 
 ```
@@ -10,6 +11,8 @@ For security professionals and researchers only.
 ```
 
 Then copy the reg commands to a Admin cmd.exe prompt for a system running 0patch
+
+For security professionals and researchers only.
 
 The goal of BDF is to patch executable binaries with user desired shellcode and continue normal execution of the prepatched state.
 
@@ -287,6 +290,11 @@ On successful run you should see this line in BDF output:
 
 ###Changelog
 
+####01/11/2016
+
+* Fix entry point truncation bug that led to improper recovery in rare instances
+
+
 ####07/04/2016
 
 * Support for dynamic paths in BDFProxy for preprocessor
@@ -456,7 +464,7 @@ Small optimizations for speed.
 Added a new win86 shellcode: loadliba_reverse_tcp
     
   - Based on the following research by Jared DeMott: http://bromiumlabs.files.wordpress.com/2014/02/bypassing-emet-4-1.pdf -- Thanks @bannedit0 for mentioning this.
-  - This shellcode uses LoadLibraryA and GetProcessAddress APIs to find all necessary APIs for a reverse TCP connection. No more of Stephen Fewers API hash lookup (which is still brilliant).
+  - This shellcode uses LoadLibraryA and GetProcAddress APIs to find all necessary APIs for a reverse TCP connection. No more of Stephen Fewers API hash lookup (which is still brilliant).
   - It's not stealthy. It's position dependent. But the results are great (code cave jumping): https://www.virustotal.com/en/file/a31ed901abcacd61a09a84157887fc4a189d3fe3e3573c24e776bac8d5bb8a0f/analysis/1401385796/
   - Bypasses EMET 4.1. The caller protection doesn't catch it.
   - As such, I'll be furthering this idea with an algo that patches the binary with custom shellcode based on the APIs that are in the IAT. Including porting the current win86 shellcodes to this idea.

@@ -12,7 +12,7 @@ techniques are based on.
 
 Special thanks to Travis Morrow for poking holes in my ideas.
 
-Copyright (c) 2013-2016, Joshua Pitts
+Copyright (c) 2013-2017, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -62,7 +62,7 @@ def signal_handler(signal, frame):
 class bdfMain():
 
     version = """\
-         Version:   3.4.0
+         Version:   3.4.2
          """
 
     author = """\
@@ -608,7 +608,7 @@ class bdfMain():
         print "Not supported."
         sys.exit()
     result = supported_file.run_this()
-    if result is True and options.SUPPORT_CHECK is False:
+    if result is True and options.SUPPORT_CHECK is False and supported_file.OUTPUT is not None:
         print "File {0} is in the 'backdoored' directory".format(os.path.basename(supported_file.OUTPUT))
 
     #END BDF MAIN

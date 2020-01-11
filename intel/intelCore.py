@@ -1,6 +1,6 @@
 '''
 
-Copyright (c) 2013-2016, Joshua Pitts
+Copyright (c) 2013-2017, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -79,7 +79,7 @@ class intelCore():
         self.flItms['ImpList'] = []
         md = Cs(CS_ARCH_X86, CS_MODE_32)
         self.count = 0
-        for k in md.disasm(self.f.read(12), self.flItms['VrtStrtngPnt']):
+        for k in md.disasm(self.f.read(20), self.flItms['VrtStrtngPnt']):
             self.count += k.size
             _bytes = bytearray(b'')
 
@@ -109,7 +109,7 @@ class intelCore():
         self.count = 0
         self.flItms['ImpList'] = []
         md = Cs(CS_ARCH_X86, CS_MODE_64)
-        for k in md.disasm(self.f.read(12), self.flItms['VrtStrtngPnt']):
+        for k in md.disasm(self.f.read(20), self.flItms['VrtStrtngPnt']):
             self.count += k.size
             _bytes = bytearray(b'')
 

@@ -1,6 +1,6 @@
 '''
 
-Copyright (c) 2013-2016, Joshua Pitts
+Copyright (c) 2013-2017, Joshua Pitts
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -773,7 +773,7 @@ class winI32_shellcode():
                             "\x68\x52\x74\x6c\x45"  # RtlExitUserThread
                             "\x54"                  # push esp
                             "\x50"                  # push eax
-                            "\xff\x17"              # call getprocessaddress
+                            "\xff\x17"              # call getprocaddress
                             "\x6a\x00"              # push 0
                             "\xff\xd0"              # call eax
                             )

