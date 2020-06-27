@@ -67,12 +67,12 @@ class bdfMain():
 
     author = """\
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ALERT: NEW VERSION IN DEVELOPMENT ONLY AVAILABLE TO SPONSORS
+         ALERT: NEW VERSION IN DEVELOPMENT 
+         *** ONLY AVAILABLE TO SPONSORS ***
          SPONSOR THE NEXT VERSION HERE: https://github.com/sponsors/secretsquirrel
          Author:    Joshua Pitts
          Email:     the.midnite.runr[-at ]gmail<d o-t>com
-         Twitter:   @midnite_runr
-         IRC:       freenode.net #BDFactory
+         Twitter:   @ausernamedjosh
          SPONSOR THE NEXT VERSION HERE: https://github.com/sponsors/secretsquirrel
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          """
