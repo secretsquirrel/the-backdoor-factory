@@ -284,7 +284,7 @@ class bdfMain():
     parser.add_option("-A", "--idt_in_cave", dest="IDT_IN_CAVE", default=False, action="store_true",
                       help="EXPERIMENTAL "
                       "By default a new Import Directory Table is created in a new section, "
-                      "by calling this flag it will be put in a code cave.  This can cause bianry "
+                      "by calling this flag it will be put in a code cave.  This can cause binary "
                       "failure is some cases. Test on target binaries first."
                       )
     parser.add_option("-C","--code_sign", dest="CODE_SIGN", default=False, action="store_true", 
