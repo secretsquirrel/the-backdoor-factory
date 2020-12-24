@@ -2252,7 +2252,7 @@ static int verify_pe_file(char *indata, unsigned int peheader, int pe32plus,
 	return ret;
 }
 
-// extract_existing_pe_pkcs7 retreives a decoded PKCS7 struct corresponding to the
+// extract_existing_pe_pkcs7 retrieves a decoded PKCS7 struct corresponding to the
 // existing signature of the PE file.
 static PKCS7 *extract_existing_pe_pkcs7(char *indata, unsigned int peheader, int pe32plus,
 									   unsigned int sigpos, unsigned int siglen)
