@@ -67,13 +67,12 @@ class bdfMain():
 
     author = """\
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ALERT: NEW VERSION IN DEVELOPMENT 
+         ALERT: NEW VERSION Available 
          *** ONLY AVAILABLE TO SPONSORS ***
-         SPONSOR THE NEXT VERSION HERE: https://github.com/sponsors/secretsquirrel
+         SPONSOR HERE: https://github.com/sponsors/secretsquirrel
          Author:    Joshua Pitts
          Email:     the.midnite.runr[-at ]gmail<d o-t>com
          Twitter:   @ausernamedjosh
-         SPONSOR THE NEXT VERSION HERE: https://github.com/sponsors/secretsquirrel
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          """
 
