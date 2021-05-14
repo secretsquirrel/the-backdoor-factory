@@ -1,5 +1,5 @@
 
-## New version of BACKDOOR FACTORY being developed, to be released July 2021, only to sponsors! Sponsor here: https://github.com/sponsors/secretsquirrel
+## The new version of BACKDOOR FACTORY is available! Sponsor for access: https://github.com/sponsors/secretsquirrel
 
 
 ## The Backdoor Factory (BDF)
