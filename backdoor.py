@@ -313,7 +313,7 @@ class bdfMain():
             'Only support ELF, PE, and MACH-O file formats'
             return None
 
-    if options.NO_BANNER is False:
+    if !options.NO_BANNER:
         print choice(menu)
         print author
         print version
@@ -327,11 +327,11 @@ class bdfMain():
         for root, subFolders, files in os.walk(options.DIR):
             for _file in files:
                 options.FILE = os.path.join(root, _file)
-                if os.path.isdir(options.FILE) is True:
+                if os.path.isdir(options.FILE):
                     print "Directory found, continuing"
                     continue
                 is_supported = basicDiscovery(options.FILE)
-                if is_supported is "PE":
+                if is_supported == "PE":
                     supported_file = pebin(options.FILE,
                                            options.OUTPUT,
                                            options.SHELL,
@@ -362,7 +362,7 @@ class bdfMain():
                                            options.CODE_SIGN,
                                            options.PREPROCESS,
                                            )
-                elif is_supported is "ELF":
+                elif is_supported == "ELF":
                     supported_file = elfbin(options.FILE,
                                             options.OUTPUT,
                                             options.SHELL,
@@ -375,7 +375,7 @@ class bdfMain():
                                             options.IMAGE_TYPE,
                                             options.PREPROCESS,
                                             )
-                elif is_supported is "MACHO":
+                elif is_supported == "MACHO":
                     supported_file = machobin(options.FILE,
                                               options.OUTPUT,
                                               options.SHELL,
@@ -388,7 +388,7 @@ class bdfMain():
                                               options.PREPROCESS,
                                               )
 
-                if options.SUPPORT_CHECK is True:
+                if options.SUPPORT_CHECK == True:
                     if os.path.isfile(options.FILE):
                         is_supported = False
                 print "file", options.FILE
@@ -397,16 +397,16 @@ class bdfMain():
                 except Exception, e:
                     is_supported = False
                     print 'Exception:', str(e), '%s' % options.FILE
-                if is_supported is False or is_supported is None:
+                if is_supported == False or is_supported == None:
                     print "%s is not supported." % options.FILE
                             #continue
                 else:
                     print "%s is supported." % options.FILE
-                #    if supported_file.flItms['runas_admin'] is True:
+                #    if supported_file.flItms['runas_admin'] == True:
                 #        print "%s must be run as admin." % options.FILE
                 print "*" * 50
 
-        if options.SUPPORT_CHECK is True:
+        if options.SUPPORT_CHECK == True:
             sys.exit()
 
         print ("You are going to backdoor the following "
@@ -421,7 +421,7 @@ class bdfMain():
                 #print item
                 print "*" * 50
                 options.File = options.DIR + '/' + item
-                if os.path.isdir(options.FILE) is True:
+                if os.path.isdir(options.FILE) == True:
                     print "Directory found, continuing"
                     continue
 
@@ -429,7 +429,7 @@ class bdfMain():
                 result = None
                 is_supported = basicDiscovery(options.FILE)
                 try:
-                    if is_supported is "PE":
+                    if is_supported == "PE":
                         supported_file = pebin(options.FILE,
                                                options.OUTPUT,
                                                options.SHELL,
@@ -463,7 +463,7 @@ class bdfMain():
                         supported_file.OUTPUT = None
                         supported_file.output_options()
                         result = supported_file.patch_pe()
-                    elif is_supported is "ELF":
+                    elif is_supported == "ELF":
                         supported_file = elfbin(options.FILE,
                                                 options.OUTPUT,
                                                 options.SHELL,
@@ -481,7 +481,7 @@ class bdfMain():
                         supported_file.output_options()
                         result = supported_file.patch_elf()
 
-                    elif is_supported is "MACHO":
+                    elif is_supported == "MACHO":
                         supported_file = machobin(options.FILE,
                                                   options.OUTPUT,
                                                   options.SHELL,
@@ -497,7 +497,7 @@ class bdfMain():
                         supported_file.output_options()
                         result = supported_file.patch_macho()
 
-                    if result is None:
+                    if result == None:
                         print 'Not Supported. Continuing'
                         continue
                     else:
@@ -510,7 +510,7 @@ class bdfMain():
 
         sys.exit()
 
-    if options.INJECTOR is True:
+    if options.INJECTOR == True:
         supported_file = pebin(options.FILE,
                                options.OUTPUT,
                                options.SHELL,
@@ -550,7 +550,7 @@ class bdfMain():
 
     #OUTPUT = output_options(options.FILE, options.OUTPUT)
     is_supported = basicDiscovery(options.FILE)
-    if is_supported is "PE":
+    if is_supported == "PE":
         supported_file = pebin(options.FILE,
                                options.OUTPUT,
                                options.SHELL,
@@ -581,7 +581,7 @@ class bdfMain():
                                options.CODE_SIGN,
                                options.PREPROCESS,
                                )
-    elif is_supported is "ELF":
+    elif is_supported == "ELF":
         supported_file = elfbin(options.FILE,
                                 options.OUTPUT,
                                 options.SHELL,
@@ -595,7 +595,7 @@ class bdfMain():
                                 options.PREPROCESS,
                                 )
 
-    elif is_supported is "MACHO":
+    elif is_supported == "MACHO":
         supported_file = machobin(options.FILE,
                                   options.OUTPUT,
                                   options.SHELL,
@@ -612,8 +612,8 @@ class bdfMain():
         print "Not supported."
         sys.exit()
     result = supported_file.run_this()
-    if result is True and options.SUPPORT_CHECK is False and supported_file.OUTPUT is not None:
-        print "File {0} is in the 'backdoored' directory".format(os.path.basename(supported_file.OUTPUT))
+    if result == True and options.SUPPORT_CHECK == False and supported_file.OUTPUT == not None:
+        print "File {0} == in the 'backdoored' directory".format(os.path.basename(supported_file.OUTPUT))
 
     #END BDF MAIN
 
