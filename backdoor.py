@@ -55,7 +55,7 @@ from machobin import machobin
 
 
 def signal_handler(signal, frame):
-        print '\nProgram Exit'
+        print('\nProgram Exit')
         sys.exit(0)
 
 
@@ -314,24 +314,24 @@ class bdfMain():
             return None
 
     if options.NO_BANNER is False:
-        print choice(menu)
-        print author
-        print version
+        print((choice(menu)))
+        print(author)
+        print(version)
         time.sleep(.5)
     else:
-        print "\t Backdoor Factory"
-        print author
-        print version
+        print("\t Backdoor Factory")
+        print(author)
+        print(version)
 
     if options.DIR:
         for root, subFolders, files in os.walk(options.DIR):
             for _file in files:
                 options.FILE = os.path.join(root, _file)
                 if os.path.isdir(options.FILE) is True:
-                    print "Directory found, continuing"
+                    print("Directory found, continuing")
                     continue
                 is_supported = basicDiscovery(options.FILE)
-                if is_supported is "PE":
+                if is_supported == "PE":
                     supported_file = pebin(options.FILE,
                                            options.OUTPUT,
                                            options.SHELL,
@@ -362,7 +362,7 @@ class bdfMain():
                                            options.CODE_SIGN,
                                            options.PREPROCESS,
                                            )
-                elif is_supported is "ELF":
+                elif is_supported == "ELF":
                     supported_file = elfbin(options.FILE,
                                             options.OUTPUT,
                                             options.SHELL,
@@ -375,7 +375,7 @@ class bdfMain():
                                             options.IMAGE_TYPE,
                                             options.PREPROCESS,
                                             )
-                elif is_supported is "MACHO":
+                elif is_supported == "MACHO":
                     supported_file = machobin(options.FILE,
                                               options.OUTPUT,
                                               options.SHELL,
@@ -391,45 +391,45 @@ class bdfMain():
                 if options.SUPPORT_CHECK is True:
                     if os.path.isfile(options.FILE):
                         is_supported = False
-                print "file", options.FILE
+                print(("file", options.FILE))
                 try:
                     is_supported = supported_file.support_check()
-                except Exception, e:
+                except Exception(e):
                     is_supported = False
-                    print 'Exception:', str(e), '%s' % options.FILE
+                    print(('Exception:', str(e), '%s' % options.FILE))
                 if is_supported is False or is_supported is None:
-                    print "%s is not supported." % options.FILE
+                    print(("%s is not supported." % options.FILE))
                             #continue
                 else:
-                    print "%s is supported." % options.FILE
+                    print(("%s is supported." % options.FILE))
                 #    if supported_file.flItms['runas_admin'] is True:
                 #        print "%s must be run as admin." % options.FILE
-                print "*" * 50
+                print(("*" * 50))
 
         if options.SUPPORT_CHECK is True:
             sys.exit()
 
-        print ("You are going to backdoor the following "
+        print(("You are going to backdoor the following "
                "items in the %s directory:"
-               % options.DIR)
+               % options.DIR))
         dirlisting = os.listdir(options.DIR)
         for item in dirlisting:
-            print "     {0}".format(item)
-        answer = raw_input("Do you want to continue? (yes/no) ")
+            print(("     {0}".format(item)))
+        answer = input("Do you want to continue? (yes/no) ")
         if 'yes' in answer.lower():
             for item in dirlisting:
                 #print item
-                print "*" * 50
+                print(("*" * 50))
                 options.File = options.DIR + '/' + item
                 if os.path.isdir(options.FILE) is True:
-                    print "Directory found, continuing"
+                    print("Directory found, continuing")
                     continue
 
-                print ("backdooring file %s" % item)
+                print(("backdooring file %s" % item))
                 result = None
                 is_supported = basicDiscovery(options.FILE)
                 try:
-                    if is_supported is "PE":
+                    if is_supported == "PE":
                         supported_file = pebin(options.FILE,
                                                options.OUTPUT,
                                                options.SHELL,
@@ -463,7 +463,7 @@ class bdfMain():
                         supported_file.OUTPUT = None
                         supported_file.output_options()
                         result = supported_file.patch_pe()
-                    elif is_supported is "ELF":
+                    elif is_supported == "ELF":
                         supported_file = elfbin(options.FILE,
                                                 options.OUTPUT,
                                                 options.SHELL,
@@ -481,7 +481,7 @@ class bdfMain():
                         supported_file.output_options()
                         result = supported_file.patch_elf()
 
-                    elif is_supported is "MACHO":
+                    elif is_supported == "MACHO":
                         supported_file = machobin(options.FILE,
                                                   options.OUTPUT,
                                                   options.SHELL,
@@ -498,13 +498,13 @@ class bdfMain():
                         result = supported_file.patch_macho()
 
                     if result is None:
-                        print 'Not Supported. Continuing'
+                        print('Not Supported. Continuing')
                         continue
                     else:
-                        print ("[*] File {0} is in backdoored "
-                               "directory".format(supported_file.FILE))
+                        print(("[*] File {0} is in backdoored "
+                               "directory".format(supported_file.FILE)))
                 except Exception as e:
-                    print "DIR ERROR", str(e)
+                    print(("DIR ERROR", str(e)))
         else:
             print("Goodbye")
 
@@ -550,7 +550,7 @@ class bdfMain():
 
     #OUTPUT = output_options(options.FILE, options.OUTPUT)
     is_supported = basicDiscovery(options.FILE)
-    if is_supported is "PE":
+    if is_supported == "PE":
         supported_file = pebin(options.FILE,
                                options.OUTPUT,
                                options.SHELL,
@@ -581,7 +581,7 @@ class bdfMain():
                                options.CODE_SIGN,
                                options.PREPROCESS,
                                )
-    elif is_supported is "ELF":
+    elif is_supported == "ELF":
         supported_file = elfbin(options.FILE,
                                 options.OUTPUT,
                                 options.SHELL,
@@ -595,7 +595,7 @@ class bdfMain():
                                 options.PREPROCESS,
                                 )
 
-    elif is_supported is "MACHO":
+    elif is_supported == "MACHO":
         supported_file = machobin(options.FILE,
                                   options.OUTPUT,
                                   options.SHELL,
@@ -609,11 +609,11 @@ class bdfMain():
                                   )
 
     else:
-        print "Not supported."
+        print("Not supported.")
         sys.exit()
     result = supported_file.run_this()
     if result is True and options.SUPPORT_CHECK is False and supported_file.OUTPUT is not None:
-        print "File {0} is in the 'backdoored' directory".format(os.path.basename(supported_file.OUTPUT))
+        print(("File {0} is in the 'backdoored' directory".format(os.path.basename(supported_file.OUTPUT))))
 
     #END BDF MAIN
 

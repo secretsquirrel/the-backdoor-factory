@@ -16,15 +16,7 @@ fi
 uname -a | grep -i kali &> /dev/null 
 if [ $? -eq 0 ]; then
 	apt-get update
-	apt-get install -y python-capstone autoconf libtool curl libcurl4-openssl-dev
-
-	echo '[*] Install osslsigncode'
-    cd osslsigncode
-    ./autogen.sh
-    ./configure
-	make
-	make install
-    cd ..	
+	apt-get install -y python3-capstone autoconf libtool curl libcurl4-openssl-dev
 
 	#install appack
 	uname -a | grep -i "armv" &> /dev/null
@@ -55,14 +47,6 @@ if [ $? -eq 0 ]; then
 	        echo ""
 	fi
 	
-	echo '[*] Install osslsigncode'
-    cd osslsigncode
-    ./autogen.sh
-    ./configure
-	make
-	make install
-    cd ..	
-
 	uname -a | grep -i "armv" &> /dev/null
         if [ $? -ne 0 ]; then
                 echo "[*] installing appack for onionduke"
@@ -87,14 +71,6 @@ if [ $? -eq 0 ]; then
 	pip install pefile
 	pip install capstone
 	
-	echo '[*] Install osslsigncode'
-    	cd osslsigncode
-    	./autogen.sh
-    	./configure
-	make
-	make install
-    cd ..	
-
 	cd ./aPLib/example/
 	clang -c -I../lib/macho64 -Wall -O2  -o appack.o appack.c -v 
 	clang -Wall -O2  -o appack appack.o ../lib/macho64/aplib.a -v 

