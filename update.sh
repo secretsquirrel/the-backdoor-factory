@@ -5,6 +5,14 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+#check capstone
+
+if [ ! -f capstone ]; then
+	echo 'Capstone not found'
+	echo 'Cloning Capstone from git .......'
+	`git clone https://github.com/capstone-engine/capstone`
+fi
+
 #update capstone
 
 cd capstone
@@ -41,4 +49,4 @@ fi
 
 # update pefile
 
-pip install --upgrade pefile
+pip3 install --upgrade pefile

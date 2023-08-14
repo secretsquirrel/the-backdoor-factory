@@ -175,7 +175,7 @@ class macho_intel32_shellcode():
 
     def user_supplied_shellcode(self):
         if self.SUPPLIED_SHELLCODE is None:
-            print "[!] User must provide shellcode for this module (-U)"
+            print("[!] User must provide shellcode for this module (-U)")
             return False
         else:
             supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()

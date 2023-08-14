@@ -52,7 +52,7 @@ class linux_elfarmle32_shellcode():
     def pack_ip_addresses(self):
         hostocts = []
         if self.HOST is None:
-            print "This shellcode requires a HOST parameter -H"
+            print("This shellcode requires a HOST parameter -H")
             sys.exit(1)
         for i, octet in enumerate(self.HOST.split('.')):
                 hostocts.append(int(octet))
@@ -162,7 +162,7 @@ class linux_elfarmle32_shellcode():
         For user supplied shellcode
         """
         if self.SUPPLIED_SHELLCODE is None:
-            print "[!] User must provide shellcode for this module (-U)"
+            print("[!] User must provide shellcode for this module (-U)")
             sys.exit(0)
         else:
             supplied_shellcode = open(self.SUPPLIED_SHELLCODE, 'r+b').read()

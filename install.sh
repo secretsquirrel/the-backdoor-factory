@@ -16,15 +16,10 @@ fi
 uname -a | grep -i kali &> /dev/null 
 if [ $? -eq 0 ]; then
 	apt-get update
-	apt-get install -y python-capstone autoconf libtool curl libcurl4-openssl-dev
-
-	echo '[*] Install osslsigncode'
-    cd osslsigncode
-    ./autogen.sh
-    ./configure
-	make
-	make install
-    cd ..	
+	apt-get install -y python3-capstone autoconf libtool curl libcurl4-openssl-dev
+	wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb    
+	dpkg -i libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
+	rm -rf libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
 
 	#install appack
 	uname -a | grep -i "armv" &> /dev/null
@@ -44,25 +39,17 @@ fi
 uname -a | grep -v "kali" | grep -i linux &> /dev/null 
 if [ $? -eq 0 ]; then
 
-	if hash pip 2>/dev/null; then
-		sudo apt-get install -y python-pip autoconf libtool curl libcurl4-openssl-dev
-	        pip install pefile
+	if hash pip3 2>/dev/null; then
+		sudo apt-get install -y python3-pip autoconf libtool curl libcurl4-openssl-dev
+	        pip3 install pefile
 	        #install capstone
-		pip install capstone
+		pip3 install capstone
 	else
-	        echo '[!!!!] Install pefile and capstone manually, pip is not installed'
-	        echo '[!!!!] or install pip and retry'
+	        echo '[!!!!] Install pefile and capstone manually, pip3 is not installed'
+	        echo '[!!!!] or install pip3 and retry'
 	        echo ""
 	fi
 	
-	echo '[*] Install osslsigncode'
-    cd osslsigncode
-    ./autogen.sh
-    ./configure
-	make
-	make install
-    cd ..	
-
 	uname -a | grep -i "armv" &> /dev/null
         if [ $? -ne 0 ]; then
                 echo "[*] installing appack for onionduke"
@@ -84,17 +71,9 @@ if [ $? -eq 0 ]; then
 	brew install automake
 	brew install libtool
 	
-	pip install pefile
-	pip install capstone
+	pip3 install pefile
+	pip3 install capstone
 	
-	echo '[*] Install osslsigncode'
-    	cd osslsigncode
-    	./autogen.sh
-    	./configure
-	make
-	make install
-    cd ..	
-
 	cd ./aPLib/example/
 	clang -c -I../lib/macho64 -Wall -O2  -o appack.o appack.c -v 
 	clang -Wall -O2  -o appack appack.o ../lib/macho64/aplib.a -v 

