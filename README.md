@@ -71,9 +71,11 @@ on their official GitHub, the BUILD STATUS is (CL failling): https://github.com/
 cloning and compiling won't work at all (I tried, no luck ;) ), so it's better to download the Release Version from here: https://github.com/mtrojnar/osslsigncode/releases for your supported platform and run these commands in the downloaded folder
 
 for installing on Ubuntu, Debian, or alike Linux users:
-      unzip osslsigncode-*.zip && cp osslsigncode-*/bin/osslsigncode /bin
+
+	unzip osslsigncode-*.zip && cp osslsigncode-*/bin/osslsigncode /bin
 
 for installing on macOS:
+
      unzip osslsigncode-*.zip && cp osslsigncode-*/bin/osslsigncode /bin && cp osslsigncode-*/share/bash-completion/osslsigncode /share/bash-completion
 
 
