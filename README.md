@@ -1,6 +1,7 @@
 
 ## The new version of BACKDOOR FACTORY is available! Get access here: https://github.com/sponsors/secretsquirrel
 
+# WARNING: Pull Requests WILL BE IGNORED AND CLOSED.
 
 ## The Backdoor Factory (BDF)
 
